@@ -18,7 +18,7 @@
 
 #define kLinkTextColor [UIColor colorWithRed:243/255.0 green:100/255.0 blue:21/255.0 alpha:1]
 #define kNormalTextColor [UIColor blackColor]
-#define kLinkTextFontSize 14
+#define kLinkTextFontSize 20
 #define kLinkTextFont [UIFont systemFontOfSize:kLinkTextFontSize]
 #define kNormalTextFont kLinkTextFont
 
