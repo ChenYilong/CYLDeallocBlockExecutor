@@ -7,13 +7,18 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		9A1352C81AC5639B00F9BE7F /* NSString+Size.m in Sources */ = {isa = PBXBuildFile; fileRef = 9A1352C71AC5639B00F9BE7F /* NSString+Size.m */; };
 		9AB500931AC4089100419A88 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 9AB500921AC4089100419A88 /* main.m */; };
 		9AB500961AC4089100419A88 /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 9AB500951AC4089100419A88 /* AppDelegate.m */; };
 		9AB500991AC4089100419A88 /* ViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 9AB500981AC4089100419A88 /* ViewController.m */; };
-		9AB5009C1AC4089100419A88 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 9AB5009A1AC4089100419A88 /* Main.storyboard */; };
 		9AB5009E1AC4089100419A88 /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 9AB5009D1AC4089100419A88 /* Images.xcassets */; };
 		9AB500A11AC4089100419A88 /* LaunchScreen.xib in Resources */ = {isa = PBXBuildFile; fileRef = 9AB5009F1AC4089100419A88 /* LaunchScreen.xib */; };
 		9AB500AD1AC4089200419A88 /* LinkTableViewDemoTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 9AB500AC1AC4089200419A88 /* LinkTableViewDemoTests.m */; };
+		9AB500B81AC4095400419A88 /* ColorLinkTableView.m in Sources */ = {isa = PBXBuildFile; fileRef = 9AB500B71AC4095400419A88 /* ColorLinkTableView.m */; };
+		9AB500BB1AC40A1700419A88 /* ColorLinkModel.m in Sources */ = {isa = PBXBuildFile; fileRef = 9AB500BA1AC40A1700419A88 /* ColorLinkModel.m */; };
+		9AB500BD1AC41A4300419A88 /* data.json in Resources */ = {isa = PBXBuildFile; fileRef = 9AB500BC1AC41A4300419A88 /* data.json */; };
+		9AB500C01AC42A0E00419A88 /* ColorLinkCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 9AB500BF1AC42A0E00419A88 /* ColorLinkCell.m */; };
+		9AB500CB1AC5084300419A88 /* NSMutableAttributedString+Common.m in Sources */ = {isa = PBXBuildFile; fileRef = 9AB500CA1AC5084300419A88 /* NSMutableAttributedString+Common.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -27,6 +32,8 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		9A1352C61AC5639B00F9BE7F /* NSString+Size.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "NSString+Size.h"; sourceTree = "<group>"; };
+		9A1352C71AC5639B00F9BE7F /* NSString+Size.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "NSString+Size.m"; sourceTree = "<group>"; };
 		9AB5008D1AC4089100419A88 /* LinkTableViewDemo.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = LinkTableViewDemo.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		9AB500911AC4089100419A88 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		9AB500921AC4089100419A88 /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
@@ -34,12 +41,20 @@
 		9AB500951AC4089100419A88 /* AppDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = AppDelegate.m; sourceTree = "<group>"; };
 		9AB500971AC4089100419A88 /* ViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ViewController.h; sourceTree = "<group>"; };
 		9AB500981AC4089100419A88 /* ViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = ViewController.m; sourceTree = "<group>"; };
-		9AB5009B1AC4089100419A88 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
 		9AB5009D1AC4089100419A88 /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Images.xcassets; sourceTree = "<group>"; };
 		9AB500A01AC4089100419A88 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/LaunchScreen.xib; sourceTree = "<group>"; };
 		9AB500A61AC4089200419A88 /* LinkTableViewDemoTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = LinkTableViewDemoTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		9AB500AB1AC4089200419A88 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		9AB500AC1AC4089200419A88 /* LinkTableViewDemoTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = LinkTableViewDemoTests.m; sourceTree = "<group>"; };
+		9AB500B61AC4095400419A88 /* ColorLinkTableView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ColorLinkTableView.h; sourceTree = "<group>"; };
+		9AB500B71AC4095400419A88 /* ColorLinkTableView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ColorLinkTableView.m; sourceTree = "<group>"; };
+		9AB500B91AC40A1700419A88 /* ColorLinkModel.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ColorLinkModel.h; sourceTree = "<group>"; };
+		9AB500BA1AC40A1700419A88 /* ColorLinkModel.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ColorLinkModel.m; sourceTree = "<group>"; };
+		9AB500BC1AC41A4300419A88 /* data.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = data.json; sourceTree = "<group>"; };
+		9AB500BE1AC42A0E00419A88 /* ColorLinkCell.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ColorLinkCell.h; sourceTree = "<group>"; };
+		9AB500BF1AC42A0E00419A88 /* ColorLinkCell.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ColorLinkCell.m; sourceTree = "<group>"; };
+		9AB500C91AC5084300419A88 /* NSMutableAttributedString+Common.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "NSMutableAttributedString+Common.h"; sourceTree = "<group>"; };
+		9AB500CA1AC5084300419A88 /* NSMutableAttributedString+Common.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "NSMutableAttributedString+Common.m"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -81,11 +96,17 @@
 		9AB5008F1AC4089100419A88 /* LinkTableViewDemo */ = {
 			isa = PBXGroup;
 			children = (
+				9AB500C11AC436A900419A88 /* Classes */,
 				9AB500941AC4089100419A88 /* AppDelegate.h */,
 				9AB500951AC4089100419A88 /* AppDelegate.m */,
 				9AB500971AC4089100419A88 /* ViewController.h */,
 				9AB500981AC4089100419A88 /* ViewController.m */,
-				9AB5009A1AC4089100419A88 /* Main.storyboard */,
+				9AB500B61AC4095400419A88 /* ColorLinkTableView.h */,
+				9AB500B71AC4095400419A88 /* ColorLinkTableView.m */,
+				9AB500B91AC40A1700419A88 /* ColorLinkModel.h */,
+				9AB500BA1AC40A1700419A88 /* ColorLinkModel.m */,
+				9AB500BE1AC42A0E00419A88 /* ColorLinkCell.h */,
+				9AB500BF1AC42A0E00419A88 /* ColorLinkCell.m */,
 				9AB5009D1AC4089100419A88 /* Images.xcassets */,
 				9AB5009F1AC4089100419A88 /* LaunchScreen.xib */,
 				9AB500901AC4089100419A88 /* Supporting Files */,
@@ -96,6 +117,7 @@
 		9AB500901AC4089100419A88 /* Supporting Files */ = {
 			isa = PBXGroup;
 			children = (
+				9AB500BC1AC41A4300419A88 /* data.json */,
 				9AB500911AC4089100419A88 /* Info.plist */,
 				9AB500921AC4089100419A88 /* main.m */,
 			);
@@ -117,6 +139,25 @@
 				9AB500AB1AC4089200419A88 /* Info.plist */,
 			);
 			name = "Supporting Files";
+			sourceTree = "<group>";
+		};
+		9AB500C11AC436A900419A88 /* Classes */ = {
+			isa = PBXGroup;
+			children = (
+				9AB500C21AC436A900419A88 /* Category */,
+			);
+			path = Classes;
+			sourceTree = "<group>";
+		};
+		9AB500C21AC436A900419A88 /* Category */ = {
+			isa = PBXGroup;
+			children = (
+				9A1352C61AC5639B00F9BE7F /* NSString+Size.h */,
+				9A1352C71AC5639B00F9BE7F /* NSString+Size.m */,
+				9AB500C91AC5084300419A88 /* NSMutableAttributedString+Common.h */,
+				9AB500CA1AC5084300419A88 /* NSMutableAttributedString+Common.m */,
+			);
+			path = Category;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -199,8 +240,8 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				9AB5009C1AC4089100419A88 /* Main.storyboard in Resources */,
 				9AB500A11AC4089100419A88 /* LaunchScreen.xib in Resources */,
+				9AB500BD1AC41A4300419A88 /* data.json in Resources */,
 				9AB5009E1AC4089100419A88 /* Images.xcassets in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -221,7 +262,12 @@
 			files = (
 				9AB500991AC4089100419A88 /* ViewController.m in Sources */,
 				9AB500961AC4089100419A88 /* AppDelegate.m in Sources */,
+				9AB500BB1AC40A1700419A88 /* ColorLinkModel.m in Sources */,
+				9AB500C01AC42A0E00419A88 /* ColorLinkCell.m in Sources */,
+				9A1352C81AC5639B00F9BE7F /* NSString+Size.m in Sources */,
+				9AB500CB1AC5084300419A88 /* NSMutableAttributedString+Common.m in Sources */,
 				9AB500931AC4089100419A88 /* main.m in Sources */,
+				9AB500B81AC4095400419A88 /* ColorLinkTableView.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -244,14 +290,6 @@
 /* End PBXTargetDependency section */
 
 /* Begin PBXVariantGroup section */
-		9AB5009A1AC4089100419A88 /* Main.storyboard */ = {
-			isa = PBXVariantGroup;
-			children = (
-				9AB5009B1AC4089100419A88 /* Base */,
-			);
-			name = Main.storyboard;
-			sourceTree = "<group>";
-		};
 		9AB5009F1AC4089100419A88 /* LaunchScreen.xib */ = {
 			isa = PBXVariantGroup;
 			children = (
@@ -297,7 +335,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 8.2;
+				IPHONEOS_DEPLOYMENT_TARGET = 7.0;
 				MTL_ENABLE_DEBUG_INFO = YES;
 				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = iphoneos;
@@ -332,7 +370,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 8.2;
+				IPHONEOS_DEPLOYMENT_TARGET = 7.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				SDKROOT = iphoneos;
 				VALIDATE_PRODUCT = YES;
@@ -344,6 +382,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				INFOPLIST_FILE = LinkTableViewDemo/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 7.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
@@ -354,6 +393,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				INFOPLIST_FILE = LinkTableViewDemo/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 7.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
@@ -412,6 +452,7 @@
 				9AB500B21AC4089200419A88 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 		9AB500B31AC4089200419A88 /* Build configuration list for PBXNativeTarget "LinkTableViewDemoTests" */ = {
 			isa = XCConfigurationList;
@@ -420,6 +461,7 @@
 				9AB500B51AC4089200419A88 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};
