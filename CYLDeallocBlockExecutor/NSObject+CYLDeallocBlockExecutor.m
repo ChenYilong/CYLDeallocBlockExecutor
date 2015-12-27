@@ -9,7 +9,7 @@
 #import "NSObject+CYLDeallocBlockExecutor.h"
 #import <objc/runtime.h>
 
-const void *deallocExecutorBlockKey = &deallocExecutorBlockKey;
+const void * deallocExecutorBlockKey = &deallocExecutorBlockKey;
 
 @implementation NSObject (CYLDeallocBlockExecutor)
 

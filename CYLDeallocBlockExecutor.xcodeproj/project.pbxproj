@@ -11,12 +11,11 @@
 		9ACCE5591C30371B00D98916 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 9ACCE54E1C30371B00D98916 /* Assets.xcassets */; };
 		9ACCE55A1C30371B00D98916 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 9ACCE54F1C30371B00D98916 /* LaunchScreen.storyboard */; };
 		9ACCE55B1C30371B00D98916 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 9ACCE5511C30371B00D98916 /* Main.storyboard */; };
-		9ACCE55C1C30371B00D98916 /* Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 9ACCE5531C30371B00D98916 /* Info.plist */; };
 		9ACCE55D1C30371B00D98916 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 9ACCE5541C30371B00D98916 /* main.m */; };
 		9ACCE55E1C30371B00D98916 /* ViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 9ACCE5561C30371B00D98916 /* ViewController.m */; };
-		9ACCE5611C3037A200D98916 /* NSObject+CYLDeallocBlockExecutor.m in Sources */ = {isa = PBXBuildFile; fileRef = 9ACCE5601C3037A200D98916 /* NSObject+CYLDeallocBlockExecutor.m */; };
-		9ACCE5641C30382200D98916 /* CYLDeallocExecutor.m in Sources */ = {isa = PBXBuildFile; fileRef = 9ACCE5631C30382200D98916 /* CYLDeallocExecutor.m */; };
 		9ACCE5681C303E0000D98916 /* UIView+ThemeManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 9ACCE5671C303E0000D98916 /* UIView+ThemeManager.m */; };
+		9AE3DD3D1C3064BD003184AD /* CYLDeallocExecutor.m in Sources */ = {isa = PBXBuildFile; fileRef = 9AE3DD3A1C3064BD003184AD /* CYLDeallocExecutor.m */; };
+		9AE3DD3E1C3064BD003184AD /* NSObject+CYLDeallocBlockExecutor.m in Sources */ = {isa = PBXBuildFile; fileRef = 9AE3DD3C1C3064BD003184AD /* NSObject+CYLDeallocBlockExecutor.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -30,13 +29,13 @@
 		9ACCE5541C30371B00D98916 /* main.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
 		9ACCE5551C30371B00D98916 /* ViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ViewController.h; sourceTree = "<group>"; };
 		9ACCE5561C30371B00D98916 /* ViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ViewController.m; sourceTree = "<group>"; };
-		9ACCE55F1C3037A200D98916 /* NSObject+CYLDeallocBlockExecutor.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "NSObject+CYLDeallocBlockExecutor.h"; sourceTree = "<group>"; };
-		9ACCE5601C3037A200D98916 /* NSObject+CYLDeallocBlockExecutor.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "NSObject+CYLDeallocBlockExecutor.m"; sourceTree = "<group>"; };
-		9ACCE5621C30382200D98916 /* CYLDeallocExecutor.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CYLDeallocExecutor.h; sourceTree = "<group>"; };
-		9ACCE5631C30382200D98916 /* CYLDeallocExecutor.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CYLDeallocExecutor.m; sourceTree = "<group>"; };
-		9ACCE5651C303B2800D98916 /* CYLDeallocBlockExecutor.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CYLDeallocBlockExecutor.h; sourceTree = "<group>"; };
 		9ACCE5661C303E0000D98916 /* UIView+ThemeManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "UIView+ThemeManager.h"; sourceTree = "<group>"; };
 		9ACCE5671C303E0000D98916 /* UIView+ThemeManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "UIView+ThemeManager.m"; sourceTree = "<group>"; };
+		9AE3DD381C3064BD003184AD /* CYLDeallocBlockExecutor.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CYLDeallocBlockExecutor.h; sourceTree = "<group>"; };
+		9AE3DD391C3064BD003184AD /* CYLDeallocExecutor.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CYLDeallocExecutor.h; sourceTree = "<group>"; };
+		9AE3DD3A1C3064BD003184AD /* CYLDeallocExecutor.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CYLDeallocExecutor.m; sourceTree = "<group>"; };
+		9AE3DD3B1C3064BD003184AD /* NSObject+CYLDeallocBlockExecutor.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "NSObject+CYLDeallocBlockExecutor.h"; sourceTree = "<group>"; };
+		9AE3DD3C1C3064BD003184AD /* NSObject+CYLDeallocBlockExecutor.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "NSObject+CYLDeallocBlockExecutor.m"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -53,7 +52,7 @@
 		9ACCE5261C3034A900D98916 = {
 			isa = PBXGroup;
 			children = (
-				9ACCE5491C30371B00D98916 /* CYLDeallocBlockExecutor */,
+				9AE3DD371C3064BD003184AD /* CYLDeallocBlockExecutor */,
 				9ACCE54B1C30371B00D98916 /* Example */,
 				9ACCE5301C3034A900D98916 /* Products */,
 			);
@@ -65,19 +64,6 @@
 				9ACCE52F1C3034A900D98916 /* CYLDeallocBlockExecutor.app */,
 			);
 			name = Products;
-			sourceTree = "<group>";
-		};
-		9ACCE5491C30371B00D98916 /* CYLDeallocBlockExecutor */ = {
-			isa = PBXGroup;
-			children = (
-				9ACCE5621C30382200D98916 /* CYLDeallocExecutor.h */,
-				9ACCE5631C30382200D98916 /* CYLDeallocExecutor.m */,
-				9ACCE55F1C3037A200D98916 /* NSObject+CYLDeallocBlockExecutor.h */,
-				9ACCE5601C3037A200D98916 /* NSObject+CYLDeallocBlockExecutor.m */,
-				9ACCE5651C303B2800D98916 /* CYLDeallocBlockExecutor.h */,
-			);
-			name = CYLDeallocBlockExecutor;
-			path = CYLDeallocExecutor;
 			sourceTree = "<group>";
 		};
 		9ACCE54B1C30371B00D98916 /* Example */ = {
@@ -96,6 +82,18 @@
 				9ACCE5671C303E0000D98916 /* UIView+ThemeManager.m */,
 			);
 			path = Example;
+			sourceTree = "<group>";
+		};
+		9AE3DD371C3064BD003184AD /* CYLDeallocBlockExecutor */ = {
+			isa = PBXGroup;
+			children = (
+				9AE3DD381C3064BD003184AD /* CYLDeallocBlockExecutor.h */,
+				9AE3DD391C3064BD003184AD /* CYLDeallocExecutor.h */,
+				9AE3DD3A1C3064BD003184AD /* CYLDeallocExecutor.m */,
+				9AE3DD3B1C3064BD003184AD /* NSObject+CYLDeallocBlockExecutor.h */,
+				9AE3DD3C1C3064BD003184AD /* NSObject+CYLDeallocBlockExecutor.m */,
+			);
+			path = CYLDeallocBlockExecutor;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -157,7 +155,6 @@
 			files = (
 				9ACCE55A1C30371B00D98916 /* LaunchScreen.storyboard in Resources */,
 				9ACCE5591C30371B00D98916 /* Assets.xcassets in Resources */,
-				9ACCE55C1C30371B00D98916 /* Info.plist in Resources */,
 				9ACCE55B1C30371B00D98916 /* Main.storyboard in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -172,8 +169,8 @@
 				9ACCE55E1C30371B00D98916 /* ViewController.m in Sources */,
 				9ACCE55D1C30371B00D98916 /* main.m in Sources */,
 				9ACCE5681C303E0000D98916 /* UIView+ThemeManager.m in Sources */,
-				9ACCE5641C30382200D98916 /* CYLDeallocExecutor.m in Sources */,
-				9ACCE5611C3037A200D98916 /* NSObject+CYLDeallocBlockExecutor.m in Sources */,
+				9AE3DD3D1C3064BD003184AD /* CYLDeallocExecutor.m in Sources */,
+				9AE3DD3E1C3064BD003184AD /* NSObject+CYLDeallocBlockExecutor.m in Sources */,
 				9ACCE5581C30371B00D98916 /* AppDelegate.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

@@ -8,7 +8,7 @@
 
 #import <UIKit/UIKit.h>
 
-static NSString *const kThemeDidChangeNotification = @"ThemeDidChangeNotification";
+static NSString * const kThemeDidChangeNotification = @"ThemeDidChangeNotification";
 
 @interface UIView (ThemeManager)
 

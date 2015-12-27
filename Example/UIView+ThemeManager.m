@@ -10,8 +10,8 @@
 #import <objc/runtime.h>
 #import "CYLDeallocBlockExecutor.h"
 
-const void *kUIView_ThemeMap = &kUIView_ThemeMap;
-const void *kUIView_DeallocHelper = &kUIView_DeallocHelper;
+const void * kUIView_ThemeMap = &kUIView_ThemeMap;
+const void * kUIView_DeallocHelper = &kUIView_DeallocHelper;
 
 @implementation UIView (ThemeManager)
 
@@ -54,9 +54,9 @@ const void *kUIView_DeallocHelper = &kUIView_DeallocHelper;
 
 - (void)themeChangedWithDict:(NSDictionary *)themeMap {
     if ([themeMap[@"BackgroundColor"] isEqualToString:@"randomColor"]) {
-        self.backgroundColor = [UIColor colorWithRed:arc4random_uniform(256)/255.f
-                                               green:arc4random_uniform(256)/255.f
-                                                blue:arc4random_uniform(256)/255.f
+        self.backgroundColor = [UIColor colorWithRed:arc4random_uniform(256) / 255.f
+                                               green:arc4random_uniform(256) / 255.f
+                                                blue:arc4random_uniform(256) / 255.f
                                                alpha:1.f
                                 ];
     }
