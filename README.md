@@ -16,10 +16,10 @@ Hello block，byebye dealloc！一行代码代替dealloc完成“self-manager”
   2.  [应用场景](https://github.com/ChenYilong/CYLDeallocBlockExecutor#应用场景) 
     1.  [管理KVO与NSNotificationCenter的removeObserver操作](https://github.com/ChenYilong/CYLDeallocBlockExecutor#管理kvo与nsnotificationcenter的removeobserver操作) 
     2.   [模拟weak修饰的property的生命周期](https://github.com/ChenYilong/CYLDeallocBlockExecutor#模拟weak修饰的property的生命周期) 
-  3.  [ 使用CYLDeallocBlockExecutor ](https://github.com/ChenYilong/CYLDeallocBlockExecutor#使用CYLDeallocBlockExecutor) 
+  3.  [ 使用CYLDeallocBlockExecutor ](https://github.com/ChenYilong/CYLDeallocBlockExecutor#使用cyldeallocblockexecutor) 
     1.   [第一步：使用cocoaPods导入CYLDeallocBlockExecutor](https://github.com/ChenYilong/CYLDeallocBlockExecutor#第一步使用cocoapods导入CYLDeallocBlockExecutor) 
     2.  [第二步：一行代码搞定](https://github.com/ChenYilong/CYLDeallocBlockExecutor#第二步一行代码搞定) 
-    3.  [第三步：一行代码搞定](https://github.com/ChenYilong/CYLDeallocBlockExecutor#第三步) 
+    3.  [第三步](https://github.com/ChenYilong/CYLDeallocBlockExecutor#第三步) 
   4.  [ 运行Demo ](https://github.com/ChenYilong/CYLDeallocBlockExecutor#运行demo) 
 
 ## 与其他框架的区别
@@ -188,7 +188,6 @@ pod update --verbose
 运行好 demo后，请点击设备屏幕，会触发换主题（背景）的事件。
 
 
-## 适用于多种应用应用场景
 （更多iOS开发干货，欢迎关注  [微博@iOS程序犭袁](http://weibo.com/luohanchenyilong/) ）
 
 ----------
