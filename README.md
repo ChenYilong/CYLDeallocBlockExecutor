@@ -13,14 +13,14 @@ Hello block，byebye dealloc！一行代码代替dealloc完成“self-manager”
 ## 导航
 
   1.  [ 与其他框架的区别 ](https://github.com/ChenYilong/CYLDeallocBlockExecutor#与其他框架的区别) 
-  2.  [应用场景](https://github.com/ChenYilong/CYLDeallocBlockExecutor#应用场景) 
-    1.  [管理KVO与NSNotificationCenter的removeObserver操作](https://github.com/ChenYilong/CYLDeallocBlockExecutor#管理kvo与nsnotificationcenter的removeobserver操作) 
-    2.   [模拟weak修饰的property的生命周期](https://github.com/ChenYilong/CYLDeallocBlockExecutor#模拟weak修饰的property的生命周期) 
-  3.  [ 使用CYLDeallocBlockExecutor ](https://github.com/ChenYilong/CYLDeallocBlockExecutor#使用cyldeallocblockexecutor) 
+  2.  [ 使用CYLDeallocBlockExecutor ](https://github.com/ChenYilong/CYLDeallocBlockExecutor#使用cyldeallocblockexecutor) 
     1.   [第一步：使用cocoaPods导入CYLDeallocBlockExecutor](https://github.com/ChenYilong/CYLDeallocBlockExecutor#第一步使用cocoapods导入CYLDeallocBlockExecutor) 
     2.  [第二步：一行代码搞定](https://github.com/ChenYilong/CYLDeallocBlockExecutor#第二步一行代码搞定) 
     3.  [第三步](https://github.com/ChenYilong/CYLDeallocBlockExecutor#第三步) 
-  4.  [ 运行Demo ](https://github.com/ChenYilong/CYLDeallocBlockExecutor#运行demo) 
+  3.  [ 运行Demo ](https://github.com/ChenYilong/CYLDeallocBlockExecutor#运行demo)
+  4.  [应用场景](https://github.com/ChenYilong/CYLDeallocBlockExecutor#应用场景) 
+    1.  [管理KVO与NSNotificationCenter的removeObserver操作](https://github.com/ChenYilong/CYLDeallocBlockExecutor#管理kvo与nsnotificationcenter的removeobserver操作) 
+    2.   [模拟weak修饰的property的生命周期](https://github.com/ChenYilong/CYLDeallocBlockExecutor#模拟weak修饰的property的生命周期)  
 
 ## 与其他框架的区别
 
@@ -35,82 +35,6 @@ Hello block，byebye dealloc！一行代码代替dealloc完成“self-manager”
 （学习交流群：523070828）
 
 
-
-
-## 应用场景
-
-### 管理KVO与NSNotificationCenter的removeObserver操作
-
-在 `KVO` 、 `NSNotificationCenter` 在 `addObserver` 后，都需要在  `dealloc`  方法中进行 `removeObserver`  操作，一方面代码分散，不易维护，
-
-
-另一方面如果想在分类中使用 `KVO` 、 `NSNotificationCenter` ，而你又想在  `dealloc`  中进行 `removeObserver` 操作，那应该怎么办？
-
-答：你需要借助 [CYLDeallocBlockExecutor](https://github.com/ChenYilong/CYLDeallocBlockExecutor) ！
-
-Demo 中给出了一个换皮肤的 Demo，演示：
-
-所有的的操作全部都在 Setter 方法中进行，无需借助 Dealloc 方法。
-
- ```Objective-C
-- (void)setThemeMap:(NSDictionary *)themeMap {
-    objc_setAssociatedObject(self, &kUIView_ThemeMap, themeMap, OBJC_ASSOCIATION_COPY_NONATOMIC);
-    if (themeMap) {
-        // Need to removeObserver in dealloc
-        // NOTE: need to be __unsafe_unretained because __weak var will be reset to nil in dealloc
-        __unsafe_unretained typeof(self) weakSelf = self;
-        [self cyl_executeAtDealloc:^{
-            [[NSNotificationCenter defaultCenter] removeObserver:weakSelf];
-        }];
-        [[NSNotificationCenter defaultCenter] removeObserver:self
-                                                        name:kThemeDidChangeNotification
-                                                      object:nil];
-        [[NSNotificationCenter defaultCenter] addObserver:self
-                                                 selector:@selector(themeChanged:)
-                                                     name:kThemeDidChangeNotification
-                                                   object:nil
-         ];
-        [self themeChangedWithDict:themeMap];
-    } else {
-        [[NSNotificationCenter defaultCenter] removeObserver:self
-                                                        name:kThemeDidChangeNotification
-                                                      object:nil];
-    }
-}
- ```
-
-### 模拟weak修饰的property的生命周期
-
-我曾经在我的一篇博文中使用过类似的策略：
-
-
-全文见： [《runtime 如何实现 weak 属性》]( https://github.com/ChenYilong/iOSInterviewQuestions/blob/master/01《招聘一个靠谱的iOS》面试题参考答案/《招聘一个靠谱的iOS》面试题参考答案（上）.md#8-runtime-如何实现-weak-属性 ) 
-
-下面做下简要叙述：
-
-
-我们都知道@property的 weak 属性：
-
-
- > weak 此特质表明该属性定义了一种“非拥有关系” (nonowning relationship)。为这种属性设置新值时，设置方法既不保留新值，也不释放旧值。此特质同 assign 类似， 然而在属性所指的对象遭到摧毁时，属性值也会清空(nil out)。
-
-
-那么如何让不使用weak修饰的@property，拥有weak的效果？
-
-代码如下所示：
-
-
- ```Objective-C
-- (void)setObject:(NSObject *)object
-{
-    objc_setAssociatedObject(self, "object", object, OBJC_ASSOCIATION_ASSIGN);
-    [object cyl_executeAtDealloc:^{
-        _object = nil;
-    }];
-}
- ```
-
-这样就达到了当 objet 为 nil 时，自动将 self.object 置 nil 的目的，从而就模拟了weak修饰的property的生命周期。
 
 ## 使用[CYLDeallocBlockExecutor](https://github.com/ChenYilong/CYLDeallocBlockExecutor)
 
@@ -187,6 +111,89 @@ pod update --verbose
 
 运行好 demo后，请点击设备屏幕，会触发换主题（背景）的事件。
 
+
+## 应用场景
+
+### 管理KVO与NSNotificationCenter的removeObserver操作
+
+在 `KVO` 、 `NSNotificationCenter` 在 `addObserver` 后，都需要在  `dealloc`  方法中进行 `removeObserver`  操作，一方面代码分散，不易维护，
+
+
+另一方面如果想在分类中使用 `KVO` 、 `NSNotificationCenter` ，而你又想在  `dealloc`  中进行 `removeObserver` 操作，那应该怎么办？
+
+答：你需要借助 [CYLDeallocBlockExecutor](https://github.com/ChenYilong/CYLDeallocBlockExecutor) ！
+
+Demo 中给出了一个换皮肤的 Demo，演示：
+
+所有的的操作全部都在 Setter 方法中进行，无需借助 Dealloc 方法。
+
+ ```Objective-C
+- (void)setThemeMap:(NSDictionary *)themeMap {
+    objc_setAssociatedObject(self, &kUIView_ThemeMap, themeMap, OBJC_ASSOCIATION_COPY_NONATOMIC);
+    if (themeMap) {
+        // Need to removeObserver in dealloc
+        // NOTE: need to be __unsafe_unretained because __weak var will be reset to nil in dealloc
+        __unsafe_unretained typeof(self) weakSelf = self;
+        [self cyl_executeAtDealloc:^{
+            [[NSNotificationCenter defaultCenter] removeObserver:weakSelf];
+        }];
+        [[NSNotificationCenter defaultCenter] removeObserver:self
+                                                        name:kThemeDidChangeNotification
+                                                      object:nil];
+        [[NSNotificationCenter defaultCenter] addObserver:self
+                                                 selector:@selector(themeChanged:)
+                                                     name:kThemeDidChangeNotification
+                                                   object:nil
+         ];
+        [self themeChangedWithDict:themeMap];
+    } else {
+        [[NSNotificationCenter defaultCenter] removeObserver:self
+                                                        name:kThemeDidChangeNotification
+                                                      object:nil];
+    }
+}
+ ```
+
+对应的时序图如下所示：
+
+
+![enter image description here](http://i68.tinypic.com/zx7kgp.jpg)
+
+直接从看图里的第8步骤开始看：
+ [CYLDeallocBlockExecutor](https://github.com/ChenYilong/CYLDeallocBlockExecutor) 所起作用的地方从第8步骤开始。
+
+### 模拟weak修饰的property的生命周期
+
+我曾经在我的一篇博文中使用过类似的策略：
+
+
+全文见： [《runtime 如何实现 weak 属性》]( https://github.com/ChenYilong/iOSInterviewQuestions/blob/master/01《招聘一个靠谱的iOS》面试题参考答案/《招聘一个靠谱的iOS》面试题参考答案（上）.md#8-runtime-如何实现-weak-属性 ) 
+
+下面做下简要叙述：
+
+
+我们都知道@property的 weak 属性：
+
+
+ > weak 此特质表明该属性定义了一种“非拥有关系” (nonowning relationship)。为这种属性设置新值时，设置方法既不保留新值，也不释放旧值。此特质同 assign 类似， 然而在属性所指的对象遭到摧毁时，属性值也会清空(nil out)。
+
+
+那么如何让不使用weak修饰的@property，拥有weak的效果？
+
+代码如下所示：
+
+
+ ```Objective-C
+- (void)setObject:(NSObject *)object
+{
+    objc_setAssociatedObject(self, "object", object, OBJC_ASSOCIATION_ASSIGN);
+    [object cyl_executeAtDealloc:^{
+        _object = nil;
+    }];
+}
+ ```
+
+这样就达到了当 objet 为 nil 时，自动将 self.object 置 nil 的目的，从而就模拟了weak修饰的property的生命周期。
 
 （更多iOS开发干货，欢迎关注  [微博@iOS程序犭袁](http://weibo.com/luohanchenyilong/) ）
 
