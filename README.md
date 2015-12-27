@@ -96,7 +96,7 @@ Demo 中给出了一个换皮肤的 Demo，演示：
 
 那么如何让不使用weak修饰的@property，拥有weak的效果？
 
-代码如下所示
+代码如下所示:
 
 
  ```Objective-C
