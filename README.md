@@ -13,13 +13,14 @@ Hello block，byebye dealloc！一行代码代替dealloc完成“self-manager”
 ## 导航
 
   1.  [ 与其他框架的区别 ](https://github.com/ChenYilong/CYLDeallocBlockExecutor#与其他框架的区别) 
-  2.  [ 集成后的效果 ](https://github.com/ChenYilong/CYLDeallocBlockExecutor#集成后的效果) 
+  2.  [应用场景](https://github.com/ChenYilong/CYLDeallocBlockExecutor#应用场景) 
+    1.  [管理KVO与NSNotificationCenter的removeObserver操作](https://github.com/ChenYilong/CYLDeallocBlockExecutor#管理kvo与nsnotificationcenter的removeobserver操作) 
+    2.   [模拟weak修饰的property的生命周期](https://github.com/ChenYilong/CYLDeallocBlockExecutor#模拟weak修饰的property的生命周期) 
   3.  [ 使用CYLDeallocBlockExecutor ](https://github.com/ChenYilong/CYLDeallocBlockExecutor#使用CYLDeallocBlockExecutor) 
+    1.   [第一步：使用cocoaPods导入CYLDeallocBlockExecutor](https://github.com/ChenYilong/CYLDeallocBlockExecutor#第一步使用cocoapods导入CYLDeallocBlockExecutor) 
+    2.  [第二步：一行代码搞定](https://github.com/ChenYilong/CYLDeallocBlockExecutor#第二步一行代码搞定) 
+    3.  [第三步：一行代码搞定](https://github.com/ChenYilong/CYLDeallocBlockExecutor#第三步) 
   4.  [ 运行Demo ](https://github.com/ChenYilong/CYLDeallocBlockExecutor#运行demo) 
-  5.  [ 适用于多种应用应用场景 ](https://github.com/ChenYilong/CYLDeallocBlockExecutor#适用于多种应用应用场景) 
-   1.  [ 网络故障 ](https://github.com/ChenYilong/CYLDeallocBlockExecutor#网络故障) 
-   2.  [ 暂无数据 ](https://github.com/ChenYilong/CYLDeallocBlockExecutor#暂无数据) 
-
 
 ## 与其他框架的区别
 
@@ -96,7 +97,7 @@ Demo 中给出了一个换皮肤的 Demo，演示：
 
 那么如何让不使用weak修饰的@property，拥有weak的效果？
 
-代码如下所示:
+代码如下所示：
 
 
  ```Objective-C
@@ -116,7 +117,7 @@ Demo 中给出了一个换皮肤的 Demo，演示：
 三步完成：
 
   1.  [ 第一步：使用cocoaPods导入CYLDeallocBlockExecutor ](https://github.com/ChenYilong/CYLDeallocBlockExecutor#第一步使用cocoapods导入CYLDeallocBlockExecutor) 
-  2.  [第二步：遵循协议](https://github.com/ChenYilong/CYLDeallocBlockExecutor#第二步遵循协议) 
+  2.  [第二步：一行代码搞定](https://github.com/ChenYilong/CYLDeallocBlockExecutor#第二步一行代码搞定) 
   3.  [第三步](https://github.com/ChenYilong/CYLDeallocBlockExecutor#第三步) 
 
 ### 第一步：使用CocoaPods导入CYLDeallocBlockExecutor
