@@ -183,6 +183,10 @@ pod update --verbose
 
 在 demo 中我们使用了 UIView 的一个分类来管理皮肤，并在分类中设置了一个皮肤主题属性，并且使用了通知进行换皮肤操作，所有的 `addObserver` 和 `removeObserver` 操作都在皮肤属性的 setter 方法中实现。
 
+
+运行好 demo后，请点击设备屏幕，会触发换主题（背景）的事件。
+
+
 ## 适用于多种应用应用场景
 （更多iOS开发干货，欢迎关注  [微博@iOS程序犭袁](http://weibo.com/luohanchenyilong/) ）
 
