@@ -7,7 +7,7 @@ Pod::Spec.new do |s|
   s.license      = { :type => 'MIT', :file => 'LICENSE' }
   s.author       = { "ChenYilong" => "luohanchenyilong@163.com" }
   s.platform     = :ios, '6.0'
-  s.source       = { :git => "https://github.com/ChenYilong/CYLDeallocBlockExecutor.git", :tag => s.version.to_s }
+  s.source       = { :git => "https://github.com/ChenYilong/CYLDeallocBlockExecutor.git", :commit => "44b7222317ab546058e8733a577dc0797826239a" }
   s.source_files  = 'CYLDeallocBlockExecutor', 'CYLDeallocBlockExecutor/**/*.{h,m}'
   s.requires_arc = true
 end
