@@ -54,13 +54,28 @@ Hello block，byebye dealloc！一行代码代替dealloc完成“self-manager”
 
 然后使用 `cocoaPods` 进行安装：
 
+
+
+如果你尚未安装 Cocoapods, 运行以下命令进行安装:
+
+>  gem install cocoapods
+
+
+安装依赖
+
+
+
 建议使用如下方式：
 
  ```Objective-C
- # 不升级CocoaPods的spec仓库
-pod update --verbose 
+# 禁止升级CocoaPods的spec仓库，否则会卡在 Analyzing dependencies ，非常慢 
+# 如果提示找不到库，则可去掉 --no-repo-update
+pod update --verbose --no-repo-update
  ```
 
+如果提示找不到库，则可去掉 --no-repo-update
+
+>  pod update
 
 
 ### 第二步：导入头文件
