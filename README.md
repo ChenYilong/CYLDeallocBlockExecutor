@@ -44,38 +44,46 @@ Hello block，byebye dealloc！一行代码代替dealloc完成“self-manager”
   2.  [第二步：一行代码搞定](https://github.com/ChenYilong/CYLDeallocBlockExecutor#第二步一行代码搞定) 
   3.  [第三步](https://github.com/ChenYilong/CYLDeallocBlockExecutor#第三步) 
 
+
 ### 第一步：使用CocoaPods导入CYLDeallocBlockExecutor
 
-在 `Podfile` 中如下导入：
+
+在 `Podfile` 中进行如下导入：
+
 
  ```Objective-C
- pod 'CYLDeallocBlockExecutor'
+pod 'CYLDeallocBlockExecutor'
  ```
+
+
 
 然后使用 `cocoaPods` 进行安装：
 
+如果尚未安装 Cocoapods, 运行以下命令进行安装:
 
 
-如果你尚未安装 Cocoapods, 运行以下命令进行安装:
-
->  gem install cocoapods
-
-
-安装依赖
+ ```Objective-C
+gem install cocoapods
+ ```
 
 
+安装成功后就可以安装依赖了：
 
 建议使用如下方式：
 
  ```Objective-C
-# 禁止升级CocoaPods的spec仓库，否则会卡在 Analyzing dependencies ，非常慢 
-# 如果提示找不到库，则可去掉 --no-repo-update
-pod update --verbose --no-repo-update
+ # 禁止升级CocoaPods的spec仓库，否则会卡在 Analyzing dependencies ，非常慢 
+ pod update --verbose --no-repo-update
  ```
+
 
 如果提示找不到库，则可去掉 --no-repo-update
 
->  pod update
+
+ ```Objective-C
+pod update
+ ```
+
 
 
 ### 第二步：导入头文件
