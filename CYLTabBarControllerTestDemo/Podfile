@@ -1,0 +1,5 @@
+target "TestDemo" do
+
+pod 'CYLTabBarController'
+
+end

@@ -21,6 +21,7 @@ Hello block，byebye dealloc！一行代码代替dealloc完成“self-manager”
   4.  [应用场景](https://github.com/ChenYilong/CYLDeallocBlockExecutor#应用场景) 
     1.  [管理KVO与NSNotificationCenter的removeObserver操作](https://github.com/ChenYilong/CYLDeallocBlockExecutor#管理kvo与nsnotificationcenter的removeobserver操作) 
     2.   [模拟weak修饰的property的生命周期](https://github.com/ChenYilong/CYLDeallocBlockExecutor#模拟weak修饰的property的生命周期)  
+    3.   [更加安全地在 viewDidLoad 里管理应用的生命周期](https://github.com/ChenYilong/CYLDeallocBlockExecutor#更加安全地在viewdidload里管理应用的生命周期) 
 
 ## 与其他框架的区别
 
@@ -217,6 +218,47 @@ Demo 中给出了一个换皮肤的 Demo，演示：
  ```
 
 这样就达到了当 objet 为 nil 时，自动将 self.object 置 nil 的目的，从而就模拟了weak修饰的property的生命周期。
+
+### 更加安全地在 viewDidLoad 里管理应用的生命周期
+
+在我的一个框架 [CYLTabBarController](https://github.com/ChenYilong/CYLTabBarController) 中，有一个KVO注册与反注册的实现：
+
+ ```Objective-C
+- (void)viewDidLoad {
+    [super viewDidLoad];
+    // 处理tabBar，使用自定义 tabBar 添加 发布按钮
+    [self setUpTabBar];
+    // KVO注册监听
+    if (!self.isObservingSwappableImageViewDefaultOffset) {
+        [self.tabBar addObserver:self forKeyPath:@"swappableImageViewDefaultOffset" options:NSKeyValueObservingOptionNew context:CYLSwappableImageViewDefaultOffsetContext];
+        self.observingSwappableImageViewDefaultOffset = YES;
+    }
+    self.delegate = self;
+}
+
+- (void)dealloc {
+    // KVO反注册
+    if (self.isObservingSwappableImageViewDefaultOffset) {
+        [self.tabBar removeObserver:self forKeyPath:@"swappableImageViewDefaultOffset"];
+    }
+}
+ ```
+
+也许你会很奇怪为什么有一个flag在做判断，那是因为 viewDidLoad 在一些场景下没有被调用，但 dealloc 却被调用了。。。什么场景？当 [CYLTabBarController](https://github.com/ChenYilong/CYLTabBarController) 被作为StoryBoard的初始控制器，但是你又重写了下面的方法：
+
+ ```Objective-C
+- (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
+    if (!self.isUserLogin) {
+        LoginViewController *login = [[UIStoryboard storyboardWithName:@"Main" bundle:nil] instantiateViewControllerWithIdentifier:@"LoginViewController"];
+        self.window.rootViewController = login;
+    }
+    return YES;
+}
+ ```
+
+Demo 我已经放在仓库里，叫做 CYLTabBarControllerTestDemo
+，[CYLTabBarController](https://github.com/ChenYilong/CYLTabBarController) 版本 1.5.5 及之前的版本因为没有 flag 判断，直接会 crash 掉。
+这种场景下我这里采用了 flag 来规避，其实也可以用 CYLDeallocBlockExecutor 来达到目的。在 viewDidLoad 做 dealloc 该做的事，即使 viewDidLoad 没有被调用，也没有关系，block里的内容也不会被执行。
 
 （更多iOS开发干货，欢迎关注  [微博@iOS程序犭袁](http://weibo.com/luohanchenyilong/) ）
 
