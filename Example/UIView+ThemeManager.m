@@ -20,7 +20,7 @@ const void * kUIView_DeallocHelper = &kUIView_DeallocHelper;
     if (themeMap) {
         // Need to removeObserver in dealloc
         // NOTE: need to be __unsafe_unretained because __weak var will be reset to nil in dealloc
-        __unsafe_unretained typeof(self) weakSelf = self;
+        __unsafe_unretained __typeof(self) weakSelf = self;
         [self cyl_executeAtDealloc:^{
             [[NSNotificationCenter defaultCenter] removeObserver:weakSelf];
         }];
@@ -64,14 +64,16 @@ const void * kUIView_DeallocHelper = &kUIView_DeallocHelper;
 
 @end
 
-// 如果不适用CYLDeallocBlockExecutor，则代码如下所示：
+// 如果不使用CYLDeallocBlockExecutor，则代码如下所示：
+
+
 //- (void)setThemeMap:(NSDictionary *)themeMap {
 //    objc_setAssociatedObject(self, &kUIView_ThemeMap, themeMap, OBJC_ASSOCIATION_COPY_NONATOMIC);
 //    if (themeMap) {
 //        // Need to removeObserver in dealloc
 //        if (objc_getAssociatedObject(self, &kUIView_DeallocHelper) == nil) {
 //            // NOTE: need to be __unsafe_unretained because __weak var will be reset to nil in dealloc
-//            __unsafe_unretained typeof(self) weakSelf = self;
+//            __unsafe_unretained __typeof(self) weakSelf = self;
 //            id deallocHelper = [self addDeallocBlock:^{
 //                [[NSNotificationCenter defaultCenter] removeObserver:weakSelf];
 //            }];
