@@ -11,6 +11,6 @@
 
 @interface NSObject (CYLDeallocBlockExecutor)
 
-- (void)cyl_executeAtDealloc:(DeallocExecutorBlock)block;
+- (void)cyl_executeAtDealloc:(CYLDeallocExecutorBlock)block;
 
 @end

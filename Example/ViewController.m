@@ -9,10 +9,11 @@
 #import "ViewController.h"
 #import "UIView+ThemeManager.h"
 #import "CYLDeallocBlockExecutor.h"
-
+typedef void (^CYLDeallocDemoBlock)();
 @interface ViewController ()
 
 @property (nonatomic, assign, getter=isBySetter) BOOL bySetter;
+@property (nonatomic, copy) CYLDeallocDemoBlock deallocDemoBlock;
 
 @end
 
@@ -23,6 +24,20 @@
     self.view.themeMap = @{ @"BackgroundColor" : @"randomColor" };
     self.bySetter = YES;
     // Do any additional setup after loading the view, typically from a nib.
+    
+    
+   
+}
+- (void)didReceiveMemoryWarning {
+    self.deallocDemoBlock = ^() {
+        self;
+    };
+    [self cyl_executeAtDealloc:^{
+        NSLog(@"🔴类名与方法名：%@（在第%@行），描述：%@", @(__PRETTY_FUNCTION__), @(__LINE__), @"");
+    }];
+}
+- (void)dealloc {
+    NSLog(@"🔴类名与方法名：%@（在第%@行），描述：%@", @(__PRETTY_FUNCTION__), @(__LINE__), @"");
 }
 
 - (void)touchesBegan:(NSSet<UITouch *> *)touches withEvent:(UIEvent *)event {

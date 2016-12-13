@@ -10,13 +10,13 @@
 
 @interface CYLDeallocExecutor()
 
-@property (nonatomic, copy) DeallocExecutorBlock deallocExecutorBlock;
+@property (nonatomic, copy) CYLDeallocExecutorBlock deallocExecutorBlock;
 
 @end
 
 @implementation CYLDeallocExecutor
 
-- (id)initWithBlock:(DeallocExecutorBlock)deallocExecutorBlock {
+- (id)initWithBlock:(CYLDeallocExecutorBlock)deallocExecutorBlock {
     self = [super init];
     if (self) {
         _deallocExecutorBlock = [deallocExecutorBlock copy];

@@ -8,10 +8,10 @@
 
 #import <Foundation/Foundation.h>
 
-typedef void (^DeallocExecutorBlock)(void);
+typedef void (^CYLDeallocExecutorBlock)(void);
 
 @interface CYLDeallocExecutor : NSObject
 
-- (id)initWithBlock:(DeallocExecutorBlock)block;
+- (id)initWithBlock:(CYLDeallocExecutorBlock)block;
 
 @end

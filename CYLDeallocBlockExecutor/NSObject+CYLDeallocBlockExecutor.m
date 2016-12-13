@@ -9,15 +9,15 @@
 #import "NSObject+CYLDeallocBlockExecutor.h"
 #import <objc/runtime.h>
 
-const void * deallocExecutorBlockKey = &deallocExecutorBlockKey;
+const void * CYLDeallocExecutorBlockKey = &CYLDeallocExecutorBlockKey;
 
 @implementation NSObject (CYLDeallocBlockExecutor)
 
-- (void)cyl_executeAtDealloc:(DeallocExecutorBlock)block {
-    if (block) {
+- (void)cyl_executeAtDealloc:(CYLDeallocExecutorBlock)block {
+    if (block && !objc_getAssociatedObject(self, CYLDeallocExecutorBlockKey)) {
         CYLDeallocExecutor *executor = [[CYLDeallocExecutor alloc] initWithBlock:block];
         objc_setAssociatedObject(self,
-                                 deallocExecutorBlockKey,
+                                 CYLDeallocExecutorBlockKey,
                                  executor,
                                  OBJC_ASSOCIATION_RETAIN);
     }
