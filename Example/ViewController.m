@@ -16,7 +16,7 @@
 }
 
 @property (nonatomic, assign, getter=isBySetter) BOOL bySetter;
-@property (nonatomic, strong)NSNumber *aNumber;
+@property (nonatomic, strong) NSNumber *aNumber;
 @end
 
 @implementation ViewController
@@ -40,19 +40,23 @@
     
     
     [self cyl_executeAtDealloc:^{
-        
         __strong typeof(self) strongSelf = weakSelf;
-        
         //NSNumber *n = strongSelf->_number; //会挂 weakSelf还是具有地址值,strongSelf为nil. (编译器不允许weakSelf->访问指针)
         
         NSNumber *n1 = weakSelf.aNumber;
         NSNumber *n2 = strongSelf.aNumber;
-        NSLog(@"%@,%@",n1,n2); //(null),(null)  尝试读取实例变量,里面的变量均为nil了
-        
+        NSLog(@"%@,%@", n1, n2); //(null),(null)  尝试读取实例变量,里面的变量均为nil了
         
         NSNumber *n3 = unsafeSelf.aNumber; //unsafeSelf也具有地址值
-        NSLog(@"%@",n3);//(null)
+        NSLog(@"%@", n3);//(null)
         
+    }];
+}
+
+- (void)didReceiveMemoryWarning {
+    //模拟对self多次执行 `cyl_executeAtDealloc:` 方法
+    [self cyl_executeAtDealloc:^{
+        NSLog(@"🔴类名与方法名：%@（在第%@行），描述：%@", @(__PRETTY_FUNCTION__), @(__LINE__), @"");
     }];
 }
 

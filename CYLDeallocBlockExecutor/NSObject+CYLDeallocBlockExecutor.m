@@ -9,24 +9,24 @@
 #import "NSObject+CYLDeallocBlockExecutor.h"
 #import <objc/runtime.h>
 
-const void * deallocExecutorsKey = &deallocExecutorsKey;
+const void *CYLDeallocExecutorsKey = &CYLDeallocExecutorsKey;
 
 @implementation NSObject (CYLDeallocBlockExecutor)
 
 - (NSHashTable *)cyl_deallocExecutors {
     
-    NSHashTable *table = objc_getAssociatedObject(self,deallocExecutorsKey);
+    NSHashTable *table = objc_getAssociatedObject(self,CYLDeallocExecutorsKey);
     
     if (!table) {
         table = [NSHashTable hashTableWithOptions:NSPointerFunctionsStrongMemory];
-        objc_setAssociatedObject(self, deallocExecutorsKey, table, OBJC_ASSOCIATION_RETAIN);
+        objc_setAssociatedObject(self, CYLDeallocExecutorsKey, table, OBJC_ASSOCIATION_RETAIN);
     }
     
     return table;
 }
 
 
-- (void)cyl_executeAtDealloc:(DeallocExecutorBlock)block {
+- (void)cyl_executeAtDealloc:(CYLDeallocExecutorBlock)block {
     if (block) {
         CYLDeallocExecutor *executor = [[CYLDeallocExecutor alloc] initWithBlock:block];
         
