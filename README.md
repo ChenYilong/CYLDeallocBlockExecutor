@@ -2,12 +2,9 @@
 
 Hello block，byebye dealloc！一行代码代替dealloc完成“self-manager”
 
-
 <p align="center">
-![pod-v1.0.0](https://img.shields.io/badge/pod-v1.0.0-brightgreen.svg)
-![Objective--C-compatible](https://img.shields.io/badge/Objective--C-compatible-orange.svg)   ![platform-iOS-6.0+](https://img.shields.io/badge/platform-iOS%206.0%2B-ff69b4.svg)
+<a href=""><img src="https://img.shields.io/badge/pod-v1.1.2-brightgreen.svg"></a> <a href=""><img src="https://img.shields.io/badge/Objective--C-compatible-orange.svg"></a> <a href=""><img src="https://img.shields.io/badge/platform-iOS%206.0%2B-ff69b4.svg"></a>
 </a>
-
 
 
 ## 导航
