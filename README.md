@@ -26,7 +26,7 @@ Hello block，byebye dealloc！一行代码代替dealloc完成“self-manager”
 -------------|-------------|-------------
 1 | 轻量级、无污染 | 基于 NSObject 分类，无污染，适用于任何 Objective-C 对象，比基于子类化、继承的框架更加轻量级
 2 | 高性能 | 使用 runtime 的对象关联（或称为关联引用）技术，随着关联对象的 dealloc，对应的 block 自发执行，性能消耗极低。
-3 | 简单，无学习成本 | 一行代码完成，仅需使用  `cyl_executeAtDealloc:`  中的 block 代替  `dealloc` 即可。自动检测对象的 dealloc 的时机，执行 block。
+3 | 简单，无学习成本 | 一行代码完成，仅需使用  `cyl_didDeallocWithSelfCallback:`  中的 block 代替  `dealloc` 即可。自动检测对象的 dealloc 的时机，执行 block。
 4 | 将分散的代码集中起来 | 你可以使用 [CYLDeallocBlockExecutor](https://github.com/ChenYilong/CYLDeallocBlockExecutor) 将  `KVO`  或 `NSNotificationCenter` 的 `addObserver` 和 `removeObserver`  操作集中放在一个位置，让代码更加直观，易于维护，demo 中也给出了相应的使用方法。
 5 |支持CocoaPods |容易集成
 
@@ -97,12 +97,12 @@ pod update
 一行代码代替 dealloc：
 
  ```Objective-C
-        [foo cyl_executeAtDealloc:^{
+        [foo cyl_didDeallocWithSelfCallback:^(__unsafe_unretained id owner, NSUInteger identifier) {
            // do something
         }];
  ```
 
-这里注意：在 `cyl_executeAtDealloc` 的参数 block 中不能使用 weak 修饰符修饰的 self，因为 weak 变量在 dealloc 中会被自定置为 nil。在使用 `cyl_executeAtDealloc` 你需要遵循一个准则：
+这里注意：在 `cyl_didDeallocWithSelfCallback` 的参数 block 中不能使用 weak 修饰符修饰的 self，因为 weak 变量在 dealloc 中会被自定置为 nil。在使用 `cyl_didDeallocWithSelfCallback` 你需要遵循一个准则：
 
  > 参数 block 中的内容可以完全放入 dealloc。
 
@@ -110,10 +110,8 @@ pod update
 
 
  ```Objective-C
-        // NOTE: need to be __unsafe_unretained because __weak var will be reset to nil in dealloc
-        __unsafe_unretained typeof(self) weakSelf = self;
-        [self cyl_executeAtDealloc:^{
-            [[NSNotificationCenter defaultCenter] removeObserver:weakSelf];
+        [self cyl_didDeallocWithSelfCallback:^(__unsafe_unretained id owner, NSUInteger identifier) {
+            [[NSNotificationCenter defaultCenter] removeObserver:owner];
         }];
  ```
 
@@ -154,8 +152,7 @@ Demo 中给出了一个换皮肤的 Demo，演示：
     if (themeMap) {
         // Need to removeObserver in dealloc
         // NOTE: need to be __unsafe_unretained because __weak var will be reset to nil in dealloc
-        __unsafe_unretained typeof(self) weakSelf = self;
-        [self cyl_executeAtDealloc:^{
+        [self cyl_didDeallocWithSelfCallback:^(__unsafe_unretained id weakSelf, NSUInteger identifier) {
             [[NSNotificationCenter defaultCenter] removeObserver:weakSelf];
         }];
         [[NSNotificationCenter defaultCenter] removeObserver:self
@@ -208,8 +205,8 @@ Demo 中给出了一个换皮肤的 Demo，演示：
 - (void)setObject:(NSObject *)object
 {
     objc_setAssociatedObject(self, "object", object, OBJC_ASSOCIATION_ASSIGN);
-    [object cyl_executeAtDealloc:^{
-        _object = nil;
+    [object cyl_didDeallocWithSelfCallback:^(__unsafe_unretained id owner, NSUInteger identifier) {
+        owner = nil;
     }];
 }
  ```
