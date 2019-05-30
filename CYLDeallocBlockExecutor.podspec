@@ -1,6 +1,6 @@
 Pod::Spec.new do |s|
   s.name         = "CYLDeallocBlockExecutor"
-  s.version      = "1.2.0"
+  s.version      = "1.3.0"
   s.summary      = "When object(iOS) is nil,then it can automaticely execute a block "
   s.description  = "It can observe object(iOS) being nil, or in other words, being dealloced, then automaticely execute a block."
   s.homepage     = "https://github.com/ChenYilong/CYLDeallocBlockExecutor"

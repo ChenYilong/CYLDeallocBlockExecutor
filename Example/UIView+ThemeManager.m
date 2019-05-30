@@ -10,6 +10,12 @@
 #import <objc/runtime.h>
 #import "CYLDeallocBlockExecutor.h"
 
+#if __has_include(<CYLDeallocBlockExecutor.h/CYLDeallocBlockExecutor.h.h>)
+#import <CYLDeallocBlockExecutor/CYLDeallocBlockExecutor.h.h>
+#else
+#import "CYLDeallocBlockExecutor.h"
+#endif
+
 const void * kUIView_ThemeMap = &kUIView_ThemeMap;
 const void * kUIView_DeallocHelper = &kUIView_DeallocHelper;
 
@@ -20,9 +26,10 @@ const void * kUIView_DeallocHelper = &kUIView_DeallocHelper;
     if (themeMap) {
         // Need to removeObserver in dealloc
         // NOTE: need to be __unsafe_unretained because __weak var will be reset to nil in dealloc
-        __unsafe_unretained __typeof(self) weakSelf = self;
-        [self cyl_executeAtDealloc:^{
-            [[NSNotificationCenter defaultCenter] removeObserver:weakSelf];
+        // __unsafe_unretained __typeof(self) weakSelf = self;
+        [self cyl_willDeallocWithSelfCallback:^(__unsafe_unretained id owner, NSUInteger identifier) {
+            NSLog(@"🔴类名与方法名：%@（在第%@行），描述：顺序执行：%@", @(__PRETTY_FUNCTION__), @(__LINE__), @(identifier));
+            [[NSNotificationCenter defaultCenter] removeObserver:owner];
         }];
         [[NSNotificationCenter defaultCenter] removeObserver:self
                                                         name:kThemeDidChangeNotification
@@ -45,9 +52,9 @@ const void * kUIView_DeallocHelper = &kUIView_DeallocHelper;
 }
 
 - (void)themeChanged:(NSNotification *)notification {
-        if (notification.userInfo == nil) {
-            return;
-        }
+    if (notification.userInfo == nil) {
+        return;
+    }
     NSDictionary *themeMap = [notification userInfo];
     [self themeChangedWithDict:themeMap];
 }
