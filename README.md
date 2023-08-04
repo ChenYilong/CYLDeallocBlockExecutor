@@ -175,7 +175,8 @@ Demo 中给出了一个换皮肤的 Demo，演示：
 对应的时序图如下所示：
 
 
-![enter image description here](http://i68.tinypic.com/zx7kgp.jpg)
+![CYLDeallocBlockExecutor](assets/16911207374398.jpg)
+
 
 直接从看图里的第8步骤开始看：
  [CYLDeallocBlockExecutor](https://github.com/ChenYilong/CYLDeallocBlockExecutor) 所起作用的地方从第8步骤开始。
@@ -257,6 +258,68 @@ Demo 我已经放在仓库里，叫做 CYLTabBarControllerTestDemo
 同时，如果用 KVO 监听 iVar，如果由于不能确定 iVar 是否为 nil，那么你就可以做出判断，只在有值时监听。同时，释放 KVO 的行为，就可以借助本库，放在这个是否有值的判断里。这样就达到了只在有值时监听，同时在 self 销毁时释放的效果。
 
 （更多iOS开发干货，欢迎关注  [微博@iOS程序犭袁](http://weibo.com/luohanchenyilong/) ）
+
+
+## 补充知识
+
+## 对应的Swift实现
+
+Objective-C 中 `__unsafe_unretained` 的行为对应的是 Swift 中的 `unowned` 相。两者都不会改变对象的引用计数，也不会将引用的对象设为 `nil` 当它被释放。
+
+它们的共同点是：如果你试图访问一个已经被释放的 `__unsafe_unretained` 或 `unowned` 引用，你会遇到未定义的行为，可能会导致程序崩溃。
+
+同样的, 在 Swift 中，如果你试图访问一个已经被释放的 unowned 引用，程序会立即崩溃。这是因为 unowned 是一个无主引用，当其引用的对象被销毁后，它并不会自动变为 nil，它依然保持对已经被销毁的对象的引用。
+
+这也就是为什么在使用 unowned 时，你需要确保在其生命周期内，被 unowned 引用的对象不会意外地消失。这样可以避免出现运行时错误。所以，你应当在使用 unowned 引用时，保证引用的对象在 unowned 引用的生命周期内始终存在。
+
+不过我们可以利用这个特性, 来实现本文中的功能, 下面为对应的 Swift 版本的代码示例:
+
+
+```swift
+class CYLDeallocHelper {
+    let deinitCallback: (AnyObject) -> Void
+    unowned let owner: AnyObject
+
+    init(owner: AnyObject, deinitCallback: @escaping (AnyObject) -> Void) {
+        self.deinitCallback = deinitCallback
+        self.owner = owner
+    }
+
+    deinit {
+        deinitCallback(owner)
+    }
+}
+
+extension NSObject {
+    private struct AssociatedKeys {
+        static var deallocHelper: UInt8 = 0
+    }
+
+    func cyl_willDealloc(deinitCallback: @escaping (AnyObject) -> Void) {
+        let helper = CYLDeallocHelper(owner: self, deinitCallback: deinitCallback)
+        objc_setAssociatedObject(self, &AssociatedKeys.deallocHelper, helper, .OBJC_ASSOCIATION_RETAIN)
+    }
+}
+
+class MyClass: NSObject {
+    override init() {
+        super.init()
+        self.cyl_willDealloc { unownedOwner in
+            print("\(unownedOwner) is being deallocated")
+            // For instance, NotificationCenter.default.removeObserver(unownedOwner)
+        }
+    }
+}
+
+var instance: MyClass? = MyClass()
+instance = nil  // Prints "<MyClass: 0x0000000100506240> is being deallocated"
+```
+
+在这个实现中，你可以在对象销毁前执行任何操作。你可以使用这种方式在对象销毁之前清理资源，发送通知，或者执行其他需要在对象销毁前完成的任务。
+
+我进行下代码分析: 
+在这个特殊的场景中，也就是在销毁对象之前执行某些操作，可以被称为 "deinit callback" 或者 "pre-destruction hook"。确实需要使用 unowned 而不是 weak。原因是在 deinit 阶段，对象已经在准备销毁，所以 weak 引用会自动置为 nil。因此，在 deinit 回调中，我们需要一个确保对象存在的引用，这就是 unowned 引用。
+
 
 ----------
 Posted by [微博@iOS程序犭袁](http://weibo.com/luohanchenyilong/)  
