@@ -4,6 +4,16 @@ This document tracks the lifecycle block API of CYLDeallocBlockExecutor: blocks 
 
 ## Task log
 
+### TODO: Example scene life cycle and Carthage (2026-11-22, branch `feat/lifecycle-callbacks`, PR #12)
+
+**Context.** Two open rows of the integration prerequisites table: the Example app has no scene life cycle, so it crashes at launch on iOS 27; Carthage needs a shared framework scheme.
+
+**Requirement (English translation of the prompt).** Continue with the open items.
+
+**Prompt (verbatim).** continue / in
+
+**Plan.** (1) Scene delegate for the Example, launched on an iOS 27.2 simulator. (2) A framework target with a shared scheme, checked with `carthage build --no-skip-current`.
+
 ### DONE: CI checks (2026-11-22, branch `feat/lifecycle-callbacks`, PR #12)
 
 **Context.** The repository has no CI. Every check in this document (lifecycle tests, `pod lib lint`, SPM build, Example build) ran only on the local Mac.
