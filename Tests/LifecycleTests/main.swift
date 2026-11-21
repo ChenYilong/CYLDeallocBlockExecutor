@@ -49,6 +49,39 @@ final class RawViewController: UIViewController {
     }
 }
 
+class PerformBaseViewController: UIViewController {
+    override func viewDidLoad() {
+        cyl_performLifecycle(.viewDidLoad, callSuper: { super.viewDidLoad() }) { log.append("baseBody") }
+    }
+}
+
+final class PerformSubViewController: PerformBaseViewController {
+    override func viewDidLoad() {
+        cyl_performLifecycle(.viewDidLoad, callSuper: { super.viewDidLoad() }) { log.append("subBody") }
+    }
+}
+
+/// Like CYLTabBarController's layout: super, core body, raw .end invoke.
+class CoreLayoutViewController: UIViewController {
+    override init(nibName: String?, bundle: Bundle?) {
+        super.init(nibName: nibName, bundle: bundle)
+        cyl_setManualLifecycleDispatch(true, for: [.viewDidLayoutSubviews], timings: [.end])
+        cyl_addLifecycleCallback(for: .viewDidLayoutSubviews, key: "core.after") { _, _, _ in log.append("core-after") }
+    }
+    required init?(coder: NSCoder) { fatalError() }
+    override func viewDidLayoutSubviews() {
+        super.viewDidLayoutSubviews()
+        log.append("core-body")
+        cyl_invokeLifecycleCallbacks(for: .viewDidLayoutSubviews, timing: .end)
+    }
+}
+
+final class AppPerformLayoutViewController: CoreLayoutViewController {
+    override func viewDidLayoutSubviews() {
+        cyl_performLifecycle(.viewDidLayoutSubviews, callSuper: { super.viewDidLayoutSubviews() }) { log.append("app-body") }
+    }
+}
+
 /// Like CYLTabBarController: no override, registers in init; an app subclass overrides.
 class CoreLikeViewController: UIViewController {
     override init(nibName: String?, bundle: Bundle?) {
@@ -285,13 +318,49 @@ func runTests(window: UIWindow) {
     // 15. README KVO scenario: viewDidLoad never runs, dealloc does; and the normal path.
     let kvoTarget = KVOTarget()
     autoreleasepool { _ = KVOObserverViewController(target: kvoTarget) }
+    check(kvoTarget.observationInfo == nil, "KVO: no viewDidLoad, nothing to remove")
+    var observedWhileAlive = false
     autoreleasepool {
         let observer = KVOObserverViewController(target: kvoTarget)
         observer.loadViewIfNeeded()
-        observer.loadViewIfNeeded()
+        observedWhileAlive = kvoTarget.observationInfo != nil
     }
     kvoTarget.value = 1
-    check(true, "README KVO scenario without a flag (no crash)")
+    check(observedWhileAlive && kvoTarget.observationInfo == nil, "KVO: observer removed by the dealloc block (README, no flag)")
+
+    // 16. Nested cyl_performLifecycle (base and subclass).
+    log = []
+    let nested = PerformSubViewController()
+    for timing in CYLLifecycleTiming.allCases {
+        nested.cyl_addLifecycleCallback(for: .viewDidLoad, timing: timing) { _, _, info in log.append("\(info.timing)") }
+    }
+    nested.loadViewIfNeeded()
+    check(log == ["beforeSuper", "afterSuper", "baseBody", "subBody", "end"], "nested cyl_performLifecycle fires each timing once", "\(log)")
+
+    // 17. Core override with raw .end, app subclass with cyl_performLifecycle.
+    log = []
+    let coreApp = AppPerformLayoutViewController(nibName: nil, bundle: nil)
+    coreApp.cyl_addLifecycleCallback(for: .viewDidLayoutSubviews, timing: .end) { _, _, _ in log.append("end-block") }
+    coreApp.loadViewIfNeeded()
+    log = []
+    coreApp.view.setNeedsLayout(); coreApp.view.layoutIfNeeded()
+    check(log == ["core-after", "core-body", "end-block", "app-body"], "core raw .end inside an app's cyl_performLifecycle", "\(log)")
+
+    // 18. UIKit subclasses.
+    for (name, controller) in [("UITableViewController", UITableViewController(style: .insetGrouped) as UIViewController),
+                               ("UINavigationController", UINavigationController(rootViewController: UIViewController()))] {
+        log = []
+        controller.cyl_addLifecycleCallback(for: .viewDidLayoutSubviews, timing: .afterSuper) { _, _, _ in log.append("after") }
+        controller.cyl_addLifecycleCallback(for: .viewDidLayoutSubviews, timing: .end) { _, _, _ in log.append("end") }
+        controller.loadViewIfNeeded()
+        controller.view.frame = CGRect(x: 0, y: 0, width: 300, height: 500)
+        controller.view.setNeedsLayout(); controller.view.layoutIfNeeded()
+        print("INFO \(name): viewDidLayoutSubviews .afterSuper fired: \(log.contains("after")), .end fired: \(log.contains("end"))")
+        log = []
+        controller.cyl_addLifecycleCallback(for: .viewWillAppear) { _, _, _ in log.append("willAppear") }
+        controller.beginAppearanceTransition(true, animated: false); controller.endAppearanceTransition()
+        check(log.contains("willAppear"), "\(name): viewWillAppear .afterSuper fires", "\(log)")
+    }
 
     // 13. Size transition: rotate the scene (asynchronous), then finish.
     var sizes: [CGSize] = []

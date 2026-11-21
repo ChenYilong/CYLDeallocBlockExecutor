@@ -197,12 +197,14 @@ final class CYLCallbackModel {
     }
 
     /**
-     * Whether the automatic hook dispatches `event` at `timing`: some block waits for it, the owner did not declare that
-     * point manual and is not dispatching the event with `cyl_performLifecycle` right now.
+     * Whether the automatic hook dispatches `event` at `timing`: some block waits for it and the owner did not declare that
+     * point manual; `.end` also waits while the owner runs `cyl_performLifecycle` for the event.
      */
     func dispatchesAutomatically(_ event: CYLLifecycleEvent, timing: CYLLifecycleTiming) -> Bool {
         lock.lock(); defer { lock.unlock() }
-        guard !manualPoints.contains(DispatchPoint(event: event, timing: timing)), performingCounts[event] == nil else { return false }
+        guard !manualPoints.contains(DispatchPoint(event: event, timing: timing)) else { return false }
+        // While an override runs cyl_performLifecycle, it fires .end itself at its outermost level.
+        guard timing != .end || performingCounts[event] == nil else { return false }
         return lifecycleEntries.values.contains { $0.event == event && $0.timing == timing }
     }
 

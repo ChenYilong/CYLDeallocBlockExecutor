@@ -211,8 +211,10 @@ extension NSObject {
     }
 
     /**
-     * Runs an override with all three timings in place: `.beforeSuper`, `callSuper`, `.afterSuper`, `body`, `.end`.
-     * The automatic hook skips this object and event meanwhile, so nothing runs twice.
+     * Runs an override so that its `.end` blocks fire after its body: `callSuper`, `body`, then `.end`.
+     * On a view controller, `.beforeSuper` / `.afterSuper` come from the automatic hook inside `callSuper`, and `.end`
+     * fires only at the outermost `cyl_performLifecycle` of the event (a subclass and its superclass can both use it)
+     * and not when the owner declared `.end` manual. Other owners (no hook) get all three timings from the outermost call.
      *
      *     override func viewDidLoad() {
      *         cyl_performLifecycle(.viewDidLoad, callSuper: { super.viewDidLoad() }) {
@@ -222,14 +224,22 @@ extension NSObject {
      */
     public func cyl_performLifecycle(_ event: CYLLifecycleEvent, info: CYLLifecycleInfo = CYLLifecycleInfo(),
                                      callSuper: () -> Void, body: () -> Void = {}) {
-        let model = cyl_callbackModel(create: false)
-        model?.beginPerforming(event)
-        defer { model?.endPerforming(event) }
-        cyl_fireLifecycle(event, timing: .beforeSuper, info: info)
+        guard let model = cyl_callbackModel(create: true) else { return }
+        let outermost = !model.isPerforming(event)
+        let hooked = self is UIViewController
+        model.beginPerforming(event)
+        defer { model.endPerforming(event) }
+        if outermost && !hooked {
+            cyl_fireLifecycle(event, timing: .beforeSuper, info: info)
+        }
         callSuper()
-        cyl_fireLifecycle(event, timing: .afterSuper, info: info)
+        if outermost && !hooked {
+            cyl_fireLifecycle(event, timing: .afterSuper, info: info)
+        }
         body()
-        cyl_fireLifecycle(event, timing: .end, info: info)
+        if outermost && !model.isManualDispatch(event, timing: .end) {
+            cyl_fireLifecycle(event, timing: .end, info: info)
+        }
     }
 
     /**

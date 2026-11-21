@@ -6,7 +6,7 @@ This document tracks the lifecycle block API of CYLDeallocBlockExecutor: blocks 
 
 ### DONE: lifecycle blocks for CYLTabBarController (2026-11-22, branch `feat/lifecycle-callbacks`, PR #12)
 
-**Result.** Score 100 (28 / 28). Evidence: `bash Tests/run-lifecycle-tests.sh <simulator UDID>` on iOS 27.2 (iPhone 18 Pro simulator, macOS 27.3, Xcode 27.2 27B52): `RESULT: PASS 26 passed, 0 failed` in both runs (exchange swizzle installed after and before the hooks). Example builds clean into a fresh derived data folder (only the old asset catalog warnings remain, see the prerequisites table).
+**Result.** Score 100 (28 / 28). Evidence: `bash Tests/run-lifecycle-tests.sh <simulator UDID>` on iOS 27.2 (iPhone 18 Pro simulator, macOS 27.3, Xcode 27.2 27B52): `RESULT: PASS 31 passed, 0 failed` in both runs (exchange swizzle installed after and before the hooks), in Debug and Release on iOS 27.2 and in Debug on iOS 17.5 (iPhone 15 simulator; the iOS 15.0 runtime does not run on macOS 27). `pod lib lint` (full build) passes. Example builds clean into a fresh derived data folder (only the old asset catalog warnings remain, see the prerequisites table).
 
 **Context.** The library only offers a dealloc block (`cyl_willDealloc(selfCallback:)`). CYLTabBarController has its own one-off layout block (`viewDidLayoutSubviewsBlock`, `invokeOnceViewDidLayoutSubViewsBlock`, `-cyl_rearmViewDidLayoutSubviewsBlockInvokeOnce`) and wants to replace such code with this library.
 
@@ -122,9 +122,18 @@ CYLTabBarController's overrides today call `super` first and then a `cyl…()` b
 | `didReceiveMemoryWarning` + `unloadsUnselectedViewsOnMemoryWarning` | `.afterSuper` block, flag checked inside |
 | `viewWillTransition` work before `super` | `.beforeSuper` block reading `info.size` / `info.transitionCoordinator` |
 | `viewDidLayoutSubviews` internal work | `.afterSuper` block |
-| App's `viewDidLayoutSubviewsBlock` (+ invoke once, re-arm, FlatDesign early return) | `cyl_setManualLifecycleDispatch(true, for: [.viewDidLayoutSubviews], timings: [.end])`; setter = `cyl_addLifecycleCallback(for: .viewDidLayoutSubviews, timing: .end, invokeOnce: true, key: "cyl.core.layoutBlock")`; dispatch with `cyl_invokeLifecycleCallbacks(for: .viewDidLayoutSubviews, timing: .end)` where the block runs today; re-arm = `cyl_rearmLifecycleCallbacks(for: .viewDidLayoutSubviews)` + its own `setNeedsLayout()` |
+| App's `viewDidLayoutSubviewsBlock` (+ invoke once, re-arm, FlatDesign early return) | `cyl_setManualLifecycleDispatch(true, for: [.viewDidLayoutSubviews], timings: [.end])`; setter = `cyl_addLifecycleCallback(for: .viewDidLayoutSubviews, timing: .end, invokeOnce: invokeOnceViewDidLayoutSubViewsBlock, key: "cyl.core.layoutBlock")` (assigning the block with the flag off runs it on every layout, as today; `setViewDidLayoutSubViewsBlockInvokeOnce` passes `true`); dispatch with `cyl_invokeLifecycleCallbacks(for: .viewDidLayoutSubviews, timing: .end)` where the block runs today; re-arm = `cyl_rearmLifecycleCallbacks(for: .viewDidLayoutSubviews)` + its own `setNeedsLayout()` |
 | `deinit` → `cylStopObservingForDealloc()` with `isObserving…` flags | Where the observer is added: capture the observed object, `cyl_willDealloc(key:) { … observed.removeObserver(…) }`; no flag |
 | Theme: `cyl_themeDidChange` per controller, `CYLThemeManagerCenter.updateThemes(for:)` | `.afterSuper` `traitCollectionDidChange` block; theme observers removed with keyed dealloc blocks |
+
+### Design v3: nested overrides (advisor, 2026-11-22)
+
+Found by the final review: with two overriding levels, v2 fired blocks twice or out of order (base and subclass both using `cyl_performLifecycle`; CYLTabBarController's raw `.end` inside an app subclass's `cyl_performLifecycle`). Same interface, new rules:
+
+- The automatic hook always brackets UIKit with `.beforeSuper` / `.afterSuper`, also while `cyl_performLifecycle` runs.
+- On a view controller, `cyl_performLifecycle` runs `callSuper`, then `body`, then `.end` only at its outermost level for the event, and not when `.end` is declared manual. Owners that are not view controllers (no hook) get all three timings from the outermost call.
+- While `cyl_performLifecycle` runs, the automatic hook skips only `.end`.
+- Limitation: a UIKit class whose override does not call `super` never reaches the hook. Seen: `UINavigationController.viewDidLayoutSubviews` (no `.afterSuper` / `.end`); its appearance events fire. `UITableViewController` fires `.afterSuper` and `.end`.
 
 ### CYLTabBarController mapping, v1 (not changed in this task)
 
@@ -141,7 +150,7 @@ CYLTabBarController's overrides today call `super` first and then a `cyl…()` b
 | Item | Status |
 | :-- | :-- |
 | Swift Package Manager (`Package.swift`): CYLTabBarController ships through SPM and Carthage | TODO |
-| Podspec platform is iOS 9.0; Xcode 27 builds 15.0+ only, `pod lib lint` likely fails | TODO |
+| Podspec platform: raised from iOS 9.0 to 15.0 (CYLTabBarController's minimum; the library needs iOS 11+ APIs and Xcode 27 builds 15.0+); `pod lib lint` (full build) passes | DONE |
 | Version bump and tag (1.4.0) | TODO (maintainer) |
 | Example app on iOS 27: no scene life cycle (`UIApplicationSceneManifest`), so it crashes at launch like the test app did before its scene delegate; old asset catalog warnings (1024 icon, launch images) | TODO |
 | Integrate into CYLTabBarController (mapping above); not done here because another session owns that checkout | TODO |
@@ -157,6 +166,8 @@ Score = 100 × (rows of both tables whose last column is not `TODO`) / (all rows
 | 1b | Timing row added after the follow-up (denominator 25 → 26) | 1 / 26 | 4 |
 | 1c | Design v2 rows added (manual per timing, replace by key; denominator 26 → 28) | 1 / 28 | 4 |
 | 2 | Implementation + simulator tests (`Tests/run-lifecycle-tests.sh`, iOS 27.2, 26/26 checks, both swizzle orders) | 28 / 28 | 100 |
+| 3a | Final review: nested overrides fire twice; "Manual dispatch" and "Automatic dispatch" back to partial (tests failed: nested perform, core raw `.end` inside app perform) | 26 / 28 | 93 |
+| 3b | Design v3 + new tests (nested perform, core + app subclass, UIKit subclasses, KVO `observationInfo`): 31/31 on iOS 27.2 Debug and Release (`CYL_TEST_CONFIGURATION=release`) and iOS 17.5 Debug, both swizzle orders; podspec iOS 15.0, `pod lib lint` (full build) passes | 28 / 28 | 100 |
 
 ## Lifecycle events
 
@@ -189,7 +200,7 @@ Score = 100 × (rows of both tables whose last column is not `TODO`) / (all rows
 | Shared lock | Adding, cancelling and running use the lock of the dealloc API (`deallocCallbackLock`) and the per-object model lock. | `cylDeallocCallbackLock` (the dealloc lock) creates the model and hands out identifiers; `CYLCallbackModel.lock` guards entries; blocks run outside both. Verified: "add/cancel from inside a block" |
 | Cancel one / cancel all | Cancel a block by its identifier, or all blocks of one event. | `cyl_cancelLifecycleCallback(identifier:)`, `cyl_cancelAllLifecycleCallbacks(for:timing:)`. Verified: "order by identifier, cancel one", "cancel all", "add/cancel from inside a block" |
 | Invoke once and re-arm | A block can run only once; re-arming lets it run once more (the `invokeOnce` pattern of CYLTabBarController). | `invokeOnce:` + `cyl_rearmLifecycleCallbacks(for:timing:)`. Verified: "invoke once (manual end)", "re-arm runs an invoke-once block again" |
-| Manual dispatch | The owner fires an event itself at the exact point it needs (CYLTabBarController runs its layout block at the end of its own `-viewDidLayoutSubviews`). | `cyl_performLifecycle(_:info:callSuper:body:)`, `cyl_invokeLifecycleCallbacks(for:timing:info:)`. Verified: "cyl_performLifecycle order, no double fire", "manual end after the override body" |
+| Manual dispatch | The owner fires an event itself at the exact point it needs (CYLTabBarController runs its layout block at the end of its own `-viewDidLayoutSubviews`). | `cyl_performLifecycle(_:info:callSuper:body:)`, `cyl_invokeLifecycleCallbacks(for:timing:info:)`. Verified: "cyl_performLifecycle order, no double fire", "manual end after the override body", "nested cyl_performLifecycle fires each timing once", "core raw .end inside an app's cyl_performLifecycle" |
 | Automatic dispatch | Any `UIViewController` fires the events without code in its overrides. | `UIViewController+CYLLifecycleHooks.swift` (`method_setImplementation`, previous IMP captured, installed lazily). Verified: "automatic timings, no override", exchange swizzle in both install orders |
 | Timing (before super / after super / end) | Each block chooses when it runs: at the top before `super`, at the top after `super`, or at the end of the method. | `CYLLifecycleTiming` (`.beforeSuper`, `.afterSuper`, `.end`). Verified: "automatic timings, no override", "automatic timings, override", "cyl_performLifecycle order, no double fire" |
 | Manual dispatch per timing | The owner can dispatch one timing of an event itself while the other timings of that event stay automatic. | `cyl_setManualLifecycleDispatch(_:for:timings:)`. Verified: "automatic afterSuper beside manual end" |

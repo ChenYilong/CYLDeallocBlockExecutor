@@ -12,7 +12,9 @@ OUT="$(mktemp -d "${TMPDIR:-/tmp}/cyl-lifecycle-tests.XXXXXX")"
 APP="$OUT/CYLLifecycleTests.app"
 mkdir -p "$APP"
 SDK="$(xcrun --sdk iphonesimulator --show-sdk-path)"
-xcrun --sdk iphonesimulator swiftc -Onone -g -D DEBUG -target "$(uname -m)-apple-ios15.0-simulator" -sdk "$SDK" \
+# CYL_TEST_CONFIGURATION=release builds like a consumer's Release build (-O, no DEBUG).
+if [ "${CYL_TEST_CONFIGURATION:-debug}" = "release" ]; then FLAGS=(-O); else FLAGS=(-Onone -g -D DEBUG); fi
+xcrun --sdk iphonesimulator swiftc "${FLAGS[@]}" -target "$(uname -m)-apple-ios15.0-simulator" -sdk "$SDK" \
   CYLDeallocBlockExecutor/*.swift Tests/LifecycleTests/main.swift -o "$APP/CYLLifecycleTests"
 cat > "$APP/Info.plist" <<'PLIST'
 <?xml version="1.0" encoding="UTF-8"?>
