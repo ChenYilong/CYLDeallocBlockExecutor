@@ -3,7 +3,7 @@
 Hello block，byebye dealloc！一行代码代替dealloc完成“self-manager”
 
 <p align="center">
-<a href=""><img src="https://img.shields.io/badge/pod-v1.1.2-brightgreen.svg"></a> <a href=""><img src="https://img.shields.io/badge/Objective--C-compatible-orange.svg"></a> <a href=""><img src="https://img.shields.io/badge/platform-iOS%206.0%2B-ff69b4.svg"></a>
+<a href=""><img src="https://img.shields.io/badge/pod-v1.1.2-brightgreen.svg"></a> <a href=""><img src="https://img.shields.io/badge/Swift-5.0-orange.svg"></a> <a href=""><img src="https://img.shields.io/badge/platform-iOS%209.0%2B-ff69b4.svg"></a>
 </a>
 
 
@@ -24,9 +24,9 @@ Hello block，byebye dealloc！一行代码代替dealloc完成“self-manager”
 
  -| 特点 |解释
 -------------|-------------|-------------
-1 | 轻量级、无污染 | 基于 NSObject 分类，无污染，适用于任何 Objective-C 对象，比基于子类化、继承的框架更加轻量级
+1 | 轻量级、无污染 | 基于 NSObject 分类，无污染，适用于任何 NSObject 子类对象，比基于子类化、继承的框架更加轻量级
 2 | 高性能 | 使用 runtime 的对象关联（或称为关联引用）技术，随着关联对象的 dealloc，对应的 block 自发执行，性能消耗极低。
-3 | 简单，无学习成本 | 一行代码完成，仅需使用  `cyl_willDeallocWithSelfCallback:`  中的 block 代替  `dealloc` 即可。自动检测对象的 dealloc 的时机，执行 block。
+3 | 简单，无学习成本 | 一行代码完成，仅需使用  `cyl_willDealloc(selfCallback:)`  中的 block 代替  `dealloc` 即可。自动检测对象的 dealloc 的时机，执行 block。
 4 | 将分散的代码集中起来 | 你可以使用 [CYLDeallocBlockExecutor](https://github.com/ChenYilong/CYLDeallocBlockExecutor) 将  `KVO`  或 `NSNotificationCenter` 的 `addObserver` 和 `removeObserver`  操作集中放在一个位置，让代码更加直观，易于维护，demo 中也给出了相应的使用方法。
 5 |支持CocoaPods |容易集成
 
@@ -49,7 +49,7 @@ Hello block，byebye dealloc！一行代码代替dealloc完成“self-manager”
 在 `Podfile` 中进行如下导入：
 
 
- ```Objective-C
+ ```ruby
 pod 'CYLDeallocBlockExecutor'
  ```
 
@@ -60,7 +60,7 @@ pod 'CYLDeallocBlockExecutor'
 如果尚未安装 CocoaPods, 运行以下命令进行安装:
 
 
- ```Objective-C
+ ```bash
 gem install cocoapods
  ```
 
@@ -69,7 +69,7 @@ gem install cocoapods
 
 建议使用如下方式：
 
- ```Objective-C
+ ```bash
  # 禁止升级CocoaPods的spec仓库，否则会卡在 Analyzing dependencies ，非常慢 
  pod update --verbose --no-repo-update
  ```
@@ -78,7 +78,7 @@ gem install cocoapods
 如果提示找不到库，则可去掉 --no-repo-update
 
 
- ```Objective-C
+ ```bash
 pod update
  ```
 
@@ -88,31 +88,31 @@ pod update
 
 导入头文件：
 
- ```Objective-C
-#import "CYLDeallocBlockExecutor.h"
+ ```swift
+// 无需导入头文件：库本身即为 Swift，随 Pod 引入即可
  ```
 
 使用方法：
 
 一行代码代替 dealloc：
 
- ```Objective-C
-        [foo cyl_willDeallocWithSelfCallback:^(__unsafe_unretained id owner, NSUInteger identifier) {
-           // do something
-        }];
+ ```swift
+        foo.cyl_willDealloc { owner, identifier in
+            // do something
+        }
  ```
 
-这里注意：在 `cyl_willDeallocWithSelfCallback` 的参数 block 中不能使用 weak 修饰符修饰的 self，因为 weak 变量在 dealloc 中会被自定置为 nil。在使用 `cyl_willDeallocWithSelfCallback` 你需要遵循一个准则：
+这里注意：在 `cyl_willDealloc(selfCallback:)` 的参数 block 中不能使用 weak 修饰符修饰的 self，因为 weak 变量在 dealloc 中会被自定置为 nil。在使用 `cyl_willDealloc(selfCallback:)` 你需要遵循一个准则：
 
  > 参数 block 中的内容可以完全放入 dealloc。
 
 因为该 block 就是在 dealloc 执行的时候执行的！
 
 
- ```Objective-C
-        [self cyl_willDeallocWithSelfCallback:^(__unsafe_unretained id owner, NSUInteger identifier) {
-            [[NSNotificationCenter defaultCenter] removeObserver:owner];
-        }];
+ ```swift
+        cyl_willDealloc { owner, identifier in
+            NotificationCenter.default.removeObserver(owner.takeUnretainedValue())
+        }
  ```
 
 
@@ -146,28 +146,26 @@ Demo 中给出了一个换皮肤的 Demo，演示：
 
 所有的的操作全部都在 Setter 方法中进行，无需借助 Dealloc 方法。
 
- ```Objective-C
-- (void)setThemeMap:(NSDictionary *)themeMap {
-    objc_setAssociatedObject(self, &kUIView_ThemeMap, themeMap, OBJC_ASSOCIATION_COPY_NONATOMIC);
-    if (themeMap) {
-        // Need to removeObserver in dealloc
-        // NOTE: need to be __unsafe_unretained because __weak var will be reset to nil in dealloc
-        [self cyl_willDeallocWithSelfCallback:^(__unsafe_unretained id weakSelf, NSUInteger identifier) {
-            [[NSNotificationCenter defaultCenter] removeObserver:weakSelf];
-        }];
-        [[NSNotificationCenter defaultCenter] removeObserver:self
-                                                        name:kThemeDidChangeNotification
-                                                      object:nil];
-        [[NSNotificationCenter defaultCenter] addObserver:self
-                                                 selector:@selector(themeChanged:)
-                                                     name:kThemeDidChangeNotification
-                                                   object:nil
-         ];
-        [self themeChangedWithDict:themeMap];
-    } else {
-        [[NSNotificationCenter defaultCenter] removeObserver:self
-                                                        name:kThemeDidChangeNotification
-                                                      object:nil];
+ ```swift
+var themeMap: [String: Any]? {
+    get { objc_getAssociatedObject(self, &themeMapKey) as? [String: Any] }
+    set {
+        objc_setAssociatedObject(self, &themeMapKey, newValue, .OBJC_ASSOCIATION_COPY_NONATOMIC)
+        if let themeMap = newValue {
+            // Need to removeObserver at dealloc
+            // NOTE: owner is unretained because a weak reference is already nil during dealloc
+            cyl_willDealloc { owner, identifier in
+                NotificationCenter.default.removeObserver(owner.takeUnretainedValue())
+            }
+            NotificationCenter.default.removeObserver(self, name: kThemeDidChangeNotification, object: nil)
+            NotificationCenter.default.addObserver(self,
+                                                   selector: #selector(themeChanged(_:)),
+                                                   name: kThemeDidChangeNotification,
+                                                   object: nil)
+            themeChanged(with: themeMap)
+        } else {
+            NotificationCenter.default.removeObserver(self, name: kThemeDidChangeNotification, object: nil)
+        }
     }
 }
  ```
@@ -202,13 +200,15 @@ Demo 中给出了一个换皮肤的 Demo，演示：
 代码如下所示：
 
 
- ```Objective-C
-- (void)setObject:(NSObject *)object
-{
-    objc_setAssociatedObject(self, "object", object, OBJC_ASSOCIATION_ASSIGN);
-    [object cyl_willDeallocWithSelfCallback:^(__unsafe_unretained id owner, NSUInteger identifier) {
-        owner = nil;
-    }];
+ ```swift
+var object: NSObject? {
+    get { objc_getAssociatedObject(self, &objectKey) as? NSObject }
+    set {
+        objc_setAssociatedObject(self, &objectKey, newValue, .OBJC_ASSOCIATION_ASSIGN)
+        newValue?.cyl_willDealloc { owner, identifier in
+            // 被关联对象销毁时，在这里把 self.object 置 nil
+        }
+    }
 }
  ```
 
@@ -218,41 +218,42 @@ Demo 中给出了一个换皮肤的 Demo，演示：
 
 在我的一个框架 [CYLTabBarController](https://github.com/ChenYilong/CYLTabBarController) 中，有一个KVO注册与反注册的实现：
 
- ```Objective-C
-- (void)viewDidLoad {
-    [super viewDidLoad];
+ ```swift
+override func viewDidLoad() {
+    super.viewDidLoad()
     // 处理tabBar，使用自定义 tabBar 添加 发布按钮
-    [self setUpTabBar];
+    setUpTabBar()
     // KVO注册监听
-    if (!self.isObservingSwappableImageViewDefaultOffset) {
-        [self.tabBar addObserver:self forKeyPath:@"swappableImageViewDefaultOffset" options:NSKeyValueObservingOptionNew context:CYLSwappableImageViewDefaultOffsetContext];
-        self.observingSwappableImageViewDefaultOffset = YES;
+    if !isObservingSwappableImageViewDefaultOffset {
+        tabBar.addObserver(self, forKeyPath: "swappableImageViewDefaultOffset", options: .new, context: CYLSwappableImageViewDefaultOffsetContext)
+        isObservingSwappableImageViewDefaultOffset = true
     }
-    self.delegate = self;
+    delegate = self
 }
 
-- (void)dealloc {
+deinit {
     // KVO反注册
-    if (self.isObservingSwappableImageViewDefaultOffset) {
-        [self.tabBar removeObserver:self forKeyPath:@"swappableImageViewDefaultOffset"];
+    if isObservingSwappableImageViewDefaultOffset {
+        tabBar.removeObserver(self, forKeyPath: "swappableImageViewDefaultOffset")
     }
 }
  ```
 
 也许你会很奇怪为什么有一个flag在做判断，那是因为 viewDidLoad 在一些场景下没有被调用，但 dealloc 却被调用了。。。什么场景？当 [CYLTabBarController](https://github.com/ChenYilong/CYLTabBarController) 被作为StoryBoard的初始控制器，但是你又重写了下面的方法：
 
- ```Objective-C
-- (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
-    if (!self.isUserLogin) {
-        LoginViewController *login = [[UIStoryboard storyboardWithName:@"Main" bundle:nil] instantiateViewControllerWithIdentifier:@"LoginViewController"];
-        self.window.rootViewController = login;
+ ```swift
+func application(_ application: UIApplication,
+                 didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
+    if !isUserLogin {
+        let login = UIStoryboard(name: "Main", bundle: nil).instantiateViewController(withIdentifier: "LoginViewController")
+        window?.rootViewController = login
     }
-    return YES;
+    return true
 }
  ```
 
 Demo 我已经放在仓库里，叫做 CYLTabBarControllerTestDemo
-，[CYLTabBarController](https://github.com/ChenYilong/CYLTabBarController) 版本 1.5.5 及之前的版本因为没有 flag 判断，直接会 crash 掉。
+，[CYLTabBarController](https://github.com/ChenYilong/CYLTabBarController) 版本 1.5.5 及之前的版本因为没有 flag 判断，直接会 crash 掉。Demo 的 Podfile 现已固定到 CYLTabBarController 最新提交。
 这种场景下我这里采用了 flag 来规避，其实也可以用 CYLDeallocBlockExecutor 来达到目的。在 viewDidLoad 做 dealloc 该做的事，即使 viewDidLoad 没有被调用，也没有关系，block里的内容也不会被执行。
 
 同时，如果用 KVO 监听 iVar，如果由于不能确定 iVar 是否为 nil，那么你就可以做出判断，只在有值时监听。同时，释放 KVO 的行为，就可以借助本库，放在这个是否有值的判断里。这样就达到了只在有值时监听，同时在 self 销毁时释放的效果。
@@ -264,7 +265,7 @@ Demo 我已经放在仓库里，叫做 CYLTabBarControllerTestDemo
 
 ## 对应的Swift实现
 
-Objective-C 中 `__unsafe_unretained` 的行为对应的是 Swift 中的 `unowned` 相。两者都不会改变对象的引用计数，也不会将引用的对象设为 `nil` 当它被释放。
+本库的 Swift 实现用 `Unmanaged<AnyObject>` 表示原 Objective-C 中的 `__unsafe_unretained id owner`；它的行为对应 Swift 中的 `unowned`。两者都不会改变对象的引用计数，也不会将引用的对象设为 `nil` 当它被释放。
 
 它们的共同点是：如果你试图访问一个已经被释放的 `__unsafe_unretained` 或 `unowned` 引用，你会遇到未定义的行为，可能会导致程序崩溃。
 

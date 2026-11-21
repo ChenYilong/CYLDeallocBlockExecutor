@@ -1,0 +1,11 @@
+
+# Private keys / credentials — never commit
+github_rsa*
+id_rsa*
+id_ed25519*
+id_ecdsa*
+*.pem
+*.key
+*.p12
+*.pfx
+.env
