@@ -7,10 +7,8 @@
 
 import UIKit
 
-@UIApplicationMain
+@main
 class AppDelegate: UIResponder, UIApplicationDelegate {
-
-    var window: UIWindow?
 
     func application(_ application: UIApplication,
                      didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
@@ -20,15 +18,6 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
                                       .foregroundColor: UIColor.white]
         navBar.barTintColor = UIColor(red: 51 / 255, green: 171 / 255, blue: 160 / 255, alpha: 1)
         navBar.isTranslucent = false
-
-        let window = UIWindow(frame: UIScreen.main.bounds)
-        let vc = ViewController()
-        let navigationController = UINavigationController(rootViewController: vc)
-        window.addSubview(vc.view)
-        window.rootViewController = navigationController
-        window.backgroundColor = .white
-        window.makeKeyAndVisible()
-        self.window = window
         return true
     }
 }

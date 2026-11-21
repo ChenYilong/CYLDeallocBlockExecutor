@@ -12,7 +12,8 @@ class ViewController: UITableViewController {
     private var _number: NSNumber?
     private var bySetter = false
     private var aNumber: NSNumber?
-    private lazy var dataSource: [String] = []
+    // Not lazy: appending through a lazy getter copies the array, which made the 600 000 rows below quadratic.
+    private var dataSource: [String] = []
 
     override func viewDidLoad() {
         super.viewDidLoad()

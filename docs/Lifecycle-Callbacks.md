@@ -12,6 +12,8 @@ This document tracks the lifecycle block API of CYLDeallocBlockExecutor: blocks 
 
 **Prompt (verbatim).** continue / in
 
+**Progress.** (1) DONE: ![iOS 27.2, iPhone 18 Pro simulator, macOS 27.3, Xcode 27.2 (27B52), CYLDeallocBlockExecutor 69ad9e3+, feat/lifecycle-callbacks, 2026-11-22. Purpose: the Example launches with a scene](assets/example-ios27-scene.png)
+
 **Plan.** (1) Scene delegate for the Example, launched on an iOS 27.2 simulator. (2) A framework target with a shared scheme, checked with `carthage build --no-skip-current`.
 
 ### DONE: CI checks (2026-11-22, branch `feat/lifecycle-callbacks`, PR #12)
@@ -191,7 +193,7 @@ Found by the final review: with two overriding levels, v2 fired blocks twice or 
 | Podspec platform: raised from iOS 9.0 to 15.0 (CYLTabBarController's minimum; the library needs iOS 11+ APIs and Xcode 27 builds 15.0+); `pod lib lint` (full build) passes | DONE |
 | CI: `.github/workflows/ci.yml` (shellcheck, SPM, Example, `pod lib lint`, lifecycle tests Debug + Release) passes on `macos-26` | DONE |
 | Version bump and tag (1.4.0) | TODO (maintainer) |
-| Example app on iOS 27: no scene life cycle (`UIApplicationSceneManifest`), so it crashes at launch like the test app did before its scene delegate; old asset catalog warnings (1024 icon, launch images) | TODO |
+| Example app on iOS 27: `SceneDelegate` + `UIApplicationSceneManifest` + launch storyboard; `dataSource` no longer lazy (its 600 000 appends were quadratic and blocked the first frame). Launched on iOS 27.2 (iPhone 18 Pro simulator, macOS 27.3, Xcode 27.2): list shown, dealloc tasks up to 300000, `viewWillAppear` block and run-once scroll fired, see [screenshot](assets/example-ios27-scene.png). Old asset catalog warnings (1024 icon, launch images) remain | DONE |
 | Integrate into CYLTabBarController (mapping above); not done here because another session owns that checkout | TODO |
 
 ## Scoring
