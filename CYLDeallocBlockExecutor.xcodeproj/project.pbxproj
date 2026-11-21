@@ -14,6 +14,9 @@
 		9ACCE5681C303E0000D98916 /* UIView+ThemeManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9ACCE5671C303E0000D98916 /* UIView+ThemeManager.swift */; };
 		9AE3DD3D1C3064BD003184AD /* CYLDeallocExecutor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9AE3DD3A1C3064BD003184AD /* CYLDeallocExecutor.swift */; };
 		9AE3DD3E1C3064BD003184AD /* NSObject+CYLDeallocBlockExecutor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9AE3DD3C1C3064BD003184AD /* NSObject+CYLDeallocBlockExecutor.swift */; };
+		9AC0FFEE1C3064BD00000013 /* UIViewController+CYLLifecycleHooks.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9AC0FFEE1C3064BD00000003 /* UIViewController+CYLLifecycleHooks.swift */; };
+		9AC0FFEE1C3064BD00000012 /* CYLLifecycle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9AC0FFEE1C3064BD00000002 /* CYLLifecycle.swift */; };
+		9AC0FFEE1C3064BD00000011 /* CYLCallbackModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9AC0FFEE1C3064BD00000001 /* CYLCallbackModel.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -25,6 +28,9 @@
 		9ACCE5561C30371B00D98916 /* ViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
 		9ACCE5671C303E0000D98916 /* UIView+ThemeManager.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "UIView+ThemeManager.swift"; sourceTree = "<group>"; };
 		9AE3DD3A1C3064BD003184AD /* CYLDeallocExecutor.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CYLDeallocExecutor.swift; sourceTree = "<group>"; };
+		9AC0FFEE1C3064BD00000001 /* CYLCallbackModel.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CYLCallbackModel.swift; sourceTree = "<group>"; };
+		9AC0FFEE1C3064BD00000002 /* CYLLifecycle.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CYLLifecycle.swift; sourceTree = "<group>"; };
+		9AC0FFEE1C3064BD00000003 /* UIViewController+CYLLifecycleHooks.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "UIViewController+CYLLifecycleHooks.swift"; sourceTree = "<group>"; };
 		9AE3DD3C1C3064BD003184AD /* NSObject+CYLDeallocBlockExecutor.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "NSObject+CYLDeallocBlockExecutor.swift"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -74,6 +80,9 @@
 			children = (
 				9AE3DD3A1C3064BD003184AD /* CYLDeallocExecutor.swift */,
 				9AE3DD3C1C3064BD003184AD /* NSObject+CYLDeallocBlockExecutor.swift */,
+				9AC0FFEE1C3064BD00000003 /* UIViewController+CYLLifecycleHooks.swift */,
+				9AC0FFEE1C3064BD00000002 /* CYLLifecycle.swift */,
+				9AC0FFEE1C3064BD00000001 /* CYLCallbackModel.swift */,
 			);
 			path = CYLDeallocBlockExecutor;
 			sourceTree = "<group>";
@@ -152,6 +161,9 @@
 				9ACCE5681C303E0000D98916 /* UIView+ThemeManager.swift in Sources */,
 				9AE3DD3D1C3064BD003184AD /* CYLDeallocExecutor.swift in Sources */,
 				9AE3DD3E1C3064BD003184AD /* NSObject+CYLDeallocBlockExecutor.swift in Sources */,
+				9AC0FFEE1C3064BD00000013 /* UIViewController+CYLLifecycleHooks.swift in Sources */,
+				9AC0FFEE1C3064BD00000012 /* CYLLifecycle.swift in Sources */,
+				9AC0FFEE1C3064BD00000011 /* CYLCallbackModel.swift in Sources */,
 				9ACCE5581C30371B00D98916 /* AppDelegate.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

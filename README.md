@@ -129,6 +129,50 @@ foo.cyl_cancelAllDeallocCallbacks()             // 取消全部
 
 回调里的 `owner` 是 `Unmanaged<AnyObject>`（对应 Objective-C 的 `__unsafe_unretained id`），对象此时正在销毁：不要持有或让它逃出 block，需要时用 `owner.takeUnretainedValue()`。
 
+### 生命周期 block
+
+除了 dealloc，还可以在 UIViewController 的生命周期里执行 block，同样是一行代码，同样可以添加多个、按添加顺序执行、按标识取消：
+
+ ```swift
+cyl_addLifecycleCallback(for: .viewWillAppear) { owner, identifier, info in
+    // owner 的类型就是当前类，不需要捕获 self
+}
+ ```
+
+执行时机由 `timing` 参数控制（以调用 UIKit 实现的 `super` 为界）：
+
+timing | 执行时机
+-------|------
+`.beforeSuper` | 顶部，`super` 之前
+`.afterSuper`（默认） | 顶部，`super` 之后
+`.end` | 底部，方法末尾（类重写了该方法时，需在重写里调用 `cyl_performLifecycle`，见 docs）
+
+支持的事件：`viewDidLoad`、`viewWillAppear`、`viewIsAppearing`、`viewDidAppear`、`viewWillLayoutSubviews`、`viewDidLayoutSubviews`、`viewWillDisappear`、`viewDidDisappear`、`viewSafeAreaInsetsDidChange`、`viewLayoutMarginsDidChange`、`traitCollectionDidChange`、`viewWillTransition`、`willMoveToParent`、`didMoveToParent`、`didReceiveMemoryWarning`。
+
+常用写法：
+
+ ```swift
+// 只执行一次的布局 block（可用 cyl_rearmLifecycleCallbacks(for:) 重新启用）
+cyl_addLifecycleCallback(for: .viewDidLayoutSubviews, timing: .end, invokeOnce: true) { owner, _, _ in
+    owner.setUpBadges()
+}
+
+// 深色模式切换时重新换肤
+cyl_addLifecycleCallback(for: .traitCollectionDidChange) { owner, _, info in
+    guard owner.traitCollection.hasDifferentColorAppearance(comparedTo: info.previousTraitCollection) else { return }
+    owner.applyTheme()
+}
+
+// 用 key 替换：同一个 key 只保留最后添加的 block（setter 多次调用也只有一个）
+cyl_willDealloc(key: "theme.removeObserver") { owner, _, _ in
+    NotificationCenter.default.removeObserver(owner.takeUnretainedValue())
+}
+ ```
+
+dealloc 也有了相同参数的版本：`cyl_willDealloc(callback:)`（owner、identifier、info），与生命周期 block 共用标识序列、锁和取消方式；原来的 `cyl_willDealloc(selfCallback:)` 不变。
+
+完整设计（自动派发、手动派发、与 CYLTabBarController 的对应关系）见 [docs/Lifecycle-Callbacks.md](docs/Lifecycle-Callbacks.md)。
+
 ### 从 Objective-C 版本迁移
 
 Objective-C | Swift
@@ -285,6 +329,19 @@ func application(_ application: UIApplication,
 Demo 我已经放在仓库里，叫做 CYLTabBarControllerTestDemo
 ，[CYLTabBarController](https://github.com/ChenYilong/CYLTabBarController) 版本 1.5.5 及之前的版本因为没有 flag 判断，直接会 crash 掉。Demo 的 Podfile 现已固定到 CYLTabBarController 最新提交。
 这种场景下我这里采用了 flag 来规避，其实也可以用 CYLDeallocBlockExecutor 来达到目的。在 viewDidLoad 做 dealloc 该做的事，即使 viewDidLoad 没有被调用，也没有关系，block里的内容也不会被执行。
+
+用本库改写后不再需要 flag：在添加监听的地方，同时添加移除监听的 dealloc block。注意要直接捕获被监听的对象，不要在 block 里通过 owner 读取（dealloc 时 owner 的属性可能已经释放）：
+
+ ```swift
+override func viewDidLoad() {
+    super.viewDidLoad()
+    let observedTabBar = tabBar
+    observedTabBar.addObserver(self, forKeyPath: "swappableImageViewDefaultOffset", options: .new, context: nil)
+    cyl_willDealloc(key: "kvo.swappableImageViewDefaultOffset") { owner, _, _ in
+        observedTabBar.removeObserver(owner.takeUnretainedValue() as! NSObject, forKeyPath: "swappableImageViewDefaultOffset")
+    }
+}
+ ```
 
 同时，如果用 KVO 监听 iVar，如果由于不能确定 iVar 是否为 nil，那么你就可以做出判断，只在有值时监听。同时，释放 KVO 的行为，就可以借助本库，放在这个是否有值的判断里。这样就达到了只在有值时监听，同时在 self 销毁时释放的效果。
 

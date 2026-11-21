@@ -33,6 +33,20 @@ class ViewController: UITableViewController {
 
         tableView.delegate = self
 
+        // Lifecycle blocks: the owner arrives typed, so no capture of self is needed.
+        cyl_addLifecycleCallback(for: .viewWillAppear) { owner, identifier, info in
+            owner.showInfo("viewWillAppear (animated: \(info.animated ?? false)). Task: \(identifier)")
+        }
+        // Once, at the end of the first layout pass (like CYLTabBarController's one-time layout block).
+        cyl_addLifecycleCallback(for: .viewDidLayoutSubviews, timing: .end, invokeOnce: true) { owner, _, _ in
+            owner.tableViewScrollToBottom(animated: false)
+        }
+        // Re-apply the skin when the appearance (light / dark) changes.
+        cyl_addLifecycleCallback(for: .traitCollectionDidChange) { owner, _, info in
+            guard owner.traitCollection.hasDifferentColorAppearance(comparedTo: info.previousTraitCollection) else { return }
+            owner.view.themeMap = ["BackgroundColor": "randomColor"]
+        }
+
         // Force object release
         autoreleasepool {
             let object = NSObject()
