@@ -9,3 +9,6 @@ id_ecdsa*
 *.p12
 *.pfx
 .env
+
+# macOS AppleDouble files
+._*
