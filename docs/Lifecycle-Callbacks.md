@@ -4,13 +4,15 @@ This document tracks the lifecycle block API of CYLDeallocBlockExecutor: blocks 
 
 ## Task log
 
-### TODO: CI checks (2026-11-22, branch `feat/lifecycle-callbacks`, PR #12)
+### DONE: CI checks (2026-11-22, branch `feat/lifecycle-callbacks`, PR #12)
 
 **Context.** The repository has no CI. Every check in this document (lifecycle tests, `pod lib lint`, SPM build, Example build) ran only on the local Mac.
 
 **Requirement (English translation of the prompt).** Add CI checks.
 
 **Prompt (verbatim).** 添加ci 检查擦
+
+**Result.** `.github/workflows/ci.yml`, run [44955521212](https://github.com/ChenYilong/CYLDeallocBlockExecutor/actions/runs/44955521212) on PR #12: all 5 jobs pass on `macos-26` (macOS 26.7.2, Xcode 26.6 17F113). shellcheck; Swift package build with warnings as errors; Example build (only the old asset catalog warnings); `pod lib lint` (`passed validation`); lifecycle tests on an iPhone 16e simulator: `RESULT: PASS 38 passed, 0 failed` in both swizzle orders, in Debug and in Release. The README has a CI badge, and its platform badge now says iOS 15.0+. Pushing a workflow file needs the `workflow` scope: the HTTPS (gh OAuth) push was rejected, the SSH push worked.
 
 **Plan.** One GitHub Actions workflow on GitHub-hosted runners (`macos-26`, as CYLTabBarController uses): shellcheck, SPM build, Example build, `pod lib lint`, and the lifecycle tests on a new simulator in Debug and Release.
 
@@ -177,6 +179,7 @@ Found by the final review: with two overriding levels, v2 fired blocks twice or 
 | Swift Package Manager: `Package.swift` (tools 5.9, iOS 15, one target), built with `xcodebuild -scheme CYLDeallocBlockExecutor -destination 'generic/platform=iOS Simulator'` from a copy without the `.xcodeproj`: BUILD SUCCEEDED, no warnings | DONE |
 | Carthage: needs a shared framework scheme; the project only has the Example app target | TODO |
 | Podspec platform: raised from iOS 9.0 to 15.0 (CYLTabBarController's minimum; the library needs iOS 11+ APIs and Xcode 27 builds 15.0+); `pod lib lint` (full build) passes | DONE |
+| CI: `.github/workflows/ci.yml` (shellcheck, SPM, Example, `pod lib lint`, lifecycle tests Debug + Release) passes on `macos-26` | DONE |
 | Version bump and tag (1.4.0) | TODO (maintainer) |
 | Example app on iOS 27: no scene life cycle (`UIApplicationSceneManifest`), so it crashes at launch like the test app did before its scene delegate; old asset catalog warnings (1024 icon, launch images) | TODO |
 | Integrate into CYLTabBarController (mapping above); not done here because another session owns that checkout | TODO |

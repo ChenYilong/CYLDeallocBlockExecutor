@@ -3,7 +3,7 @@
 Hello block，byebye dealloc！一行代码代替dealloc完成“self-manager”
 
 <p align="center">
-<a href=""><img src="https://img.shields.io/badge/pod-v1.3.0-brightgreen.svg"></a> <a href=""><img src="https://img.shields.io/badge/Swift-5.0-orange.svg"></a> <a href=""><img src="https://img.shields.io/badge/platform-iOS%209.0%2B-ff69b4.svg"></a>
+<a href=""><img src="https://img.shields.io/badge/pod-v1.3.0-brightgreen.svg"></a> <a href=""><img src="https://img.shields.io/badge/Swift-5.0-orange.svg"></a> <a href=""><img src="https://img.shields.io/badge/platform-iOS%2015.0%2B-ff69b4.svg"></a> <a href="https://github.com/ChenYilong/CYLDeallocBlockExecutor/actions/workflows/ci.yml"><img src="https://github.com/ChenYilong/CYLDeallocBlockExecutor/actions/workflows/ci.yml/badge.svg"></a>
 </a>
 
 
