@@ -49,6 +49,19 @@ jobs:
             -sdk iphonesimulator -configuration Debug CODE_SIGNING_ALLOWED=NO \
             SYMROOT="$RUNNER_TEMP/build-example"
 
+  carthage:
+    name: Carthage
+    runs-on: ${{ vars.MACOS_RUNNER || 'macos-26' }}
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v5
+      - name: Build the shared framework scheme
+        run: |
+          brew list carthage >/dev/null 2>&1 || brew install carthage
+          carthage version
+          carthage build --no-skip-current --use-xcframeworks --platform iOS
+          ls Carthage/Build/CYLDeallocBlockExecutor.xcframework
+
   lint:
     name: pod lib lint
     runs-on: ${{ vars.MACOS_RUNNER || 'macos-26' }}

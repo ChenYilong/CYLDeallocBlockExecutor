@@ -12,3 +12,4 @@ id_ecdsa*
 
 # macOS AppleDouble files
 ._*
+Carthage/

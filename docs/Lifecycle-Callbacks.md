@@ -4,7 +4,7 @@ This document tracks the lifecycle block API of CYLDeallocBlockExecutor: blocks 
 
 ## Task log
 
-### TODO: Example scene life cycle and Carthage (2026-11-22, branch `feat/lifecycle-callbacks`, PR #12)
+### DONE: Example scene life cycle and Carthage (2026-11-22, branch `feat/lifecycle-callbacks`, PR #12)
 
 **Context.** Two open rows of the integration prerequisites table: the Example app has no scene life cycle, so it crashes at launch on iOS 27; Carthage needs a shared framework scheme.
 
@@ -12,7 +12,7 @@ This document tracks the lifecycle block API of CYLDeallocBlockExecutor: blocks 
 
 **Prompt (verbatim).** continue / in
 
-**Progress.** (1) DONE: ![iOS 27.2, iPhone 18 Pro simulator, macOS 27.3, Xcode 27.2 (27B52), CYLDeallocBlockExecutor 69ad9e3+, feat/lifecycle-callbacks, 2026-11-22. Purpose: the Example launches with a scene](assets/example-ios27-scene.png)
+**Progress.** (2) DONE: Carthage, see the prerequisites table. (1) DONE: ![iOS 27.2, iPhone 18 Pro simulator, macOS 27.3, Xcode 27.2 (27B52), CYLDeallocBlockExecutor 69ad9e3+, feat/lifecycle-callbacks, 2026-11-22. Purpose: the Example launches with a scene](assets/example-ios27-scene.png)
 
 **Plan.** (1) Scene delegate for the Example, launched on an iOS 27.2 simulator. (2) A framework target with a shared scheme, checked with `carthage build --no-skip-current`.
 
@@ -189,7 +189,7 @@ Found by the final review: with two overriding levels, v2 fired blocks twice or 
 | Item | Status |
 | :-- | :-- |
 | Swift Package Manager: `Package.swift` (tools 5.9, iOS 15, one target), built with `xcodebuild -scheme CYLDeallocBlockExecutor -destination 'generic/platform=iOS Simulator'` from a copy without the `.xcodeproj`: BUILD SUCCEEDED, no warnings | DONE |
-| Carthage: needs a shared framework scheme; the project only has the Example app target | TODO |
+| Carthage: framework target `CYLDeallocBlockExecutor-Framework` (module `CYLDeallocBlockExecutor`, iOS 15, library sources only, `BUILD_LIBRARY_FOR_DISTRIBUTION`) with a shared scheme; `carthage build --no-skip-current --use-xcframeworks --platform iOS` builds `CYLDeallocBlockExecutor.xcframework` (ios-arm64, ios-arm64_x86_64-simulator) locally (Carthage 0.40, Xcode 27.2) and in the CI job `Carthage` | DONE |
 | Podspec platform: raised from iOS 9.0 to 15.0 (CYLTabBarController's minimum; the library needs iOS 11+ APIs and Xcode 27 builds 15.0+); `pod lib lint` (full build) passes | DONE |
 | CI: `.github/workflows/ci.yml` (shellcheck, SPM, Example, `pod lib lint`, lifecycle tests Debug + Release) passes on `macos-26` | DONE |
 | Version bump and tag (1.4.0) | TODO (maintainer) |
