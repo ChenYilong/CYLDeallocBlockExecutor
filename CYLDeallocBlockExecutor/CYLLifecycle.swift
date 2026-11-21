@@ -187,15 +187,39 @@ extension NSObject {
     }
 
     /**
-     * Cancels the blocks of `event`, of one timing or of all timings (nil).
+     * Cancels the block added under `key`.
+     *
+     * - Returns: Whether a block had this key.
+     */
+    @discardableResult
+    public func cyl_cancelLifecycleCallback(key: String) -> Bool {
+        guard let model = cyl_callbackModel(create: false), let identifier = model.lifecycleIdentifier(key: key) else { return false }
+        return model.removeLifecycleCallback(identifier: identifier)
+    }
+
+    /**
+     * Lets the invoke-once block added under `key` run once more.
+     *
+     * - Returns: Whether a block had this key.
+     */
+    @discardableResult
+    public func cyl_rearmLifecycleCallback(key: String) -> Bool {
+        guard let model = cyl_callbackModel(create: false), let identifier = model.lifecycleIdentifier(key: key) else { return false }
+        return model.rearmLifecycleCallback(identifier: identifier)
+    }
+
+    /**
+     * Cancels the blocks of `event` added without a key, of one timing or of all timings (nil). Keyed blocks belong to
+     * whoever holds the key (`cyl_cancelLifecycleCallback(key:)`), so an app cannot remove a library's blocks this way.
      */
     public func cyl_cancelAllLifecycleCallbacks(for event: CYLLifecycleEvent, timing: CYLLifecycleTiming? = nil) {
         cyl_callbackModel(create: false)?.removeAllLifecycleCallbacks(event: event, timing: timing)
     }
 
     /**
-     * Lets the invoke-once blocks of `event` (one timing or all) run once more. Touches no view: call
-     * `view.setNeedsLayout()` yourself when a layout event should come.
+     * Lets the invoke-once blocks of `event` added without a key (one timing or all) run once more; keyed blocks are
+     * re-armed with `cyl_rearmLifecycleCallback(key:)`. Touches no view: call `view.setNeedsLayout()` yourself when a
+     * layout event should come.
      */
     public func cyl_rearmLifecycleCallbacks(for event: CYLLifecycleEvent, timing: CYLLifecycleTiming? = nil) {
         cyl_callbackModel(create: false)?.rearmLifecycleCallbacks(event: event, timing: timing)

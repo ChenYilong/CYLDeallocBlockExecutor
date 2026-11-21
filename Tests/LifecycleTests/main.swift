@@ -185,7 +185,7 @@ func runTests(window: UIWindow) {
     check(log.filter { $0 == "afterSuper" }.count == 2 && log.filter { $0 == "body" }.count == 2, "automatic afterSuper beside manual end", "\(log)")
     check(log.prefix(3) == ["afterSuper", "body", "end1"], "manual end after the override body", "\(log)")
     log = []
-    raw.cyl_rearmLifecycleCallbacks(for: .viewDidLayoutSubviews)
+    raw.cyl_rearmLifecycleCallback(key: "layoutBlock")
     raw.view.setNeedsLayout(); raw.view.layoutIfNeeded()
     check(log.contains("end1"), "re-arm runs an invoke-once block again", "\(log)")
     log = []
@@ -361,6 +361,51 @@ func runTests(window: UIWindow) {
         controller.beginAppearanceTransition(true, animated: false); controller.endAppearanceTransition()
         check(log.contains("willAppear"), "\(name): viewWillAppear .afterSuper fires", "\(log)")
     }
+
+    // 19. Core / app isolation: the app cancels all on a core-like subclass; keyed core blocks survive.
+    log = []
+    let isolationTarget = KVOTarget()
+    autoreleasepool {
+        let isolated = PlainViewController()
+        let observed = isolationTarget
+        isolated.cyl_addLifecycleCallback(for: .viewWillLayoutSubviews, key: "cyl.core.willLayout") { _, _, _ in log.append("core") }
+        isolated.cyl_addLifecycleCallback(for: .viewWillLayoutSubviews) { _, _, _ in log.append("app") }
+        observed.addObserver(isolated, forKeyPath: "value", options: .new, context: nil)
+        isolated.cyl_willDealloc(key: "cyl.core.kvo") { owner, _, _ in
+            observed.removeObserver(owner.takeUnretainedValue() as! NSObject, forKeyPath: "value")
+        }
+        // The app's broad calls.
+        isolated.cyl_cancelAllLifecycleCallbacks(for: .viewWillLayoutSubviews)
+        isolated.cyl_cancelAllDeallocCallbacks()
+        isolated.loadViewIfNeeded()
+        isolated.view.setNeedsLayout(); isolated.view.layoutIfNeeded()
+        check(log.contains("core") && !log.contains("app"), "isolation: app cancel-all keeps the core's keyed blocks", "\(log)")
+    }
+    check(isolationTarget.observationInfo == nil, "isolation: app cancel-all keeps the core's keyed dealloc block")
+
+    // 20. The core re-arms its block by key; the app's run-once block does not run again.
+    log = []
+    let rearmed = PlainViewController()
+    rearmed.cyl_addLifecycleCallback(for: .viewWillLayoutSubviews, invokeOnce: true, key: "cyl.core.layoutBlock") { _, _, _ in log.append("core") }
+    rearmed.cyl_addLifecycleCallback(for: .viewWillLayoutSubviews, invokeOnce: true) { _, _, _ in log.append("app") }
+    rearmed.loadViewIfNeeded()
+    rearmed.view.setNeedsLayout(); rearmed.view.layoutIfNeeded()
+    log = []
+    rearmed.cyl_rearmLifecycleCallback(key: "cyl.core.layoutBlock")
+    rearmed.view.setNeedsLayout(); rearmed.view.layoutIfNeeded()
+    check(log == ["core"], "isolation: core re-arms by key, app's run-once block stays fired", "\(log)")
+    log = []
+    rearmed.cyl_rearmLifecycleCallbacks(for: .viewWillLayoutSubviews)
+    rearmed.view.setNeedsLayout(); rearmed.view.layoutIfNeeded()
+    check(log == ["app"], "isolation: re-arm by event skips keyed blocks", "\(log)")
+    log = []
+    check(rearmed.cyl_cancelLifecycleCallback(key: "cyl.core.layoutBlock"), "cancel by key returns true")
+    rearmed.cyl_rearmLifecycleCallbacks(for: .viewWillLayoutSubviews)
+    rearmed.view.setNeedsLayout(); rearmed.view.layoutIfNeeded()
+    check(log == ["app"], "cancel by key removes only that block", "\(log)")
+    let deallocKeyed = NSObject()
+    deallocKeyed.cyl_willDealloc(key: "k") { _, _, _ in log.append("never") }
+    check(deallocKeyed.cyl_cancelDeallocCallback(key: "k") && !deallocKeyed.cyl_cancelDeallocCallback(key: "k"), "cancel dealloc block by key")
 
     // 13. Size transition: rotate the scene (asynchronous), then finish.
     var sizes: [CGSize] = []

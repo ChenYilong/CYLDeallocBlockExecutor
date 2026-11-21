@@ -66,7 +66,17 @@ extension NSObject {
         return model.removeDeallocCallback(identifier: identifier)
     }
 
-    /// Remove all dealloc callbacks.
+    /// Remove the dealloc callback added under `key`.
+    ///
+    /// - Returns: Whether a callback had this key.
+    @discardableResult
+    public func cyl_cancelDeallocCallback(key: String) -> Bool {
+        guard let model = cyl_callbackModel(create: false), let identifier = model.deallocIdentifier(key: key) else { return false }
+        return model.removeDeallocCallback(identifier: identifier)
+    }
+
+    /// Remove all dealloc callbacks added without a key (every 1.3.0 callback); keyed callbacks belong to whoever holds
+    /// the key (`cyl_cancelDeallocCallback(key:)`).
     public func cyl_cancelAllDeallocCallbacks() {
         cyl_callbackModel(create: false)?.removeAllDeallocCallbacks()
     }

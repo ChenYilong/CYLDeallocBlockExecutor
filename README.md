@@ -14,6 +14,7 @@ Hello block，byebye dealloc！一行代码代替dealloc完成“self-manager”
     1.   [第一步：使用cocoaPods导入CYLDeallocBlockExecutor](https://github.com/ChenYilong/CYLDeallocBlockExecutor#第一步使用cocoapods导入CYLDeallocBlockExecutor) 
     2.  [第二步：一行代码搞定](https://github.com/ChenYilong/CYLDeallocBlockExecutor#第二步一行代码搞定) 
     3.  [第三步](https://github.com/ChenYilong/CYLDeallocBlockExecutor#第三步) 
+    4.  [生命周期 block](https://github.com/ChenYilong/CYLDeallocBlockExecutor#生命周期-block) 
   3.  [ 运行Demo ](https://github.com/ChenYilong/CYLDeallocBlockExecutor#运行demo)
   4.  [应用场景](https://github.com/ChenYilong/CYLDeallocBlockExecutor#应用场景) 
     1.  [管理KVO与NSNotificationCenter的removeObserver操作](https://github.com/ChenYilong/CYLDeallocBlockExecutor#管理kvo与nsnotificationcenter的removeobserver操作) 
@@ -24,9 +25,9 @@ Hello block，byebye dealloc！一行代码代替dealloc完成“self-manager”
 
  -| 特点 |解释
 -------------|-------------|-------------
-1 | 轻量级、无污染 | 基于 NSObject 分类，无污染，适用于任何 NSObject 子类对象，比基于子类化、继承的框架更加轻量级
+1 | 轻量级、无污染 | 基于 NSObject 分类，无污染，适用于任何 NSObject 子类对象，比基于子类化、继承的框架更加轻量级。只用 dealloc block 时不做任何 hook；第一次给 UIViewController 添加生命周期 block 时，才为 UIViewController 安装一次生命周期 hook
 2 | 高性能 | 使用 runtime 的对象关联（或称为关联引用）技术，随着关联对象的 dealloc，对应的 block 自发执行，性能消耗极低。
-3 | 简单，无学习成本 | 一行代码完成，仅需使用  `cyl_willDealloc(selfCallback:)`  中的 block 代替  `dealloc` 即可。自动检测对象的 dealloc 的时机，执行 block。
+3 | 简单，无学习成本 | 一行代码完成，仅需使用  `cyl_willDealloc(selfCallback:)`  中的 block 代替  `dealloc` 即可。自动检测对象的 dealloc 的时机，执行 block。生命周期同样一行：`cyl_addLifecycleCallback(for: .viewWillAppear) { owner, identifier, info in }`
 4 | 将分散的代码集中起来 | 你可以使用 [CYLDeallocBlockExecutor](https://github.com/ChenYilong/CYLDeallocBlockExecutor) 将  `KVO`  或 `NSNotificationCenter` 的 `addObserver` 和 `removeObserver`  操作集中放在一个位置，让代码更加直观，易于维护，demo 中也给出了相应的使用方法。
 5 |支持CocoaPods |容易集成
 
@@ -163,7 +164,8 @@ cyl_addLifecycleCallback(for: .traitCollectionDidChange) { owner, _, info in
     owner.applyTheme()
 }
 
-// 用 key 替换：同一个 key 只保留最后添加的 block（setter 多次调用也只有一个）
+// 用 key 替换：同一个 key 只保留最后添加的 block（setter 多次调用也只有一个）。
+// 带 key 的 block 归持有 key 的一方所有：cyl_cancelAll… 与按事件 re-arm 不会影响它，用 cyl_cancelDeallocCallback(key:) 等按 key 操作
 cyl_willDealloc(key: "theme.removeObserver") { owner, _, _ in
     NotificationCenter.default.removeObserver(owner.takeUnretainedValue())
 }

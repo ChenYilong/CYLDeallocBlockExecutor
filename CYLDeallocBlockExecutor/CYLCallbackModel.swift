@@ -93,10 +93,13 @@ final class CYLCallbackModel {
         return true
     }
 
+    /**
+     * Removes the dealloc blocks added without a key; keyed blocks belong to whoever holds the key.
+     */
     func removeAllDeallocCallbacks() {
         lock.lock(); defer { lock.unlock() }
-        deallocCallbacks.removeAll()
-        deallocKeys.removeAll()
+        let keyed = Set(deallocKeys.values)
+        deallocCallbacks = deallocCallbacks.filter { keyed.contains($0.key) }
     }
 
     // MARK: - Lifecycle blocks
@@ -127,17 +130,39 @@ final class CYLCallbackModel {
         return true
     }
 
+    /**
+     * Removes the blocks of `event` added without a key; keyed blocks belong to whoever holds the key.
+     */
     func removeAllLifecycleCallbacks(event: CYLLifecycleEvent, timing: CYLLifecycleTiming?) {
         lock.lock(); defer { lock.unlock() }
-        lifecycleEntries = lifecycleEntries.filter { !Self.matches($0.value, event, timing) }
-        lifecycleKeys = lifecycleKeys.filter { lifecycleEntries[$0.value] != nil }
+        lifecycleEntries = lifecycleEntries.filter { $0.value.key != nil || !Self.matches($0.value, event, timing) }
     }
 
+    /**
+     * Re-arms the invoke-once blocks of `event` added without a key; keyed blocks are re-armed by their key.
+     */
     func rearmLifecycleCallbacks(event: CYLLifecycleEvent, timing: CYLLifecycleTiming?) {
         lock.lock(); defer { lock.unlock() }
-        for (identifier, entry) in lifecycleEntries where entry.invokeOnce && Self.matches(entry, event, timing) {
+        for (identifier, entry) in lifecycleEntries where entry.key == nil && entry.invokeOnce && Self.matches(entry, event, timing) {
             lifecycleEntries[identifier]?.fired = false
         }
+    }
+
+    func lifecycleIdentifier(key: String) -> UInt? {
+        lock.lock(); defer { lock.unlock() }
+        return lifecycleKeys[key]
+    }
+
+    func deallocIdentifier(key: String) -> UInt? {
+        lock.lock(); defer { lock.unlock() }
+        return deallocKeys[key]
+    }
+
+    func rearmLifecycleCallback(identifier: UInt) -> Bool {
+        lock.lock(); defer { lock.unlock() }
+        guard lifecycleEntries[identifier] != nil else { return false }
+        lifecycleEntries[identifier]?.fired = false
+        return true
     }
 
     func containsLifecycleCallback(identifier: UInt) -> Bool {
