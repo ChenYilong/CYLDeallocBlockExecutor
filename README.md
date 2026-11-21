@@ -3,7 +3,7 @@
 Hello block，byebye dealloc！一行代码代替dealloc完成“self-manager”
 
 <p align="center">
-<a href=""><img src="https://img.shields.io/badge/pod-v1.1.2-brightgreen.svg"></a> <a href=""><img src="https://img.shields.io/badge/Swift-5.0-orange.svg"></a> <a href=""><img src="https://img.shields.io/badge/platform-iOS%209.0%2B-ff69b4.svg"></a>
+<a href=""><img src="https://img.shields.io/badge/pod-v1.3.0-brightgreen.svg"></a> <a href=""><img src="https://img.shields.io/badge/Swift-5.0-orange.svg"></a> <a href=""><img src="https://img.shields.io/badge/platform-iOS%209.0%2B-ff69b4.svg"></a>
 </a>
 
 
@@ -116,6 +116,29 @@ pod update
  ```
 
 
+### 取消回调
+
+`cyl_willDealloc(selfCallback:)` 会返回任务标识（`UInt`），可用它取消；回调按添加顺序依次执行：
+
+ ```swift
+let id = foo.cyl_willDealloc { owner, identifier in /* ... */ }
+
+foo.cyl_cancelDeallocCallback(identifier: id)   // 取消单个，返回是否成功
+foo.cyl_cancelAllDeallocCallbacks()             // 取消全部
+ ```
+
+回调里的 `owner` 是 `Unmanaged<AnyObject>`（对应 Objective-C 的 `__unsafe_unretained id`），对象此时正在销毁：不要持有或让它逃出 block，需要时用 `owner.takeUnretainedValue()`。
+
+### 从 Objective-C 版本迁移
+
+Objective-C | Swift
+------------|------
+`cyl_willDeallocWithSelfCallback:` | `cyl_willDealloc(selfCallback:)`
+`cyl_cancelDeallocCallbackWithIdentifier:` | `cyl_cancelDeallocCallback(identifier:)`
+`cyl_cancelAllDeallocCallbacks` | `cyl_cancelAllDeallocCallbacks()`
+`cyl_executeAtDealloc:`（已废弃） | `cyl_executeAtDealloc(_:)`（已废弃）
+`CYLDeallocCallbackIllegalIdentifier` | `CYLDeallocCallbackIllegalIdentifier`
+
 ### 第三步
 
 没有第三步！
@@ -201,18 +224,25 @@ var themeMap: [String: Any]? {
 
 
  ```swift
-var object: NSObject? {
-    get { objc_getAssociatedObject(self, &objectKey) as? NSObject }
-    set {
-        objc_setAssociatedObject(self, &objectKey, newValue, .OBJC_ASSOCIATION_ASSIGN)
-        newValue?.cyl_willDealloc { owner, identifier in
-            // 被关联对象销毁时，在这里把 self.object 置 nil
+private var objectKey: UInt8 = 0
+
+class Holder: NSObject {
+    // 不使用 weak 修饰，却拥有 weak 的效果：object 销毁时自动置 nil
+    var object: NSObject? {
+        get { objc_getAssociatedObject(self, &objectKey) as? NSObject }
+        set {
+            objc_setAssociatedObject(self, &objectKey, newValue, .OBJC_ASSOCIATION_ASSIGN)
+            newValue?.cyl_willDealloc { [weak self] _, _ in
+                // owner 已在销毁中，这里只清掉 self 上的关联引用，避免悬垂指针
+                guard let self = self else { return }
+                objc_setAssociatedObject(self, &objectKey, nil, .OBJC_ASSOCIATION_ASSIGN)
+            }
         }
     }
 }
  ```
 
-这样就达到了当 objet 为 nil 时，自动将 self.object 置 nil 的目的，从而就模拟了weak修饰的property的生命周期。
+这样就达到了当 object 为 nil 时，自动将 self.object 置 nil 的目的，从而就模拟了weak修饰的property的生命周期。
 
 ### 更加安全地在 viewDidLoad 里管理应用的生命周期
 
@@ -263,64 +293,11 @@ Demo 我已经放在仓库里，叫做 CYLTabBarControllerTestDemo
 
 ## 补充知识
 
-## 对应的Swift实现
+### `__unsafe_unretained` 与 Swift
 
-本库的 Swift 实现用 `Unmanaged<AnyObject>` 表示原 Objective-C 中的 `__unsafe_unretained id owner`；它的行为对应 Swift 中的 `unowned`。两者都不会改变对象的引用计数，也不会将引用的对象设为 `nil` 当它被释放。
+Objective-C 中 `__unsafe_unretained` 的行为对应 Swift 中的 `unowned(unsafe)`：不改变引用计数，对象释放后也不会自动置 `nil`，继续访问会得到未定义行为。因此回调里的 `owner` 只能在 block 内部临时使用。
 
-它们的共同点是：如果你试图访问一个已经被释放的 `__unsafe_unretained` 或 `unowned` 引用，你会遇到未定义的行为，可能会导致程序崩溃。
-
-同样的, 在 Swift 中，如果你试图访问一个已经被释放的 unowned 引用，程序会立即崩溃。这是因为 unowned 是一个无主引用，当其引用的对象被销毁后，它并不会自动变为 nil，它依然保持对已经被销毁的对象的引用。
-
-这也就是为什么在使用 unowned 时，你需要确保在其生命周期内，被 unowned 引用的对象不会意外地消失。这样可以避免出现运行时错误。所以，你应当在使用 unowned 引用时，保证引用的对象在 unowned 引用的生命周期内始终存在。
-
-不过我们可以利用这个特性, 来实现本文中的功能, 下面为对应的 Swift 版本的代码示例:
-
-
-```swift
-class CYLDeallocHelper {
-    let deinitCallback: (AnyObject) -> Void
-    unowned let owner: AnyObject
-
-    init(owner: AnyObject, deinitCallback: @escaping (AnyObject) -> Void) {
-        self.deinitCallback = deinitCallback
-        self.owner = owner
-    }
-
-    deinit {
-        deinitCallback(owner)
-    }
-}
-
-extension NSObject {
-    private struct AssociatedKeys {
-        static var deallocHelper: UInt8 = 0
-    }
-
-    func cyl_willDealloc(deinitCallback: @escaping (AnyObject) -> Void) {
-        let helper = CYLDeallocHelper(owner: self, deinitCallback: deinitCallback)
-        objc_setAssociatedObject(self, &AssociatedKeys.deallocHelper, helper, .OBJC_ASSOCIATION_RETAIN)
-    }
-}
-
-class MyClass: NSObject {
-    override init() {
-        super.init()
-        self.cyl_willDealloc { unownedOwner in
-            print("\(unownedOwner) is being deallocated")
-            // For instance, NotificationCenter.default.removeObserver(unownedOwner)
-        }
-    }
-}
-
-var instance: MyClass? = MyClass()
-instance = nil  // Prints "<MyClass: 0x0000000100506240> is being deallocated"
-```
-
-在这个实现中，你可以在对象销毁前执行任何操作。你可以使用这种方式在对象销毁之前清理资源，发送通知，或者执行其他需要在对象销毁前完成的任务。
-
-我进行下代码分析: 
-在这个特殊的场景中，也就是在销毁对象之前执行某些操作，可以被称为 "deinit callback" 或者 "pre-destruction hook"。确实需要使用 unowned 而不是 weak。原因是在 deinit 阶段，对象已经在准备销毁，所以 weak 引用会自动置为 nil。因此，在 deinit 回调中，我们需要一个确保对象存在的引用，这就是 unowned 引用。
-
+在销毁阶段，`weak` 引用已经被置 `nil`，所以必须使用不持有的引用（本库用 `Unmanaged<AnyObject>`）才能拿到“正在销毁”的对象。
 
 ----------
 Posted by [微博@iOS程序犭袁](http://weibo.com/luohanchenyilong/)  
