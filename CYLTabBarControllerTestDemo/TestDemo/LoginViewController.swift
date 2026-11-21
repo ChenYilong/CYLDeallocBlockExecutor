@@ -1,9 +1,15 @@
 //
-//  CYLDeallocBlockExecutor.h
-//  CYLDeallocExecutor
+//  LoginViewController.swift
 //  v1.2.0
 //  Created by 微博@iOS程序犭袁 ( http://weibo.com/luohanchenyilong/ ) on 15/12/27.
 //  Copyright © 2015年 https://github.com/ChenYilong . All rights reserved.
 //
 
-#import "NSObject+CYLDeallocBlockExecutor.h"
+import UIKit
+
+class LoginViewController: UIViewController {
+
+    override func viewDidLoad() {
+        super.viewDidLoad()
+    }
+}
