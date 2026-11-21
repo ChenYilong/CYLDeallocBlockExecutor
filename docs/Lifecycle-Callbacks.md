@@ -19,6 +19,12 @@ This document tracks the lifecycle block API of CYLDeallocBlockExecutor: blocks 
 - Scoring: no `TODO` in column 3 = 100, all `TODO` = 0.
 - Loop: (1) search the existing code for each TODO, (2) score, (3) implement the TODOs one by one and fill in column 3, (4) score; repeat until 100.
 
+**Follow-up (2026-11-22, verbatim):**
+
+> 生命周期可能和dealloc 也不太一样， 生命周期可能还可以在顶部执行， 顶部与底部的区分， 可以参数控制， 顶部可能也需要区分是在 super方法调用前还是调用后， 也可以通过参数控制。 请使用advisor评估如何设计。 接口设计都需要使用advisor来设计
+
+**English:** Lifecycle blocks differ from dealloc: they may also run at the top of a method. Top versus bottom is chosen by a parameter, and the top also distinguishes before and after the `super` call, again by a parameter. Use the advisor to evaluate the design; every interface design goes through the advisor.
+
 <details>
 <summary>Original prompt (verbatim)</summary>
 
@@ -44,6 +50,64 @@ public typealias CYLViewDidLayoutSubViewsBlock = (CYLTabBarController) -> Void
 
 </details>
 
+## Design (reviewed by the advisor, 2026-11-22)
+
+Every public interface below was designed with the advisor; any new public API goes back to the advisor first.
+
+### Timing
+
+The reference point is the `super` call that reaches UIKit's implementation, not the first line of an override.
+
+| Timing | Fires | Automatic dispatch | Manual dispatch |
+| :-- | :-- | :-- | :-- |
+| `.beforeSuper` | Right before UIKit's implementation runs (top, before `super`) | Yes, every view controller | Yes |
+| `.afterSuper` (default) | Right after UIKit's implementation returns (top, after `super`) | Yes, every view controller | Yes |
+| `.end` | After the owner's override body (bottom) | Only when the class does not override the method (then right after `.afterSuper`); otherwise a debug log asks for manual dispatch | Yes |
+
+### API
+
+```swift
+public enum CYLLifecycleEvent: Int    // viewDidLoad … didReceiveMemoryWarning (no dealloc case)
+public enum CYLLifecycleTiming: Int   // beforeSuper, afterSuper, end
+public struct CYLLifecycleInfo        // event, timing, animated, size, previousTraitCollection, parent
+
+// Typed owner (Self), like CYLViewDidLayoutSubViewsBlock = (CYLTabBarController) -> Void
+@discardableResult
+func cyl_addLifecycleCallback(for: CYLLifecycleEvent, timing: CYLLifecycleTiming = .afterSuper, invokeOnce: Bool = false,
+                              callback: @escaping (_ owner: Self, _ identifier: UInt, _ info: CYLLifecycleInfo) -> Void) -> UInt
+func cyl_cancelLifecycleCallback(identifier: UInt) -> Bool
+func cyl_cancelAllLifecycleCallbacks(for: CYLLifecycleEvent, timing: CYLLifecycleTiming? = nil)
+func cyl_rearmLifecycleCallbacks(for: CYLLifecycleEvent, timing: CYLLifecycleTiming? = nil)
+
+// Manual dispatch
+func cyl_performLifecycle(_ event: CYLLifecycleEvent, info: CYLLifecycleInfo, callSuper: () -> Void, body: () -> Void)
+func cyl_setManualLifecycleDispatch(_ manual: Bool, for events: Set<CYLLifecycleEvent>)
+func cyl_invokeLifecycleCallbacks(for: CYLLifecycleEvent, timing: CYLLifecycleTiming, info: CYLLifecycleInfo)
+
+// Dealloc aligned with the same shape (the 1.3.0 API stays unchanged)
+func cyl_willDealloc(callback: @escaping (_ owner: Unmanaged<AnyObject>, _ identifier: UInt, _ info: CYLLifecycleInfo) -> Void) -> UInt
+```
+
+### Rules
+
+- One model per object holds the dealloc blocks and the lifecycle blocks; one identifier counter for all of them, so cancelling by identifier is never ambiguous.
+- The model is created under `deallocCallbackLock`, as the dealloc model always was; adding, cancelling, re-arming and collecting the blocks to run happen under the model's lock. Blocks run after the lock is released, in identifier order, so a block can add or cancel blocks.
+- Invoke-once entries keep a `fired` flag: firing skips fired entries, re-arming clears the flag. Re-arming never touches the view (no `setNeedsLayout`).
+- Dealloc stays out of the typed generic API: a typed owner would be retained while it is being destroyed. The dealloc owner stays `Unmanaged`.
+- Automatic hooks: `method_setImplementation` on `UIViewController` with the previous implementation captured (no exchange with a named selector, so other swizzles such as CYLTabBarController's keep working), installed lazily the first time a lifecycle block is added. `viewIsAppearing:` is hooked only when `class_getInstanceMethod` finds it; `traitCollectionDidChange:` is reached by `NSSelectorFromString` (deprecated in iOS 17, no warning).
+- No double firing: while `cyl_performLifecycle` runs an event for an object, the automatic hook skips that object and event. The raw `cyl_invokeLifecycleCallbacks` requires the event to be declared manual first (debug assertion otherwise).
+- Callers use the `owner` parameter instead of capturing `self`: a block stored on `self` that captures `self` strongly is a retain cycle.
+
+### CYLTabBarController mapping (not changed in this task)
+
+| CYLTabBarController today | With this library |
+| :-- | :-- |
+| `viewDidLayoutSubviewsBlock` setter | Cancel the previous identifier, then `cyl_addLifecycleCallback(for: .viewDidLayoutSubviews, timing: .end, invokeOnce: …)`; a new block still replaces the old one |
+| Block run at the end of `cylViewDidLayoutSubviews` (skipped on the FlatDesign early return) | `cyl_setManualLifecycleDispatch(true, for: [.viewDidLayoutSubviews])` once, then `cyl_invokeLifecycleCallbacks(for: .viewDidLayoutSubviews, timing: .end, info:)` at the current block site, so the FlatDesign early return keeps skipping it |
+| `invokeOnceViewDidLayoutSubViewsBlock` | `invokeOnce: true` |
+| `-cyl_rearmViewDidLayoutSubviewsBlockInvokeOnce` | `cyl_rearmLifecycleCallbacks(for: .viewDidLayoutSubviews)`, then its own `view.setNeedsLayout()` |
+| Theme observers removed in `deinit` | `cyl_willDealloc(callback:)` in the setter, as the README's skin demo does |
+
 ## Scoring
 
 Score = 100 × (rows of both tables whose last column is not `TODO`) / (all rows). Every row counts the same.
@@ -51,6 +115,8 @@ Score = 100 × (rows of both tables whose last column is not `TODO`) / (all rows
 | Round | Step | Done / total | Score |
 | :-- | :-- | :-- | :-- |
 | 0 | Tables created | 0 / 25 | 0 |
+| 1 | Search of the existing code (partial matches stay TODO) | 1 / 25 | 4 |
+| 1b | Timing row added after the follow-up (denominator 25 → 26) | 1 / 26 | 4 |
 
 ## Lifecycle events
 
@@ -71,18 +137,19 @@ Score = 100 × (rows of both tables whose last column is not `TODO`) / (all rows
 | `willMove(toParent:)` | Runs before the controller is added to or removed from a container. | TODO |
 | `didMove(toParent:)` | Runs after the controller is added to or removed from a container. | TODO |
 | `didReceiveMemoryWarning()` | Runs when the app receives a memory warning. | TODO |
-| `dealloc` / `deinit` | Runs while the object is deallocated. Aligned with the other events: same `(owner, identifier)` block, same identifiers, same lock. | TODO |
+| `dealloc` / `deinit` | Runs while the object is deallocated. Aligned with the other events: same `(owner, identifier)` block, same identifiers, same lock. | TODO (partial: `cyl_willDealloc(selfCallback:)` exists, not yet aligned with other events) |
 
 ## Capabilities
 
 | Capability | Description | API / implementation |
 | :-- | :-- | :-- |
-| Several blocks per object and event | Each object can hold any number of blocks for each event; they run in the order they were added. | TODO |
-| Identifier and owner in every block | Every block receives the owner and its own identifier, as the dealloc block does (`CYLDeallocSelfCallback`). | TODO |
+| Several blocks per object and event | Each object can hold any number of blocks for each event; they run in the order they were added. | TODO (partial: dealloc only, `CYLDeallocCallbackModel`) |
+| Identifier and owner in every block | Every block receives the owner and its own identifier, as the dealloc block does (`CYLDeallocSelfCallback`). | TODO (partial: dealloc only) |
 | Typed owner for live events | The owner can be received with its own type, like `CYLViewDidLayoutSubViewsBlock = (CYLTabBarController) -> Void`. | TODO |
-| Shared lock | Adding, cancelling and running use the lock of the dealloc API (`deallocCallbackLock`) and the per-object model lock. | TODO |
-| Cancel one / cancel all | Cancel a block by its identifier, or all blocks of one event. | TODO |
+| Shared lock | Adding, cancelling and running use the lock of the dealloc API (`deallocCallbackLock`) and the per-object model lock. | TODO (partial: dealloc only) |
+| Cancel one / cancel all | Cancel a block by its identifier, or all blocks of one event. | TODO (partial: dealloc only, `cyl_cancelDeallocCallback(identifier:)`, `cyl_cancelAllDeallocCallbacks()`) |
 | Invoke once and re-arm | A block can run only once; re-arming lets it run once more (the `invokeOnce` pattern of CYLTabBarController). | TODO |
 | Manual dispatch | The owner fires an event itself at the exact point it needs (CYLTabBarController runs its layout block at the end of its own `-viewDidLayoutSubviews`). | TODO |
 | Automatic dispatch | Any `UIViewController` fires the events without code in its overrides. | TODO |
-| Pure Swift | The whole library is Swift; no Objective-C file. | TODO |
+| Timing (before super / after super / end) | Each block chooses when it runs: at the top before `super`, at the top after `super`, or at the end of the method. | TODO |
+| Pure Swift | The whole library is Swift; no Objective-C file. | Already true: `CYLDeallocBlockExecutor/*.swift` only (round 1 search: no `.h` / `.m` in the repository) |
