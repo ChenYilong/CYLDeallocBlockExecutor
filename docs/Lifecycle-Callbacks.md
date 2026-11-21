@@ -25,6 +25,12 @@ This document tracks the lifecycle block API of CYLDeallocBlockExecutor: blocks 
 
 **English:** Lifecycle blocks differ from dealloc: they may also run at the top of a method. Top versus bottom is chosen by a parameter, and the top also distinguishes before and after the `super` call, again by a parameter. Use the advisor to evaluate the design; every interface design goes through the advisor.
 
+**Follow-up 2 (2026-11-22, verbatim):**
+
+> advisor 在接口实现过程中充分参考CYLTabBarController 里的生命周期需求， 已帮助其将来集成进core代码中， 能实现用户集成后， 以及core核心代码在实现过程中更加低耦合的加入生命周期管理。也需要参考本项目readme相关描述， 参考其便利性
+
+**English:** While implementing the interface, the advisor must fully consider CYLTabBarController's lifecycle needs, so the library can later be integrated into its core, letting both the app (after integration) and the core add lifecycle management with low coupling. Also follow this project's README and keep its convenience.
+
 <details>
 <summary>Original prompt (verbatim)</summary>
 
@@ -98,7 +104,27 @@ func cyl_willDealloc(callback: @escaping (_ owner: Unmanaged<AnyObject>, _ ident
 - No double firing: while `cyl_performLifecycle` runs an event for an object, the automatic hook skips that object and event. The raw `cyl_invokeLifecycleCallbacks` requires the event to be declared manual first (debug assertion otherwise).
 - Callers use the `owner` parameter instead of capturing `self`: a block stored on `self` that captures `self` strongly is a retain cycle.
 
-### CYLTabBarController mapping (not changed in this task)
+### Design v2: CYLTabBarController's needs (advisor, 2026-11-22)
+
+CYLTabBarController's overrides today call `super` first and then a `cyl…()` body (`viewWillAppear`, `viewDidAppear`, `viewWillDisappear`, `viewDidDisappear`, `viewWillLayoutSubviews`, `viewDidLayoutSubviews`, `traitCollectionDidChange`, `didReceiveMemoryWarning`); `viewWillTransition` does its work before `super`; `deinit` removes KVO observers that were added only under some conditions (the README's flag problem). v2 changes:
+
+1. **The core registers `.afterSuper` / `.beforeSuper`, never `.end`.** The hook lives on `UIViewController`, so an app subclass of the (open) core class still reaches it through `super`: app code before `super` → `.beforeSuper` → UIKit → `.afterSuper` (the core) → app code after `super`, the order of today's `super` + `cyl…()`. `.end` fires automatically only for classes that do not override the method, which an app subclass would silently break.
+2. **Manual dispatch per (event, timing).** `cyl_setManualLifecycleDispatch(_:for:timings:)` (all timings by default): CYLTabBarController keeps `.afterSuper` of `viewDidLayoutSubviews` automatic and dispatches `.end` (the app's layout block) itself.
+3. **Replace by key.** `cyl_addLifecycleCallback(…, key:)` and `cyl_willDealloc(key:callback:)` remove the block added before under the same key in the same locked step; the new block starts unfired (replacing re-arms). The layout-block setter, a twice-called install method and the README's `themeMap` setter keep one block each. No priority parameter: registration order runs the core (init) before the app.
+4. **Dealloc capture rule.** When a dealloc block runs, UIKit's ivars (`tabBar`) may already be released: capture the observed object strongly where the observer is added, never read it through `owner`; `NotificationCenter.default.removeObserver(owner.takeUnretainedValue())` only uses the address and stays fine.
+
+| CYLTabBarController today | With this library (v2) |
+| :-- | :-- |
+| `viewWillAppear` … `viewDidDisappear`, `viewWillLayoutSubviews` forwarders | One install method registers `.afterSuper` blocks with keys (`"cyl.core.viewWillAppear"` …); the overrides can go |
+| `traitCollectionDidChange` → `cylTraitCollectionDidChange(from:)` | `.afterSuper` block reading `info.previousTraitCollection` |
+| `didReceiveMemoryWarning` + `unloadsUnselectedViewsOnMemoryWarning` | `.afterSuper` block, flag checked inside |
+| `viewWillTransition` work before `super` | `.beforeSuper` block reading `info.size` / `info.transitionCoordinator` |
+| `viewDidLayoutSubviews` internal work | `.afterSuper` block |
+| App's `viewDidLayoutSubviewsBlock` (+ invoke once, re-arm, FlatDesign early return) | `cyl_setManualLifecycleDispatch(true, for: [.viewDidLayoutSubviews], timings: [.end])`; setter = `cyl_addLifecycleCallback(for: .viewDidLayoutSubviews, timing: .end, invokeOnce: true, key: "cyl.core.layoutBlock")`; dispatch with `cyl_invokeLifecycleCallbacks(for: .viewDidLayoutSubviews, timing: .end)` where the block runs today; re-arm = `cyl_rearmLifecycleCallbacks(for: .viewDidLayoutSubviews)` + its own `setNeedsLayout()` |
+| `deinit` → `cylStopObservingForDealloc()` with `isObserving…` flags | Where the observer is added: capture the observed object, `cyl_willDealloc(key:) { … observed.removeObserver(…) }`; no flag |
+| Theme: `cyl_themeDidChange` per controller, `CYLThemeManagerCenter.updateThemes(for:)` | `.afterSuper` `traitCollectionDidChange` block; theme observers removed with keyed dealloc blocks |
+
+### CYLTabBarController mapping, v1 (not changed in this task)
 
 | CYLTabBarController today | With this library |
 | :-- | :-- |
@@ -107,6 +133,14 @@ func cyl_willDealloc(callback: @escaping (_ owner: Unmanaged<AnyObject>, _ ident
 | `invokeOnceViewDidLayoutSubViewsBlock` | `invokeOnce: true` |
 | `-cyl_rearmViewDidLayoutSubviewsBlockInvokeOnce` | `cyl_rearmLifecycleCallbacks(for: .viewDidLayoutSubviews)`, then its own `view.setNeedsLayout()` |
 | Theme observers removed in `deinit` | `cyl_willDealloc(callback:)` in the setter, as the README's skin demo does |
+
+## Integration prerequisites (TODO, outside the score)
+
+| Item | Status |
+| :-- | :-- |
+| Swift Package Manager (`Package.swift`): CYLTabBarController ships through SPM and Carthage | TODO |
+| Podspec platform is iOS 9.0; Xcode 27 builds 15.0+ only, `pod lib lint` likely fails | TODO |
+| Version bump and tag (1.4.0) | TODO (maintainer) |
 
 ## Scoring
 
@@ -117,6 +151,7 @@ Score = 100 × (rows of both tables whose last column is not `TODO`) / (all rows
 | 0 | Tables created | 0 / 25 | 0 |
 | 1 | Search of the existing code (partial matches stay TODO) | 1 / 25 | 4 |
 | 1b | Timing row added after the follow-up (denominator 25 → 26) | 1 / 26 | 4 |
+| 1c | Design v2 rows added (manual per timing, replace by key; denominator 26 → 28) | 1 / 28 | 4 |
 
 ## Lifecycle events
 
@@ -152,4 +187,6 @@ Score = 100 × (rows of both tables whose last column is not `TODO`) / (all rows
 | Manual dispatch | The owner fires an event itself at the exact point it needs (CYLTabBarController runs its layout block at the end of its own `-viewDidLayoutSubviews`). | TODO |
 | Automatic dispatch | Any `UIViewController` fires the events without code in its overrides. | TODO |
 | Timing (before super / after super / end) | Each block chooses when it runs: at the top before `super`, at the top after `super`, or at the end of the method. | TODO |
+| Manual dispatch per timing | The owner can dispatch one timing of an event itself while the other timings of that event stay automatic. | TODO |
+| Replace by key | Adding a block under a key replaces the block added before under that key (lifecycle and dealloc), so setters and install methods called twice keep one block. | TODO |
 | Pure Swift | The whole library is Swift; no Objective-C file. | Already true: `CYLDeallocBlockExecutor/*.swift` only (round 1 search: no `.h` / `.m` in the repository) |
