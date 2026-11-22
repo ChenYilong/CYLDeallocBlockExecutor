@@ -22,10 +22,6 @@ android {
         targetCompatibility = JavaVersion.VERSION_17
     }
 
-    kotlinOptions {
-        jvmTarget = "17"
-    }
-
     publishing {
         singleVariant("release") {
             withSourcesJar()
@@ -38,9 +34,14 @@ android {
     }
 }
 
+kotlin {
+    compilerOptions {
+        jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17)
+    }
+}
+
 dependencies {
     api(libs.androidx.lifecycle.common)
-    implementation(libs.androidx.lifecycle.runtime)
     testImplementation(libs.junit)
     testImplementation(libs.androidx.lifecycle.runtime.testing)
     testImplementation(libs.kotlinx.coroutines.core)
