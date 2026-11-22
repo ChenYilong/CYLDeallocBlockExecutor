@@ -1,3 +1,5 @@
+// ignore_for_file: library_private_types_in_public_api
+
 import 'package:cyl_dealloc_block_executor/cyl_dealloc_block_executor.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -21,8 +23,8 @@ class _PageState extends State<Page> with CYLLifecycleMixin<Page> {
   @override
   void initState() {
     log.add('app initState before super');
-    super.initState();
-    log.add('app initState after super');
+    // Blocks for the events fired inside super (viewDidLoad, move events) are
+    // added before super, as an iOS owner adds them before the event.
     for (final ev in LifecycleEvent.values) {
       for (final t in [LifecycleTiming.beforeSuper, LifecycleTiming.afterSuper]) {
         lifecycle.addLifecycleCallback<_PageState>(ev, (o, id, i) {
@@ -30,6 +32,8 @@ class _PageState extends State<Page> with CYLLifecycleMixin<Page> {
         }, timing: t);
       }
     }
+    super.initState();
+    log.add('app initState after super');
     onInit?.call(this);
   }
 
@@ -188,5 +192,19 @@ void main() {
         const LifecycleInfo(event: LifecycleEvent.viewDidLayoutSubviews, timing: LifecycleTiming.end));
     expect(log.where((l) => l == 'layout-block').length, 1);
     expect(log, contains('viewDidLayoutSubviews/afterSuper'));
+  });
+
+  testWidgets('detach: willMoveToParent reports parentAttached false', (tester) async {
+    final attached = <bool?>[];
+    onInit = (s) {
+      for (final ev in [LifecycleEvent.willMoveToParent, LifecycleEvent.didMoveToParent]) {
+        s.lifecycle.addLifecycleCallback<_PageState>(
+            ev, (o, id, i) => attached.add(i.parentAttached));
+      }
+    };
+    await tester.pumpWidget(app(const Page()));
+    attached.clear();
+    await tester.pumpWidget(const SizedBox());
+    expect(attached, [false, false]);
   });
 }

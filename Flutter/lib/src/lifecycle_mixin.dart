@@ -70,7 +70,7 @@ mixin CYLLifecycleMixin<W extends StatefulWidget> on State<W> {
   }
 
   void _attachBinding() {
-    final view = View.maybeOf(context);
+    final view = _view;
     _lastBrightness = WidgetsBinding.instance.platformDispatcher.platformBrightness;
     _lastTextScale = WidgetsBinding.instance.platformDispatcher.textScaleFactor;
     if (view != null) {
@@ -79,6 +79,13 @@ mixin CYLLifecycleMixin<W extends StatefulWidget> on State<W> {
     }
     _binding = _BindingObserver(this);
     WidgetsBinding.instance.addObserver(_binding!);
+  }
+
+  /// The view of the app (the implicit view, else the first one). Looked up
+  /// without an inherited-widget dependency so it is usable in `initState`.
+  FlutterView? get _view {
+    final d = WidgetsBinding.instance.platformDispatcher;
+    return d.implicitView ?? (d.views.isEmpty ? null : d.views.first);
   }
 
   static EdgeInsets _padding(FlutterView view) => EdgeInsets.fromViewPadding(
@@ -273,7 +280,7 @@ class _BindingObserver with WidgetsBindingObserver {
   @override
   void didChangeMetrics() {
     final s = _state;
-    final view = View.maybeOf(s.context);
+    final view = s._view;
     if (view == null) return;
     final padding = CYLLifecycleMixin._padding(view);
     if (padding != s._lastPadding) {
