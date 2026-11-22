@@ -2,6 +2,66 @@
 
 This document tracks the lifecycle block API of CYLDeallocBlockExecutor: blocks run at UIKit lifecycle events of an object, in the same way as the dealloc block. The API will become a core dependency of [CYLTabBarController](https://github.com/ChenYilong/CYLTabBarController), which will use it for its layout block and its theme (skin) interfaces, as the README describes for the dealloc block.
 
+## Android port (Kotlin, `android/`)
+
+Gradle module `cyldeallocblockexecutor` (package `com.cyl.deallocblockexecutor`, minSdk 23, AGP 8.7.3, Kotlin 2.0.21). JitPack: `com.github.ChenYilong:CYLDeallocBlockExecutor:<commit>` (`jitpack.yml` builds `android/`). Tests: `cd android && ./gradlew test` (JVM, JUnit, no emulator).
+
+```kotlin
+class MyOwner : LifecycleOwner { ... }
+val callbacks = CYLLifecycleCallbacks(owner)          // the owner is held weakly
+callbacks.attachTo(owner.lifecycle)                   // or owner.cylLifecycleCallbacks()
+callbacks.addCallback(CYLLifecycleEvent.LAYOUT, invokeOnce = true, key = "cyl.core.layoutBlock") { owner, id, info -> }
+callbacks.willDealloc(key = "cyl.core.kvo") { owner, id, info -> }
+callbacks.perform(CYLLifecycleEvent.LAYOUT)           // manual dispatch
+callbacks.rearm("cyl.core.layoutBlock")
+```
+
+Differences from iOS, by design: Android has no before / after `super` hook, so there is one timing; the registry is owned by the caller (no associated object on the owner); dealloc is DESTROY or an explicit `dealloc()`, never a garbage-collector hook; lifecycle and dealloc callbacks share one key space; after dealloc, adding returns the illegal identifier 0 and registers nothing; the typed extension `cylLifecycleCallbacks()` matches owners by identity, never by `equals`.
+
+| iOS | Android |
+| :-- | :-- |
+| viewDidLoad | `CREATE` |
+| viewWillAppear / viewIsAppearing | `START` |
+| viewDidAppear | `RESUME` |
+| viewWillDisappear | `PAUSE` |
+| viewDidDisappear | `STOP` |
+| dealloc (`cylWillDealloc`) | `DESTROY` (then `willDealloc` callbacks) or `dealloc()` |
+| viewDidLayoutSubviews | `LAYOUT`, manual only (`perform`) |
+| `.beforeSuper` / `.afterSuper` / `.end` | one timing |
+| `cylAddLifecycleCallback` / `cylWillDealloc` | `addCallback` / `willDealloc` |
+| `cylCancelLifecycleCallback(identifier:/key:)` | `cancel(id)` / `cancel(key)` |
+| `cylCancelAllLifecycleCallbacks(for:)` / `cylCancelAllDeallocCallbacks` | `cancelAll(event)` / `cancelAllWillDealloc()` |
+| `cylRearmLifecycleCallback(key:)` / `cylRearmLifecycleCallbacks(for:)` | `rearm(key)` / `rearm(event)` |
+| `cylInvokeLifecycleCallbacks` / `cylPerformLifecycle` | `perform(event, info)` |
+
+### Parity table: `Tests/LifecycleTests/main.swift` to `CYLLifecycleCallbacksTest`
+
+| iOS check | Android test |
+| :-- | :-- |
+| automatic timings, no override / override; cylPerformLifecycle order; nested cylPerformLifecycle; core block inside an app subclass's super call; core raw .end inside an app's cylPerformLifecycle; manual end after the override body; automatic afterSuper beside manual end; viewWillAppear .afterSuper fires (per swizzle order) | N/A on Android: one timing, no `super` hook, no method swizzling |
+| appearance events fire; exchange swizzle after hooks; info.animated; disappearance events; traitCollectionDidChange; viewSafeAreaInsetsDidChange; viewLayoutMarginsDidChange; willMove/didMove with parent; didReceiveMemoryWarning; viewWillTransition with size | N/A on Android: UIKit methods; the Lifecycle events are covered by `attachToDispatchesLifecycleEventsThenDeallocOnDestroy` |
+| invoke once (manual end) | `invokeOnceRunsOnceUntilRearmedByKey` |
+| re-arm runs an invoke-once block again | `invokeOnceRunsOnceUntilRearmedByKey` |
+| replace by key (and replacement re-arms) | `replaceByKeyRearmsTheReplacement` |
+| order by identifier, cancel one; typed owner | `orderByIdentifierCancelOneAndTypedOwner` |
+| cancel all | `cancelAllRemovesUnkeyedCallbacksOfTheEvent` |
+| add/cancel from inside a block | `addAndCancelInsideACallback` |
+| one identifier sequence for dealloc and lifecycle; dealloc order, info, keyed replacement | `deallocSharesIdentifiersRunsInOrderWithInfoAndKeyedReplacement` |
+| KVO: no viewDidLoad, nothing to remove; observer removed by the dealloc block; issue #8 (view loaded / not loaded) | `observerRemovedByTheDeallocCallbackWhetherOrNotCreateRan` |
+| isolation: app cancel-all keeps the core's keyed blocks | `appCancelAllKeepsTheCoresKeyedCallbacks` |
+| isolation: app cancel-all keeps the core's keyed dealloc block | `cancelAllWillDeallocKeepsKeyedCallbacks` |
+| isolation: core re-arms by key, app's run-once block stays fired | `coreRearmsByKeyAppRunOnceBlockStaysFired` |
+| isolation: re-arm by event skips keyed blocks | `rearmByEventSkipsKeyedCallbacks` |
+| cancel by key returns true; removes only that block | `cancelByKeyRemovesOnlyThatCallback` |
+| cancel dealloc block by key | `cancelWillDeallocByKeyReturnsTrueOnce` |
+| issue #3: cyl_executeAtDealloc x3 | N/A on Android: deprecated iOS API |
+| issue #3: cylWillDealloc x3 runs nothing early, each once, in order | `addingWillDeallocRunsNothingEarly` |
+| issue #5: identifiers ascend from 1, never 0 | `identifiersAscendFromOneNeverZero` |
+| issue #5: cancel returns true once, then false; cancel(0) false | `cancelReturnsTrueOnceThenFalse` |
+| issue #5: cancelled later tasks do not run | `cancelLaterTasksDoNotRunTheEarlierOneDoes` |
+
+Android only: `deallocRunsOnceAndCancelDuringItHasNoEffect`, `performDoesNothingWhenTheOwnerIsGone`, `extensionMatchesOwnersByIdentityNotEquals`, `extensionAttachesToTheLifecycle`, `concurrentAddsGetUniqueIdentifiers`. Result: 23 tests, 0 failures. Rows of the table: 17 ported to a test, 4 N/A on Android (each with its reason).
+
 ## Task log
 
 ### TODO: all platforms, step 1 Android (2026-11-23, branch `feat/lifecycle-callbacks-android`)
