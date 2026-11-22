@@ -101,6 +101,8 @@ class AndroidBindingTest {
             }
             app.onTrimMemory(ComponentCallbacks2.TRIM_MEMORY_RUNNING_MODERATE)
             assertEquals(emptyList(), log)
+            app.onTrimMemory(ComponentCallbacks2.TRIM_MEMORY_UI_HIDDEN)
+            assertEquals(emptyList(), log)
             app.onTrimMemory(ComponentCallbacks2.TRIM_MEMORY_COMPLETE)
             assertEquals(listOf("didReceiveMemoryWarning"), log)
         }
@@ -137,5 +139,43 @@ class AndroidBindingTest {
             }
             assertEquals(listOf("traitCollectionDidChange"), log)
         }
+    }
+
+    @Test fun sizeChangeFiresViewWillTransitionWithTheNewSize() {
+        ActivityScenario.launch(HostActivity::class.java).use { s ->
+            var size: com.chenyilong.cyldeallocblockexecutor.Size? = null
+            s.onActivity { a ->
+                LifecycleRegistry.of(a).addLifecycleCallback<HostActivity>(LifecycleEvent.viewWillTransition) { _, _, info -> size = info.size }
+                val c = Configuration(a.resources.configuration)
+                c.screenWidthDp = c.screenHeightDp.also { c.screenHeightDp = c.screenWidthDp }
+                a.resources.updateConfiguration(c, a.resources.displayMetrics)
+                app.onConfigurationChanged(c)
+                assertEquals(com.chenyilong.cyldeallocblockexecutor.Size(c.screenWidthDp, c.screenHeightDp), size)
+            }
+        }
+    }
+
+    @Test fun insetsFromTheProviderReachViewSafeAreaInsetsDidChange() {
+        val first = com.chenyilong.cyldeallocblockexecutor.Insets(top = 24)
+        val second = com.chenyilong.cyldeallocblockexecutor.Insets(top = 48, bottom = 34)
+        var current = first
+        AndroidBinding.insetsProvider = { current }
+        try {
+            ActivityScenario.launch(HostActivity::class.java).use { s ->
+                s.onActivity { a ->
+                    LifecycleRegistry.of(a).addLifecycleCallback<HostActivity>(LifecycleEvent.viewSafeAreaInsetsDidChange) { _, _, info ->
+                        log.add("insets from ${info.previousInsets}")
+                    }
+                    a.window.decorView.viewTreeObserver.dispatchOnGlobalLayout()
+                    a.window.decorView.viewTreeObserver.dispatchOnGlobalLayout()
+                    current = second
+                    a.window.decorView.viewTreeObserver.dispatchOnGlobalLayout()
+                }
+            }
+        } finally {
+            AndroidBinding.insetsProvider = { v -> null }
+        }
+        // the launch already reported the first insets; only the change to `second` fires, with the first as previous
+        assertEquals(listOf("insets from Insets(top=24, left=0, bottom=0, right=0)"), log)
     }
 }

@@ -187,3 +187,18 @@ test('replacing a key inside a block: the old block in the running snapshot is s
   fire();
   assert.deepEqual(log, ['first', 'replacement']);
 });
+
+test('works without WeakRef (older Mini Program engines)', async () => {
+  const saved = globalThis.WeakRef;
+  globalThis.WeakRef = undefined;
+  try {
+    const o = {};
+    const reg = new LifecycleRegistry(o);
+    let hit = 0;
+    reg.addLifecycleCallback('viewDidLoad', () => hit++);
+    reg.fireAutomatic('viewDidLoad', 'afterSuper');
+    assert.equal(hit, 1);
+  } finally {
+    globalThis.WeakRef = saved;
+  }
+});

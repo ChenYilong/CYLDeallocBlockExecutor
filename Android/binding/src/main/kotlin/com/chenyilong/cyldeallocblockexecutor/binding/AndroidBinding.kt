@@ -58,7 +58,12 @@ object AndroidBinding {
         return ConfigSnapshot(size, night, c.fontScale)
     }
 
-    private fun insetsOf(view: View): Insets? {
+    /** Reads the root window insets without installing an insets listener, so the app's own listener is never replaced. Replaceable in tests. */
+    internal var insetsProvider: (View) -> Insets? = ::systemInsetsOf
+
+    private fun insetsOf(view: View): Insets? = insetsProvider(view)
+
+    private fun systemInsetsOf(view: View): Insets? {
         if (Build.VERSION.SDK_INT < 23) return null
         val i = view.rootWindowInsets ?: return null
         return Insets(i.systemWindowInsetTop, i.systemWindowInsetLeft, i.systemWindowInsetBottom, i.systemWindowInsetRight)
@@ -113,7 +118,7 @@ object AndroidBinding {
 
         override fun onActivityDestroyed(activity: Activity) {
             controllerOf(activity).destroy()
-            synchronized(AndroidBinding) { activities.remove(activity) }
+            synchronized(AndroidBinding) { activities.remove(activity); controllers.remove(activity) }
         }
 
         override fun onActivitySaveInstanceState(activity: Activity, outState: Bundle) {}
@@ -136,7 +141,10 @@ object AndroidBinding {
 
         override fun onFragmentPaused(fm: FragmentManager, f: Fragment) = controllerOf(f).pause()
         override fun onFragmentStopped(fm: FragmentManager, f: Fragment) = controllerOf(f).stop()
-        override fun onFragmentDestroyed(fm: FragmentManager, f: Fragment) = controllerOf(f).destroy()
+        override fun onFragmentDestroyed(fm: FragmentManager, f: Fragment) {
+            controllerOf(f).destroy()
+            synchronized(AndroidBinding) { controllers.remove(f) }
+        }
     }
 
     private val componentCallbacks = object : ComponentCallbacks2 {
@@ -146,7 +154,8 @@ object AndroidBinding {
         }
 
         override fun onTrimMemory(level: Int) {
-            if (level < ComponentCallbacks2.TRIM_MEMORY_RUNNING_CRITICAL) return
+            // UI_HIDDEN (20) means the app went to the background, not that memory is short.
+            if (level < ComponentCallbacks2.TRIM_MEMORY_RUNNING_CRITICAL || level == ComponentCallbacks2.TRIM_MEMORY_UI_HIDDEN) return
             fire(level)
         }
 

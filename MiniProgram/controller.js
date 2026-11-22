@@ -88,8 +88,8 @@ export class LifecycleController {
 }
 
 /**
- * Wraps the options of `Page({...})` (or the `pageLifetimes` / `lifetimes` of a
- * Component) so the controller sees every handler, then calls the original.
+ * Wraps the options of `Page({...})` (Page only: a Component's `lifetimes` and
+ * `pageLifetimes` are not wrapped, forward them to a controller by hand) so the controller sees every handler, then calls the original.
  * Returns the options with `cyl` (the controller) added after onLoad.
  */
 export function withLifecycle(options) {

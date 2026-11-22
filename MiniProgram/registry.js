@@ -36,7 +36,8 @@ export class LifecycleRegistry {
   hookInstalled = false;
 
   constructor(owner        ) {
-    this.owner = new WeakRef(owner);
+    // WeakRef is not guaranteed on every Mini Program JS engine: without it the owner is held strongly (the page's own lifetime ends it with onUnload).
+    this.owner = typeof WeakRef === 'function' ? new WeakRef(owner) : { deref: () => owner };
   }
 
   hasBlocksFor(event                )          {
