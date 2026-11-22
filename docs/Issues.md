@@ -11,6 +11,7 @@ Score = rows whose third column is not TODO ÷ all rows × 100. A row counts onl
 | 1 (search existing code) | 2026-11-22 | 4 / 7 | 57 / 100 | self, to be reviewed by the advisor |
 | 2 (after fixes, commit `dba8386`) | 2026-11-22 | 7 / 7 | 100 / 100 | self, to be reviewed by the advisor |
 | 3 (review: 1.3.0 source checked, iOS 17.5 run, docs fixed) | 2026-11-22 | 7 / 7 | 100 / 100 | advisor (provisional, pending CI) |
+| 4 (final: CI green, transcriptions posted) | 2026-11-22 | 7 / 7 | 100 / 100 | advisor |
 
 ## Table
 
