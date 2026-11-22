@@ -119,16 +119,61 @@ pod update
 
 ### 取消回调
 
-`cylWillDealloc(selfCallback:)` 会返回任务标识（`UInt`），可用它取消；回调按添加顺序依次执行：
+`cylWillDealloc(selfCallback:)` 会返回任务标识（`UInt`），取消时传入的就是这个返回值（`cylWillDealloc(callback:)` 和 `cylWillDealloc(key:callback:)` 也一样）；回调按添加顺序依次执行：
 
  ```swift
 let id = foo.cylWillDealloc { owner, identifier in /* ... */ }
 
-foo.cylCancelDeallocCallback(identifier: id)   // 取消单个，返回是否成功
+foo.cylCancelDeallocCallback(identifier: id)   // 取消单个：真的取消了返回 true；已取消过或不存在返回 false
 foo.cylCancelAllDeallocCallbacks()             // 取消全部
  ```
 
+关于标识：
+
+- 传入的值就是 `cylWillDealloc` 返回的值，没有别的来源。
+- 有效的 block 永远不会返回 `0`（`cylDeallocCallbackIllegalIdentifier`）；`0` 只表示非法标识，取消它总是返回 `false`。
+- 同一个对象上的标识从 `1` 开始递增（`1, 2, 3…`），dealloc 时 block 按标识从小到大执行。所以可以比较标识来取消"晚于某个任务"的所有任务：
+
+ ```swift
+let first = foo.cylWillDealloc { _, _ in /* 任务 1 */ }
+let second = foo.cylWillDealloc { _, _ in /* 任务 2 */ }
+let third = foo.cylWillDealloc { _, _ in /* 任务 3 */ }
+
+// 只保留 first：取消所有标识大于 first 的任务（在对象销毁之前调用）
+[second, third].filter { $0 > first }.forEach { foo.cylCancelDeallocCallback(identifier: $0) }
+ ```
+
+- 带 key 的 block（`cylWillDealloc(key:callback:)` / `cylCancelDeallocCallback(key:)`）是 1.4.0 新增的，尚未发布；不需要保存标识，用 key 取消即可。
+- 对象开始销毁后（block 正在执行时）已经不能再取消了，取消要在销毁之前调用。
+
 回调里的 `owner` 是 `Unmanaged<AnyObject>`（对应 Objective-C 的 `__unsafe_unretained id`），对象此时正在销毁：不要持有或让它逃出 block，需要时用 `owner.takeUnretainedValue()`。
+
+### 观察者比被观察的控制器活得久（issue #8）
+
+iOS 11 以后，`UIViewController` 可能比观察它的 `view` 先销毁（这是释放顺序问题，不是循环引用）。观察者只要在被观察的控制器销毁时注册一个 dealloc block，在里面移除观察并清掉对控制器的引用，就不会崩溃：
+
+ ```swift
+final class ObserverView: UIView {
+    unowned(unsafe) var viewController: UIViewController?
+
+    func observe(_ viewController: UIViewController) {
+        self.viewController = viewController
+        viewController.addObserver(self, forKeyPath: "view", options: .new, context: nil)
+        // 弱引用捕获观察者；控制器先销毁时，由控制器的 dealloc block 完成清理
+        viewController.cylWillDealloc { [weak self] owner, _ in
+            guard let self else { return }
+            (owner.takeUnretainedValue() as! NSObject).removeObserver(self, forKeyPath: "view")
+            self.viewController = nil
+        }
+    }
+
+    override func observeValue(forKeyPath keyPath: String?, of object: Any?, change: [NSKeyValueChangeKey: Any]?, context: UnsafeMutableRawPointer?) {
+        // 处理 view 的变化
+    }
+}
+ ```
+
+控制器销毁后，观察者继续存活不会出错，之后它自己销毁也没有问题（视图已加载或未加载都一样）。对应测试：`Tests/LifecycleTests/main.swift` 的 "issue #8" 检查。
 
 ### 生命周期 block
 
@@ -183,7 +228,7 @@ Objective-C | Swift
 `cyl_cancelDeallocCallbackWithIdentifier:` | `cylCancelDeallocCallback(identifier:)`
 `cylCancelAllDeallocCallbacks` | `cylCancelAllDeallocCallbacks()`
 `cyl_executeAtDealloc:`（已废弃） | `cyl_executeAtDealloc(_:)`（已废弃）
-`CYLDeallocCallbackIllegalIdentifier` | `CYLDeallocCallbackIllegalIdentifier`
+`CYLDeallocCallbackIllegalIdentifier` | `cylDeallocCallbackIllegalIdentifier`
 
 ### 第三步
 

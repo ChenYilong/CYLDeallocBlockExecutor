@@ -137,6 +137,27 @@ final class KVOObserverViewController: UIViewController {
     override func observeValue(forKeyPath keyPath: String?, of object: Any?, change: [NSKeyValueChangeKey: Any]?, context: UnsafeMutableRawPointer?) {}
 }
 
+var executeRuns: [String] = []
+
+/// The 1.2.0 API is deprecated on purpose: this test calls it anyway (three expected deprecation warnings).
+func executeAtDeallocThreeTimes(on object: NSObject) {
+    object.cyl_executeAtDealloc { executeRuns.append("a") }
+    object.cyl_executeAtDealloc { executeRuns.append("b") }
+    object.cyl_executeAtDealloc { executeRuns.append("c") }
+}
+
+/// Issue #8: a view-like observer that outlives its view controller.
+final class ViewObserver: NSObject {
+    unowned(unsafe) var viewController: UIViewController?
+    let onDeinit: () -> Void
+    init(onDeinit: @escaping () -> Void) {
+        self.onDeinit = onDeinit
+        super.init()
+    }
+    deinit { onDeinit() }
+    override func observeValue(forKeyPath keyPath: String?, of object: Any?, change: [NSKeyValueChangeKey: Any]?, context: UnsafeMutableRawPointer?) {}
+}
+
 func appear(_ vc: UIViewController, in window: UIWindow) {
     window.rootViewController = vc
     window.makeKeyAndVisible()
@@ -406,6 +427,70 @@ func runTests(window: UIWindow) {
     let deallocKeyed = NSObject()
     deallocKeyed.cylWillDealloc(key: "k") { _, _, _ in log.append("never") }
     check(deallocKeyed.cylCancelDeallocCallback(key: "k") && !deallocKeyed.cylCancelDeallocCallback(key: "k"), "cancel dealloc block by key")
+
+    // 21. Issue #3: cyl_executeAtDealloc several times on one object: nothing runs early, each block runs once at dealloc.
+    executeRuns = []
+    autoreleasepool {
+        let multi = NSObject()
+        executeAtDeallocThreeTimes(on: multi)
+        check(executeRuns.isEmpty, "issue #3: cyl_executeAtDealloc x3, no block runs when a later one is added", "\(executeRuns)")
+    }
+    check(executeRuns.sorted() == ["a", "b", "c"], "issue #3: cyl_executeAtDealloc x3, every block runs exactly once at dealloc", "\(executeRuns)")
+    var willDeallocRuns: [String] = []
+    autoreleasepool {
+        let multi = NSObject()
+        for name in ["a", "b", "c"] {
+            multi.cylWillDealloc { _, _ in willDeallocRuns.append(name) }
+            check(willDeallocRuns.isEmpty, "issue #3: cylWillDealloc(selfCallback:) adding \(name) runs no block")
+        }
+    }
+    check(willDeallocRuns == ["a", "b", "c"], "issue #3: cylWillDealloc(selfCallback:) x3 runs every block exactly once, in order", "\(willDeallocRuns)")
+
+    // 22. Issue #5: identifiers ascend from 1, 0 is never returned, cancel returns true once and then false.
+    let identified = NSObject()
+    let identifiers = (0..<3).map { _ in identified.cylWillDealloc { _, _ in log.append("identified") } }
+    check(identifiers == [1, 2, 3] && !identifiers.contains(cylDeallocCallbackIllegalIdentifier), "issue #5: identifiers ascend from 1, never 0", "\(identifiers)")
+    check(identified.cylCancelDeallocCallback(identifier: identifiers[1]) && !identified.cylCancelDeallocCallback(identifier: identifiers[1]),
+          "issue #5: cancel(identifier:) returns true once, then false")
+    check(!identified.cylCancelDeallocCallback(identifier: cylDeallocCallbackIllegalIdentifier), "issue #5: cancel(identifier: 0) returns false")
+    // Cancel the later tasks by comparing identifiers: only the earlier block runs.
+    var cancelLater: [String] = []
+    autoreleasepool {
+        let object = NSObject()
+        var taskIDs: [UInt] = []
+        for name in ["first", "second", "third"] {
+            taskIDs.append(object.cylWillDealloc { _, _ in cancelLater.append(name) })
+        }
+        let threshold = taskIDs[0]
+        let cancelled = taskIDs.filter { $0 > threshold }.map { object.cylCancelDeallocCallback(identifier: $0) }
+        check(cancelled == [true, true], "issue #5: cancelling every identifier above the first returns true", "\(cancelled)")
+    }
+    check(cancelLater == ["first"], "issue #5: cancelled later tasks do not run, the earlier one does", "\(cancelLater)")
+
+    // 23. Issue #8: an observer outlives the view controller that it observes with KVO.
+    for viewLoaded in [true, false] {
+        let label = viewLoaded ? "view loaded" : "view not loaded"
+        var blockRan = false
+        var observerDeallocated = false
+        var observer: ViewObserver? = ViewObserver { observerDeallocated = true }
+        autoreleasepool {
+            let viewController = PlainViewController()
+            if viewLoaded { viewController.loadViewIfNeeded() }
+            observer?.viewController = viewController
+            viewController.addObserver(observer!, forKeyPath: "view", options: .new, context: nil)
+            viewController.cylWillDealloc { [weak observer] owner, _ in
+                blockRan = true
+                guard let observer = observer else { return }
+                (owner.takeUnretainedValue() as! NSObject).removeObserver(observer, forKeyPath: "view")
+                observer.viewController = nil
+            }
+        }
+        check(blockRan, "issue #8 (\(label)): the view controller's dealloc block ran")
+        check(observer?.viewController == nil, "issue #8 (\(label)): the observer's view controller reference is nil")
+        check(observer != nil && !observerDeallocated, "issue #8 (\(label)): the observer outlives the view controller without a crash")
+        observer = nil
+        check(observerDeallocated, "issue #8 (\(label)): the observer deallocates afterwards")
+    }
 
     // 13. Size transition: rotate the scene (asynchronous), then finish.
     var sizes: [CGSize] = []

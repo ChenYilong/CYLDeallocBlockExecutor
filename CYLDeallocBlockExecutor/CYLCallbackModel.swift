@@ -83,14 +83,15 @@ final class CYLCallbackModel {
     }
 
     /**
-     * Returns true for every legal identifier, as the 1.3.0 API did.
+     * Returns true when a block with this identifier was removed, false when there is none (never added, already
+     * cancelled, or the illegal identifier 0).
      */
     func removeDeallocCallback(identifier: UInt) -> Bool {
         guard identifier != cylDeallocCallbackIllegalIdentifier else { return false }
         lock.lock(); defer { lock.unlock() }
-        deallocCallbacks.removeValue(forKey: identifier)
+        let removed = deallocCallbacks.removeValue(forKey: identifier) != nil
         deallocKeys = deallocKeys.filter { $0.value != identifier }
-        return true
+        return removed
     }
 
     /**
