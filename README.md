@@ -170,6 +170,11 @@ final class ObserverView: UIView {
     override func observeValue(forKeyPath keyPath: String?, of object: Any?, change: [NSKeyValueChangeKey: Any]?, context: UnsafeMutableRawPointer?) {
         // 处理 view 的变化
     }
+
+    deinit {
+        // 反过来，观察者先销毁时，控制器还活着，要在这里移除观察
+        viewController?.removeObserver(self, forKeyPath: "view")
+    }
 }
  ```
 
@@ -226,9 +231,11 @@ Objective-C | Swift
 ------------|------
 `cyl_willDeallocWithSelfCallback:` | `cylWillDealloc(selfCallback:)`
 `cyl_cancelDeallocCallbackWithIdentifier:` | `cylCancelDeallocCallback(identifier:)`
-`cylCancelAllDeallocCallbacks` | `cylCancelAllDeallocCallbacks()`
+`cyl_cancelAllDeallocCallbacks` | `cylCancelAllDeallocCallbacks()`
 `cyl_executeAtDealloc:`（已废弃） | `cyl_executeAtDealloc(_:)`（已废弃）
 `CYLDeallocCallbackIllegalIdentifier` | `cylDeallocCallbackIllegalIdentifier`
+
+行为变化（1.4.0，尚未发布）：`cylCancelDeallocCallback(identifier:)` 只在真的取消了一个 block 时返回 `true`。1.3.0 的 `cyl_cancelDeallocCallbackWithIdentifier:` 对任何非 0 标识都返回 `YES`（对象上还没有任何 block 时返回 `NO`）。
 
 ### 第三步
 
