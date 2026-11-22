@@ -43,6 +43,11 @@ export class LifecycleController<T extends object> {
     this.registry.hookInstalled = true;
   }
 
+  /** True once `aboutToDisappear()` ran: the teardown blocks are done and new ones never run. */
+  get isDetached(): boolean {
+    return this.detached;
+  }
+
   private around(event: LifecycleEvent, info: Partial<LifecycleInfo> = {}): void {
     this.registry.fireAutomatic(event, 'beforeSuper', info);
     this.registry.fireAutomatic(event, 'afterSuper', info);

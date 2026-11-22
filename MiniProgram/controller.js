@@ -1,4 +1,4 @@
-import { LifecycleRegistry } from './registry.js';
+const { LifecycleRegistry } = require('./registry.js');
 
 /**
  * Fires the lifecycle events of a Mini Program Page or Component from the
@@ -17,7 +17,7 @@ import { LifecycleRegistry } from './registry.js';
  *   viewLayoutMarginsDidChange: no source (the framework has no layout event
  *   and no insets event; safe area is read once with wx.getWindowInfo).
  */
-export class LifecycleController {
+class LifecycleController {
   constructor(owner) {
     this.owner = owner;
     this.registry = LifecycleRegistry.of(owner);
@@ -26,6 +26,11 @@ export class LifecycleController {
     this.ready = false;
     this.detached = false;
     this.lastTheme = undefined;
+  }
+
+  /** True once `onUnload()` ran: the teardown blocks are done and new ones never run. */
+  get isDetached() {
+    return this.detached;
   }
 
   around(event, info = {}) {
@@ -92,7 +97,7 @@ export class LifecycleController {
  * `pageLifetimes` are not wrapped, forward them to a controller by hand) so the controller sees every handler, then calls the original.
  * Returns the options with `cyl` (the controller) added after onLoad.
  */
-export function withLifecycle(options) {
+function withLifecycle(options) {
   const out = { ...options };
   const controllerOf = (page) => (page.cylController ??= new LifecycleController(page));
   const wrap = (name, call) => {
@@ -113,3 +118,5 @@ export function withLifecycle(options) {
   wrap('onResize', (c, a) => c.onResize(a[0] ?? {}));
   return out;
 }
+
+module.exports = { LifecycleController, withLifecycle };

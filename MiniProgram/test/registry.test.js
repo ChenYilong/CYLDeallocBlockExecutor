@@ -1,6 +1,6 @@
-import assert from 'node:assert/strict';
-import { beforeEach, test } from 'node:test';
-import { LifecycleRegistry } from '../registry.js';
+const assert = require('node:assert/strict');
+const { beforeEach, test } = require('node:test');
+const { LifecycleRegistry } = require('../registry.js');
 
 const e = 'viewDidLayoutSubviews'         ;
 let owner        ;

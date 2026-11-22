@@ -2,7 +2,7 @@
 // properties), so Node can run the sources and tests directly.
 
 /** The events a block can be added to. Names match the iOS `CYLLifecycleEvent`. */
-export const LifecycleEvent = {
+const LifecycleEvent = {
   viewDidLoad: 'viewDidLoad',
   viewWillAppear: 'viewWillAppear',
   viewIsAppearing: 'viewIsAppearing',
@@ -26,15 +26,17 @@ export const LifecycleEvent = {
  * back at the single moment the platform reports, and `end` only through
  * `performLifecycle` / `invokeLifecycleCallbacks`.
  */
-export const LifecycleTiming = {
+const LifecycleTiming = {
   beforeSuper: 'beforeSuper',
   afterSuper: 'afterSuper',
   end: 'end',
 }         ;
 
-export const allTimings                             = ['beforeSuper', 'afterSuper', 'end'];
+const allTimings                             = ['beforeSuper', 'afterSuper', 'end'];
 
 /** What a block can read about the event (iOS `CYLLifecycleInfo`). */
 
 /** A block: the owner, its own identifier and the info. */
 
+
+module.exports = { LifecycleEvent, LifecycleTiming, allTimings };

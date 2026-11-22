@@ -100,6 +100,12 @@ test('aboutToDisappear: hides, moves, then runs teardown blocks in order, once',
   assert.deepEqual(log, ['viewDidDisappear/afterSuper', 'didMoveToParent/afterSuper', 'dealloc true']);
 });
 
+test('isDetached is true after aboutToDisappear', () => {
+  assert.equal(c.isDetached, false);
+  c.aboutToDisappear();
+  assert.equal(c.isDetached, true);
+});
+
 test('a hidden page does not appear after teardown', () => {
   on('viewWillAppear');
   c.aboutToDisappear();

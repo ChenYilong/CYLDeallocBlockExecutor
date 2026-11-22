@@ -1,6 +1,6 @@
-import assert from 'node:assert/strict';
-import { beforeEach, test } from 'node:test';
-import { LifecycleController, LifecycleRegistry, withLifecycle } from '../index.js';
+const assert = require('node:assert/strict');
+const { beforeEach, test } = require('node:test');
+const { LifecycleController, LifecycleRegistry, withLifecycle } = require('../index.js');
 
 let owner, c, log;
 beforeEach(() => {
@@ -112,4 +112,10 @@ test('withLifecycle: the load events fire before the original onLoad, so a block
 
 test('the registry is shared with the owner', () => {
   assert.equal(LifecycleRegistry.of(owner), c.registry);
+});
+
+test('isDetached is true after onUnload', () => {
+  assert.equal(c.isDetached, false);
+  c.onUnload();
+  assert.equal(c.isDetached, true);
 });

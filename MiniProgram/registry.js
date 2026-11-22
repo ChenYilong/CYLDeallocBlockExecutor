@@ -1,4 +1,4 @@
-import { allTimings } from './types.js';
+const { allTimings } = require('./types.js');
 
 const registries = new WeakMap();
 
@@ -12,7 +12,7 @@ const registries = new WeakMap();
  * teardown blocks); keyed blocks belong to their key holder: cancel-all and
  * re-arm by event skip them. No lock: JavaScript runs one thread.
  */
-export class LifecycleRegistry {
+class LifecycleRegistry {
   /** The registry of `owner`, created on first use. */
   static of(owner        )                    {
     let r = registries.get(owner);
@@ -238,3 +238,5 @@ export class LifecycleRegistry {
     }
   }
 }
+
+module.exports = { LifecycleRegistry };
