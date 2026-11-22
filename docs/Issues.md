@@ -32,5 +32,5 @@ The OCR text in #7 and #8 is garbled. The original screenshots are in `assets/`;
 
 | Issue | Screenshot | Comment |
 | :-- | :-- | :-- |
-| #7 | [assets/issue-7-swift-destruct-event.jpg](assets/issue-7-swift-destruct-event.jpg) | TODO |
-| #8 | [assets/issue-8-kvo-release-order.jpg](assets/issue-8-kvo-release-order.jpg) | TODO |
+| #7 | [assets/issue-7-swift-destruct-event.jpg](assets/issue-7-swift-destruct-event.jpg) | [posted](https://github.com/ChenYilong/CYLDeallocBlockExecutor/issues/7#issuecomment-7076214017) |
+| #8 | [assets/issue-8-kvo-release-order.jpg](assets/issue-8-kvo-release-order.jpg) | [posted](https://github.com/ChenYilong/CYLDeallocBlockExecutor/issues/8#issuecomment-7076214279) |
