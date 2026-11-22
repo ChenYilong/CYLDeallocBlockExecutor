@@ -1,0 +1,6 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Debug variant only: the host activity of the Robolectric tests. -->
+    <application>
+        <activity android:name=".HostActivity" android:exported="true" />
+    </application>
+</manifest>
