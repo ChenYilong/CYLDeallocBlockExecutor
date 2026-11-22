@@ -101,3 +101,30 @@ jobs:
         env:
           CYL_TEST_CONFIGURATION: ${{ matrix.configuration }}
         run: bash Tests/run-lifecycle-tests.sh "${{ steps.sim.outputs.udid }}"
+
+  # Written without a CI run: first run will show what needs adjusting.
+  node-suites:
+    name: Node suites (React Native, HarmonyOS, Mini Program)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+      - run: cd ReactNative && node --test "test/*.test.ts"
+      - run: cd HarmonyOS && node --test "test/*.test.ts"
+      - run: cd MiniProgram && node --test "test/*.test.js"
+
+  android:
+    name: Android (core and binding)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: 21
+      - uses: android-actions/setup-android@v3
+      - run: cd Android && ./gradlew :core:test :binding:testDebugUnitTest --console=plain
