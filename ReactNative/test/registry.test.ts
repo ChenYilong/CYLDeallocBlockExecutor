@@ -1,0 +1,176 @@
+import assert from 'node:assert/strict';
+import { beforeEach, test } from 'node:test';
+import { LifecycleRegistry } from '../src/index.ts';
+import type { LifecycleTiming } from '../src/index.ts';
+
+const e = 'viewDidLayoutSubviews' as const;
+let owner: object;
+let r: LifecycleRegistry;
+let log: string[];
+
+beforeEach(() => {
+  owner = {};
+  r = LifecycleRegistry.of(owner);
+  log = [];
+});
+
+function fire(t: LifecycleTiming = 'end') {
+  r.setManualLifecycleDispatch(true, [e]);
+  r.invokeLifecycleCallbacks(e, t);
+}
+
+test('one registry per owner', () => {
+  assert.equal(LifecycleRegistry.of(owner), r);
+});
+
+test('order by identifier, owner and identifier in every block (typed owner)', () => {
+  const a = r.addLifecycleCallback<object>(e, (o, id) => {
+    assert.equal(o, owner);
+    log.push(`a${id}`);
+  }, { timing: 'end' });
+  const b = r.addLifecycleCallback<object>(e, (_o, id) => log.push(`b${id}`), { timing: 'end' });
+  assert.ok(b > a);
+  fire();
+  assert.deepEqual(log, [`a${a}`, `b${b}`]);
+});
+
+test('cancel one by identifier and by key; unknown identifier is false', () => {
+  const a = r.addLifecycleCallback(e, () => log.push('a'), { timing: 'end' });
+  r.addLifecycleCallback(e, () => log.push('b'), { timing: 'end', key: 'k' });
+  r.addLifecycleCallback(e, () => log.push('c'), { timing: 'end' });
+  assert.equal(r.cancelLifecycleCallback({ identifier: a }), true);
+  assert.equal(r.cancelLifecycleCallback({ identifier: a }), false);
+  assert.equal(r.cancelLifecycleCallback({ key: 'k' }), true);
+  fire();
+  assert.deepEqual(log, ['c']);
+});
+
+test('cancel all by event and timing', () => {
+  r.addLifecycleCallback(e, () => log.push('end'), { timing: 'end' });
+  r.addLifecycleCallback(e, () => log.push('after'));
+  r.cancelAllLifecycleCallbacks(e, 'end');
+  fire();
+  fire('afterSuper');
+  assert.deepEqual(log, ['after']);
+});
+
+test('invoke once, re-arm runs it again', () => {
+  r.addLifecycleCallback(e, () => log.push('once'), { timing: 'end', invokeOnce: true });
+  fire();
+  fire();
+  assert.deepEqual(log, ['once']);
+  r.rearmLifecycleCallbacks(e);
+  fire();
+  assert.deepEqual(log, ['once', 'once']);
+});
+
+test('replace by key starts unfired and keeps one block', () => {
+  const key = 'cyl.core.layoutBlock';
+  r.addLifecycleCallback(e, () => log.push('old'), { timing: 'end', invokeOnce: true, key });
+  fire();
+  r.addLifecycleCallback(e, () => log.push('new'), { timing: 'end', invokeOnce: true, key });
+  fire();
+  fire();
+  assert.deepEqual(log, ['old', 'new']);
+  assert.equal(r.blockCount, 1);
+});
+
+test('isolation: cancel-all and re-arm by event skip keyed blocks', () => {
+  r.addLifecycleCallback(e, () => log.push('core'), { timing: 'end', invokeOnce: true, key: 'cyl.core.x' });
+  r.addLifecycleCallback(e, () => log.push('app'), { timing: 'end', invokeOnce: true });
+  fire();
+  r.rearmLifecycleCallbacks(e);
+  fire();
+  assert.deepEqual(log, ['core', 'app', 'app']);
+  r.cancelAllLifecycleCallbacks(e);
+  assert.equal(r.blockCount, 1);
+  r.rearmLifecycleCallback('cyl.core.x');
+  fire();
+  assert.equal(log.at(-1), 'core');
+});
+
+test('add and cancel from inside a block; replacing a key inside a block skips the old one', () => {
+  let second = 0;
+  r.addLifecycleCallback(e, () => {
+    log.push('first');
+    r.cancelLifecycleCallback({ identifier: second });
+    r.addLifecycleCallback(e, () => log.push('added'), { timing: 'end' });
+  }, { timing: 'end' });
+  second = r.addLifecycleCallback(e, () => log.push('second'), { timing: 'end' });
+  fire();
+  assert.deepEqual(log, ['first']);
+  fire();
+  assert.deepEqual(log, ['first', 'first', 'added']);
+});
+
+test('info carries event and timing', () => {
+  r.addLifecycleCallback(e, (_o, _id, i) => log.push(`${i.event}/${i.timing}`), { timing: 'end' });
+  fire();
+  assert.deepEqual(log, ['viewDidLayoutSubviews/end']);
+});
+
+test('performLifecycle without a hook: all timings, once at the outermost', () => {
+  for (const t of ['beforeSuper', 'afterSuper', 'end'] as const) {
+    r.addLifecycleCallback(e, () => log.push(t), { timing: t });
+  }
+  r.performLifecycle(e, {
+    callSuper: () => {
+      log.push('super');
+      r.performLifecycle(e, { callSuper: () => log.push('inner super'), body: () => log.push('inner body') });
+    },
+    body: () => log.push('body'),
+  });
+  assert.deepEqual(log, ['beforeSuper', 'super', 'inner super', 'inner body', 'afterSuper', 'body', 'end']);
+});
+
+test('performLifecycle with a hook adds only end', () => {
+  r.hookInstalled = true;
+  for (const t of ['beforeSuper', 'afterSuper', 'end'] as const) {
+    r.addLifecycleCallback(e, () => log.push(t), { timing: t });
+  }
+  r.performLifecycle(e, { callSuper: () => log.push('super'), body: () => log.push('body') });
+  assert.deepEqual(log, ['super', 'body', 'end']);
+});
+
+test('manual per timing: the hook skips only the declared timing', () => {
+  r.hookInstalled = true;
+  r.setManualLifecycleDispatch(true, [e], ['end']);
+  assert.equal(r.isAutomatic(e, 'afterSuper'), true);
+  assert.equal(r.isAutomatic(e, 'end'), false);
+  r.addLifecycleCallback(e, () => log.push('end'), { timing: 'end' });
+  r.performLifecycle(e, { callSuper: () => {}, body: () => {} });
+  assert.deepEqual(log, []);
+  r.invokeLifecycleCallbacks(e, 'end');
+  assert.deepEqual(log, ['end']);
+});
+
+test('raw invoke needs the event declared manual', () => {
+  assert.throws(() => r.invokeLifecycleCallbacks(e, 'end'), /manual/);
+});
+
+test('dealloc: order, once, shared identifiers, keyed replacement', () => {
+  const a = r.addDeallocCallback((_o, id, i) => {
+    assert.equal(i.isDealloc, true);
+    log.push(`a${id}`);
+  });
+  const l = r.addLifecycleCallback(e, () => {}, { timing: 'end' });
+  r.addDeallocCallback(() => log.push('old'), { key: 'k' });
+  r.addDeallocCallback(() => log.push('new'), { key: 'k' });
+  assert.equal(l, a + 1);
+  r.runDealloc();
+  r.runDealloc();
+  assert.deepEqual(log, [`a${a}`, 'new']);
+});
+
+test('dealloc isolation: cancel-all keeps keyed, cancel by key removes it', () => {
+  r.addDeallocCallback(() => log.push('app'));
+  r.addDeallocCallback(() => log.push('core'), { key: 'cyl.core.kvo' });
+  r.cancelAllDeallocCallbacks();
+  r.runDealloc();
+  assert.deepEqual(log, ['core']);
+  log.length = 0;
+  r.addDeallocCallback(() => log.push('core2'), { key: 'cyl.core.kvo' });
+  assert.equal(r.cancelDeallocCallback({ key: 'cyl.core.kvo' }), true);
+  r.runDealloc();
+  assert.deepEqual(log, []);
+});

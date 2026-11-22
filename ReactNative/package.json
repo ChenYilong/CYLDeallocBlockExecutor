@@ -1,0 +1,17 @@
+{
+  "name": "cyl-dealloc-block-executor",
+  "version": "1.4.0",
+  "private": true,
+  "description": "Lifecycle and teardown blocks for any object, aligned with the iOS CYLDeallocBlockExecutor API.",
+  "type": "module",
+  "main": "src/index.ts",
+  "scripts": {
+    "test": "node --test \"test/*.test.ts\""
+  },
+  "peerDependencies": {
+    "react-native": "*"
+  },
+  "peerDependenciesMeta": {
+    "react-native": { "optional": true }
+  }
+}
