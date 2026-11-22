@@ -1,0 +1,5 @@
+# JitPack builds the Android port in android/ (the root of this repository is the iOS library).
+jdk:
+  - openjdk17
+install:
+  - cd android && ./gradlew :cyldeallocblockexecutor:publishToMavenLocal

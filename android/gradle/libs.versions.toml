@@ -1,0 +1,18 @@
+# Versions of the Android port, in one place. Same AGP and Kotlin as CYLTabBarController's Example-Android.
+[versions]
+agp = "8.7.3"
+kotlin = "2.0.21"
+lifecycle = "2.8.7"
+junit = "4.13.2"
+coroutines = "1.8.1"
+
+[libraries]
+androidx-lifecycle-common = { module = "androidx.lifecycle:lifecycle-common", version.ref = "lifecycle" }
+androidx-lifecycle-runtime = { module = "androidx.lifecycle:lifecycle-runtime", version.ref = "lifecycle" }
+androidx-lifecycle-runtime-testing = { module = "androidx.lifecycle:lifecycle-runtime-testing", version.ref = "lifecycle" }
+junit = { module = "junit:junit", version.ref = "junit" }
+kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "coroutines" }
+
+[plugins]
+android-library = { id = "com.android.library", version.ref = "agp" }
+kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
