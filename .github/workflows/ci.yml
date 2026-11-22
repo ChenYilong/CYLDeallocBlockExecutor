@@ -40,6 +40,23 @@ jobs:
         working-directory: android
         run: ./gradlew test
 
+  node:
+    name: HarmonyOS and mini program (Node tests)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      # The HarmonyOS registry is plain TypeScript without ArkUI imports, so Node runs it (type stripping); hvigor needs
+      # DevEco Studio, which GitHub-hosted runners do not have, so `assembleHar` is checked locally (docs/Lifecycle-Callbacks.md).
+      - name: HarmonyOS registry
+        run: node --test harmonyos/cyldeallocblockexecutor/test/*.test.mjs
+      - name: Mini program
+        working-directory: miniprogram
+        run: npm test
+
   build:
     name: SPM + Example build
     runs-on: ${{ vars.MACOS_RUNNER || 'macos-26' }}
