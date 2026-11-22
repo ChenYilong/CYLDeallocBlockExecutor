@@ -4,7 +4,9 @@ This document tracks the lifecycle block API of CYLDeallocBlockExecutor: blocks 
 
 ## Task log
 
-### TODO: all-platform interface design aligned with iOS (2026-11-23, branch `feat/lifecycle-callbacks`, PR #12)
+### DONE: all-platform interface design aligned with iOS (2026-11-23, branch `feat/lifecycle-callbacks`, PR #12)
+
+**Result.** 145 / 145, score 100, provisional ([Cross-Platform-API.md](Cross-Platform-API.md)). Still unverified: no device, emulator, hvigor or WeChat devtools run; the real `rootWindowInsets` read on Android; Flutter not re-run on the machine that did the Android, HarmonyOS and Mini Program work.
 
 **Context.** The iOS API (this document) is the reference. Table, evidence rule, per-platform score and progress: [Cross-Platform-API.md](Cross-Platform-API.md). Platforms: Android (Kotlin), Flutter (Dart), React Native (TypeScript), HarmonyOS (ArkTS), WeChat Mini Program.
 
