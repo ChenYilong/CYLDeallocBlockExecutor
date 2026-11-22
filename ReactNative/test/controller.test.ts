@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { beforeEach, test } from 'node:test';
-import { LifecycleController } from '../src/index.ts';
+import { LifecycleController, mountLifecycle } from '../src/index.ts';
 import type { Insets, LifecycleEvent, PlatformSources } from '../src/index.ts';
 
 type Fn = (...a: any[]) => void;
@@ -44,8 +44,8 @@ let owner: object;
 let f: Fakes;
 let log: string[];
 
-function make(platform = 'ios', events: LifecycleEvent[] = []) {
-  const c = new LifecycleController(owner, f.sources(platform));
+function make(platform = 'ios', events: LifecycleEvent[] = [], navigation: 'stack' | 'immediate' = 'stack') {
+  const c = new LifecycleController(owner, f.sources(platform), { navigation });
   for (const ev of events) {
     for (const t of ['beforeSuper', 'afterSuper'] as const) {
       c.registry.addLifecycleCallback(ev, (_o, _id, i) => log.push(`${ev}/${t}`), { timing: t });
@@ -192,4 +192,69 @@ test('manual end after the body beside automatic afterSuper', () => {
   assert.deepEqual(log, ['after']);
   c.registry.invokeLifecycleCallbacks('viewDidLayoutSubviews', 'end');
   assert.deepEqual(log, ['after', 'end-block']);
+});
+
+const APPEAR = ['viewWillAppear', 'viewIsAppearing', 'viewDidAppear'] as const;
+const names = () => log.filter((l) => l.endsWith('afterSuper')).map((l) => l.split('/')[0]);
+
+test('appear order holds when focus arrives before transitionStart', () => {
+  const c = make('ios', [...APPEAR]);
+  c.attach();
+  f.emit('focus');
+  f.emit('transitionStart', { data: { closing: false } });
+  f.emit('transitionEnd', { data: { closing: false } });
+  assert.deepEqual(names(), [...APPEAR]);
+});
+
+test('appear order holds when transitionStart arrives before focus', () => {
+  const c = make('ios', [...APPEAR]);
+  c.attach();
+  f.emit('transitionStart', { data: { closing: false } });
+  f.emit('focus');
+  f.emit('transitionEnd', { data: { closing: false } });
+  assert.deepEqual(names(), [...APPEAR]);
+});
+
+test('tab navigator events without data count as appear (bottom-tabs sends data: undefined)', () => {
+  const c = make('ios', [...APPEAR]);
+  c.attach();
+  f.emit('transitionStart');
+  f.emit('transitionEnd');
+  assert.deepEqual(names(), [...APPEAR]);
+});
+
+test('immediate mode: focus fires will, isAppearing, did; blur fires will and did disappear', () => {
+  const c = make('ios', [...APPEAR, 'viewWillDisappear', 'viewDidDisappear'], 'immediate');
+  c.attach();
+  assert.equal([...f.nav.keys()].includes('transitionStart'), false, 'no transition listener in immediate mode');
+  f.emit('focus');
+  assert.deepEqual(names(), [...APPEAR]);
+  f.emit('blur');
+  assert.deepEqual(names(), [...APPEAR, 'viewWillDisappear', 'viewDidDisappear']);
+  f.emit('focus');
+  assert.equal(names().length, 8, 'a second focus runs the sequence again');
+});
+
+test('blur in stack mode opens disappear; transitionEnd closes it', () => {
+  const c = make('ios', ['viewWillDisappear', 'viewDidDisappear']);
+  c.attach();
+  f.emit('blur');
+  f.emit('transitionStart', { data: { closing: true } });
+  assert.deepEqual(names(), ['viewWillDisappear']);
+  f.emit('transitionEnd', { data: { closing: true } });
+  assert.deepEqual(names(), ['viewWillDisappear', 'viewDidDisappear']);
+});
+
+test('mount, unmount, mount subscribes again (React StrictMode)', () => {
+  const first = mountLifecycle(owner, f.sources());
+  first.controller.registry.addLifecycleCallback('viewWillTransition', () => log.push('transition'));
+  assert.equal(f.dim.length, 1);
+  first.unmount();
+  assert.equal(f.dim.length, 0);
+  const second = mountLifecycle(owner, f.sources());
+  assert.equal(f.dim.length, 1, 'the second mount subscribed again for the block that is still registered');
+  f.dim.forEach((l) => l({ window: { width: 1, height: 2, fontScale: 1 } }));
+  assert.deepEqual(log, ['transition']);
+  second.unmount();
+  assert.equal(f.dim.length, 0);
 });

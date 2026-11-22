@@ -63,6 +63,11 @@ mixin CYLLifecycleMixin<W extends StatefulWidget> on State<W> {
     LifecycleEvent.didReceiveMemoryWarning,
   };
 
+  /// Whether the `WidgetsBindingObserver` is attached (it is added when the first
+  /// block for a binding event is registered).
+  @visibleForTesting
+  bool get observerAttached => _binding != null;
+
   void _onRegister(LifecycleEvent event) {
     if (_bindingEvents.contains(event) && _binding == null && !_disposed) {
       _attachBinding();

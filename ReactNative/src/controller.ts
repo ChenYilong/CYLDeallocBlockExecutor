@@ -50,10 +50,10 @@ const sameInsets = (a: Insets, b: Insets) =>
  * Mapping (iOS event: React Native source):
  * - `viewDidLoad`, `willMoveToParent` / `didMoveToParent`: `attach()` (mount)
  *   and `detach()` (unmount, `beforeRemove` of the navigation);
- * - `viewWillAppear` / `viewWillDisappear`: navigation `transitionStart`
- *   (`closing` false / true); `viewIsAppearing`: navigation `focus`;
- *   `viewDidAppear` / `viewDidDisappear`: navigation `transitionEnd`. App
- *   foreground and background never feed an appear event (as on iOS);
+ * - appear and disappear: navigation `focus` / `blur` / `transitionStart` /
+ *   `transitionEnd` (see `ControllerOptions.navigation`); the will, isAppearing
+ *   and did events keep their order whichever arrives first. App foreground
+ *   and background never feed an appear event (as on iOS);
  * - `viewDidLayoutSubviews`: `onLayout(event)`; `viewWillLayoutSubviews` has
  *   no source (React Native reports layout after the fact);
  * - `viewSafeAreaInsetsDidChange`: `safeAreaInsets`; `viewWillTransition`:
@@ -65,6 +65,18 @@ const sameInsets = (a: Insets, b: Insets) =>
  * Sources are subscribed lazily, when the first block for one of their events
  * is added, and removed in `detach()`. Teardown blocks run in `detach()`.
  */
+export interface ControllerOptions {
+  /**
+   * How appear and disappear arrive. `stack` (default): `focus` / `blur` open
+   * the will events, `transitionStart` / `transitionEnd` close them with the did
+   * events (stack and native-stack navigators). `immediate`: there is no
+   * transition to wait for (tab navigators without animation), so `focus` fires
+   * will, isAppearing and did back to back and `blur` fires will and did
+   * disappear.
+   */
+  navigation?: 'stack' | 'immediate';
+}
+
 export class LifecycleController<T extends object> {
   readonly registry: LifecycleRegistry;
   private readonly owner: T;
@@ -72,15 +84,18 @@ export class LifecycleController<T extends object> {
   private readonly removers = new Map<string, Remove>();
   private attached = false;
   private detached = false;
-  private appearPending = false;
-  private disappearPending = false;
+  private readonly mode: 'stack' | 'immediate';
+  // appear: idle -> will -> is -> did; disappear: idle -> will -> did
+  private appear: 'idle' | 'will' | 'is' | 'did' = 'idle';
+  private disappear: 'idle' | 'will' | 'did' = 'idle';
   private lastColorScheme: string | null | undefined;
   private lastFontScale: number | undefined;
   private lastInsets: Insets | undefined;
   private lastSize: { width: number; height: number } | undefined;
 
-  constructor(owner: T, sources: PlatformSources = {}) {
+  constructor(owner: T, sources: PlatformSources = {}, options: ControllerOptions = {}) {
     this.owner = owner;
+    this.mode = options.navigation ?? 'stack';
     this.sources = sources;
     this.registry = LifecycleRegistry.of(owner);
     this.registry.hookInstalled = true;
@@ -121,20 +136,45 @@ export class LifecycleController<T extends object> {
   };
 
   private flushPending(): void {
-    this.didAppear();
-    this.didDisappear();
+    if (this.appear === 'will' || this.appear === 'is') this.didAppear();
+    if (this.disappear === 'will') this.didDisappear();
+  }
+
+  // The appear and disappear sequences keep their order whichever source
+  // arrives first (`focus` before or after `transitionStart`).
+  private willAppear(): void {
+    if (this.appear !== 'idle') return;
+    this.disappear = 'idle';
+    this.appear = 'will';
+    this.around('viewWillAppear', { animated: this.mode === 'stack' });
+  }
+
+  private isAppearing(): void {
+    this.willAppear();
+    if (this.appear !== 'will') return;
+    this.appear = 'is';
+    this.around('viewIsAppearing');
   }
 
   private didAppear(): void {
-    if (!this.appearPending) return;
-    this.appearPending = false;
-    this.around('viewDidAppear', { animated: true });
+    this.isAppearing();
+    if (this.appear !== 'is') return;
+    this.appear = 'did';
+    this.around('viewDidAppear', { animated: this.mode === 'stack' });
+  }
+
+  private willDisappear(): void {
+    if (this.disappear !== 'idle') return;
+    this.appear = 'idle';
+    this.disappear = 'will';
+    this.around('viewWillDisappear', { animated: this.mode === 'stack' });
   }
 
   private didDisappear(): void {
-    if (!this.disappearPending) return;
-    this.disappearPending = false;
-    this.around('viewDidDisappear', { animated: true });
+    this.willDisappear();
+    if (this.disappear !== 'will') return;
+    this.disappear = 'did';
+    this.around('viewDidDisappear', { animated: this.mode === 'stack' });
   }
 
   // sources
@@ -197,26 +237,29 @@ export class LifecycleController<T extends object> {
 
   private subscribeNavigation(nav: NonNullable<PlatformSources['navigation']>): void {
     const subs: Remove[] = [];
+    const stack = this.mode === 'stack';
     subs.push(
       toRemove(
-        nav.addListener('transitionStart', (e) => {
-          if (e?.data?.closing) {
-            this.disappearPending = true;
-            this.around('viewWillDisappear', { animated: true });
-          } else {
-            this.appearPending = true;
-            this.around('viewWillAppear', { animated: true });
-          }
+        nav.addListener('focus', () => {
+          this.willAppear();
+          this.isAppearing();
+          if (!stack) this.didAppear();
         }),
       ),
-      toRemove(nav.addListener('focus', () => this.around('viewIsAppearing'))),
       toRemove(
-        nav.addListener('transitionEnd', (e) => {
-          if (e?.data?.closing) this.didDisappear();
-          else this.didAppear();
+        nav.addListener('blur', () => {
+          this.willDisappear();
+          if (!stack) this.didDisappear();
         }),
       ),
     );
+    if (stack) {
+      // `data.closing` is true when the screen leaves; tab navigators send no data and only target the screen that opens.
+      subs.push(
+        toRemove(nav.addListener('transitionStart', (e) => (e?.data?.closing ? this.willDisappear() : this.willAppear()))),
+        toRemove(nav.addListener('transitionEnd', (e) => (e?.data?.closing ? this.didDisappear() : this.didAppear()))),
+      );
+    }
     this.removers.set('navigation', () => subs.forEach((r) => r()));
   }
 
@@ -245,4 +288,20 @@ export class LifecycleController<T extends object> {
     this.lastColorScheme = colorScheme;
     this.around('traitCollectionDidChange', { previousColorScheme, previousFontScale: this.lastFontScale });
   }
+}
+
+/**
+ * Mounts a controller for `owner` and returns the unmount function. Every mount
+ * makes a new controller on the owner's shared registry, so mount, unmount,
+ * mount (React StrictMode in development does exactly this) subscribes again.
+ * The first unmount runs the teardown blocks, which then no longer exist.
+ */
+export function mountLifecycle<T extends object>(
+  owner: T,
+  sources: PlatformSources = {},
+  options: ControllerOptions = {},
+): { controller: LifecycleController<T>; unmount: () => void } {
+  const controller = new LifecycleController(owner, sources, options);
+  controller.attach();
+  return { controller, unmount: () => controller.detach() };
 }

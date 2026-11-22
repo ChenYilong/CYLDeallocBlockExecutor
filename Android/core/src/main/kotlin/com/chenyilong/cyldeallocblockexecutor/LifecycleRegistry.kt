@@ -1,8 +1,6 @@
 package com.chenyilong.cyldeallocblockexecutor
 
 import java.lang.ref.WeakReference
-import java.util.Collections
-import java.util.WeakHashMap
 
 private class Entry(
     val identifier: Int,
@@ -29,16 +27,20 @@ private class Entry(
  */
 class LifecycleRegistry(owner: Any) {
     companion object {
-        private val registries: MutableMap<Any, LifecycleRegistry> =
-            Collections.synchronizedMap(WeakHashMap())
+        // Owners are keyed by identity, not equals / hashCode: two equal data-class owners must not share a registry.
+        private val registries = HashMap<Int, MutableList<LifecycleRegistry>>()
 
         /** The registry of [owner], created on first use. */
         @JvmStatic
-        fun of(owner: Any): LifecycleRegistry =
-            synchronized(registries) { registries.getOrPut(owner) { LifecycleRegistry(owner) } }
+        fun of(owner: Any): LifecycleRegistry = synchronized(registries) {
+            registries.values.forEach { list -> list.removeAll { it.owner.get() == null } }
+            registries.values.removeAll { it.isEmpty() }
+            val bucket = registries.getOrPut(System.identityHashCode(owner)) { mutableListOf() }
+            bucket.firstOrNull { it.owner.get() === owner } ?: LifecycleRegistry(owner).also { bucket.add(it) }
+        }
     }
 
-    private val owner = WeakReference(owner)
+    private val owner: WeakReference<Any> = WeakReference(owner)
     private val lock = Any()
     private var entries = mutableListOf<Entry>()
     private var nextIdentifier = 1

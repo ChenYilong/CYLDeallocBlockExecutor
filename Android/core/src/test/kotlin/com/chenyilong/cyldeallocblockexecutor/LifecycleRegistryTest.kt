@@ -33,6 +33,15 @@ class LifecycleRegistryTest {
 
     @Test fun oneRegistryPerOwner() = assertSame(r, LifecycleRegistry.of(owner))
 
+    private data class Key(val v: Int)
+
+    @Test fun equalOwnersGetSeparateRegistries() {
+        val a = Key(1)
+        val b = Key(1)
+        assertEquals(a, b)
+        assertTrue(LifecycleRegistry.of(a) !== LifecycleRegistry.of(b), "equals / hashCode must not merge two owners")
+    }
+
     @Test fun orderByIdentifierOwnerAndIdentifierInEveryBlockTypedOwner() {
         val a = r.addLifecycleCallback<Any>(e, end) { o, id, _ -> assertSame(owner, o); log += "a$id" }
         val b = r.addLifecycleCallback<Any>(e, end) { _, id, _ -> log += "b$id" }

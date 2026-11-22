@@ -174,3 +174,17 @@ test('dealloc isolation: cancel-all keeps keyed, cancel by key removes it', () =
   r.runDealloc();
   assert.deepEqual(log, []);
 });
+
+test('replacing a key inside a block: the old block in the running snapshot is skipped', () => {
+  r.addLifecycleCallback(e, () => {
+    log.push('first');
+    r.addLifecycleCallback(e, () => log.push('replacement'), { timing: 'end', key: 'k' });
+  }, { timing: 'end' });
+  r.addLifecycleCallback(e, () => log.push('old'), { timing: 'end', key: 'k' });
+  fire();
+  assert.deepEqual(log, ['first'], 'old was cancelled by the replacement before its turn');
+  assert.equal(r.blockCount, 2, 'one block per key');
+  r.cancelLifecycleCallback({ identifier: 1 });
+  fire();
+  assert.deepEqual(log, ['first', 'replacement']);
+});

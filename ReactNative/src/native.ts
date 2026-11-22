@@ -1,9 +1,10 @@
 // The only file that imports `react-native` and `react`. Not covered by the
 // Node tests (they do not load); the controller it feeds is.
-import { useEffect, useRef } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 import { Appearance, AppState, Dimensions, Platform } from 'react-native';
-import { LifecycleController } from './controller.ts';
-import type { PlatformSources } from './controller.ts';
+import { LifecycleController, mountLifecycle } from './controller.ts';
+import type { ControllerOptions, PlatformSources } from './controller.ts';
+import { LifecycleRegistry } from './registry.ts';
 import type { Insets } from './types.ts';
 
 /** The real platform sources. Pass `navigation` and `safeAreaInsets` when the screen has them. */
@@ -22,17 +23,27 @@ export function createNativeSources(extra: {
 }
 
 /**
- * A controller for the calling component: attached on mount, detached on
- * unmount. Add blocks through `controller.registry` (before the first render
- * commits, for the load events). Spread `controller.onLayout` onto the view.
+ * Lifecycle blocks for the calling component: mounted in an effect, unmounted
+ * in its cleanup. Every mount makes a new controller on the owner's registry, so
+ * React StrictMode's mount, unmount, mount works (the simulated unmount runs
+ * the teardown blocks). Add blocks through `registry`; spread `onLayout` onto
+ * the view. Use `navigation: 'immediate'` under tab navigators without animation.
  */
-export function useLifecycle<T extends object>(owner: T, extra?: Parameters<typeof createNativeSources>[0]) {
-  const ref = useRef<LifecycleController<T> | null>(null);
-  if (ref.current === null) ref.current = new LifecycleController(owner, createNativeSources(extra));
-  const controller = ref.current;
+export function useLifecycle<T extends object>(
+  owner: T,
+  extra?: Parameters<typeof createNativeSources>[0] & { navigationMode?: ControllerOptions['navigation'] },
+) {
+  const current = useRef<LifecycleController<T> | null>(null);
+  const registry = LifecycleRegistry.of(owner);
   useEffect(() => {
-    controller.attach();
-    return () => controller.detach();
-  }, [controller]);
-  return controller;
+    const mounted = mountLifecycle(owner, createNativeSources(extra), { navigation: extra?.navigationMode });
+    current.current = mounted.controller;
+    return () => {
+      current.current = null;
+      mounted.unmount();
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [owner, extra?.navigation, extra?.safeAreaInsets, extra?.navigationMode]);
+  const onLayout = useCallback((event?: unknown) => current.current?.onLayout(event), []);
+  return { registry, onLayout };
 }

@@ -9,9 +9,9 @@ final List<String> log = [];
 void Function(_PageState)? onInit;
 
 class Page extends StatefulWidget {
-  const Page({super.key, this.name = 'page', this.next});
+  const Page({super.key, this.name = 'page', this.registerAll = true});
   final String name;
-  final bool? next;
+  final bool registerAll;
   @override
   State<Page> createState() => _PageState();
 }
@@ -25,7 +25,7 @@ class _PageState extends State<Page> with CYLLifecycleMixin<Page> {
     log.add('app initState before super');
     // Blocks for the events fired inside super (viewDidLoad, move events) are
     // added before super, as an iOS owner adds them before the event.
-    for (final ev in LifecycleEvent.values) {
+    for (final ev in widget.registerAll ? LifecycleEvent.values : [LifecycleEvent.viewDidLoad]) {
       for (final t in [LifecycleTiming.beforeSuper, LifecycleTiming.afterSuper]) {
         lifecycle.addLifecycleCallback<_PageState>(ev, (o, id, i) {
           log.add('${ev.name}/${t.name}');
@@ -206,5 +206,64 @@ void main() {
     attached.clear();
     await tester.pumpWidget(const SizedBox());
     expect(attached, [false, false]);
+  });
+
+  testWidgets('trait change: text scale with the previous value', (tester) async {
+    double? previous;
+    onInit = (s) => s.lifecycle.addLifecycleCallback<_PageState>(
+        LifecycleEvent.traitCollectionDidChange, (o, id, i) => previous = i.previousTextScaleFactor);
+    await tester.pumpWidget(app(const Page()));
+    tester.platformDispatcher.textScaleFactorTestValue = 1.5;
+    await tester.pump();
+    expect(previous, 1.0);
+    addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
+  });
+
+  testWidgets('the observer is attached lazily, on the first binding-event block',
+      (tester) async {
+    await tester.pumpWidget(app(const Page(registerAll: false)));
+    final s = tester.state<State>(find.byType(Page)) as CYLLifecycleMixin;
+    expect(s.observerAttached, isFalse, reason: 'only lifecycle blocks were added, no binding event');
+    s.lifecycle.addLifecycleCallback<Object>(LifecycleEvent.didReceiveMemoryWarning, (o, id, i) {});
+    expect(s.observerAttached, isTrue);
+    await tester.pumpWidget(const SizedBox());
+    expect(s.observerAttached, isFalse, reason: 'removed in dispose');
+  });
+
+  testWidgets('activate: reparenting with a GlobalKey fires detach then attach', (tester) async {
+    final attached = <bool?>[];
+    final key = GlobalKey();
+    onInit = (s) {
+      for (final ev in [LifecycleEvent.willMoveToParent, LifecycleEvent.didMoveToParent]) {
+        s.lifecycle.addLifecycleCallback<_PageState>(ev, (o, id, i) => attached.add(i.parentAttached));
+      }
+    };
+    Widget host(bool padded) => MaterialApp(
+        home: padded
+            ? Padding(padding: const EdgeInsets.all(1), child: Page(key: key))
+            : Align(child: Page(key: key)));
+    await tester.pumpWidget(host(true));
+    attached.clear();
+    await tester.pumpWidget(host(false));
+    expect(attached, [false, false, true, true]);
+  });
+
+  testWidgets('pop: the popped page gets will and did disappear', (tester) async {
+    await tester.pumpWidget(app(Builder(
+        builder: (c) => TextButton(
+            onPressed: () => Navigator.of(c)
+                .push(MaterialPageRoute<void>(builder: (_) => const Page(name: 'second'))),
+            child: const Text('go')))));
+    await tester.tap(find.text('go'));
+    await tester.pumpAndSettle();
+    log.clear();
+    tester.state<NavigatorState>(find.byType(Navigator)).pop();
+    await tester.pump();
+    expect(log, contains('viewWillDisappear/afterSuper'));
+    expect(log, isNot(contains('viewDidDisappear/afterSuper')));
+    await tester.pumpAndSettle();
+    expect(log, contains('viewDidDisappear/afterSuper'));
+    expect(log.indexOf('viewWillDisappear/afterSuper'),
+        lessThan(log.indexOf('viewDidDisappear/afterSuper')));
   });
 }
