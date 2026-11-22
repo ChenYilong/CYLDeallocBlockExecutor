@@ -36,31 +36,104 @@ Differences from iOS, by design: Android has no before / after `super` hook, so 
 
 ### Parity table: `Tests/LifecycleTests/main.swift` to `CYLLifecycleCallbacksTest`
 
-| iOS check | Android test |
-| :-- | :-- |
-| automatic timings, no override / override; cylPerformLifecycle order; nested cylPerformLifecycle; core block inside an app subclass's super call; core raw .end inside an app's cylPerformLifecycle; manual end after the override body; automatic afterSuper beside manual end; viewWillAppear .afterSuper fires (per swizzle order) | N/A on Android: one timing, no `super` hook, no method swizzling |
-| appearance events fire; exchange swizzle after hooks; info.animated; disappearance events; traitCollectionDidChange; viewSafeAreaInsetsDidChange; viewLayoutMarginsDidChange; willMove/didMove with parent; didReceiveMemoryWarning; viewWillTransition with size | N/A on Android: UIKit methods; the Lifecycle events are covered by `attachToDispatchesLifecycleEventsThenDeallocOnDestroy` |
-| invoke once (manual end) | `invokeOnceRunsOnceUntilRearmedByKey` |
-| re-arm runs an invoke-once block again | `invokeOnceRunsOnceUntilRearmedByKey` |
-| replace by key (and replacement re-arms) | `replaceByKeyRearmsTheReplacement` |
-| order by identifier, cancel one; typed owner | `orderByIdentifierCancelOneAndTypedOwner` |
-| cancel all | `cancelAllRemovesUnkeyedCallbacksOfTheEvent` |
-| add/cancel from inside a block | `addAndCancelInsideACallback` |
-| one identifier sequence for dealloc and lifecycle; dealloc order, info, keyed replacement | `deallocSharesIdentifiersRunsInOrderWithInfoAndKeyedReplacement` |
-| KVO: no viewDidLoad, nothing to remove; observer removed by the dealloc block; issue #8 (view loaded / not loaded) | `observerRemovedByTheDeallocCallbackWhetherOrNotCreateRan` |
-| isolation: app cancel-all keeps the core's keyed blocks | `appCancelAllKeepsTheCoresKeyedCallbacks` |
-| isolation: app cancel-all keeps the core's keyed dealloc block | `cancelAllWillDeallocKeepsKeyedCallbacks` |
-| isolation: core re-arms by key, app's run-once block stays fired | `coreRearmsByKeyAppRunOnceBlockStaysFired` |
-| isolation: re-arm by event skips keyed blocks | `rearmByEventSkipsKeyedCallbacks` |
-| cancel by key returns true; removes only that block | `cancelByKeyRemovesOnlyThatCallback` |
-| cancel dealloc block by key | `cancelWillDeallocByKeyReturnsTrueOnce` |
-| issue #3: cyl_executeAtDealloc x3 | N/A on Android: deprecated iOS API |
-| issue #3: cylWillDealloc x3 runs nothing early, each once, in order | `addingWillDeallocRunsNothingEarly` |
-| issue #5: identifiers ascend from 1, never 0 | `identifiersAscendFromOneNeverZero` |
-| issue #5: cancel returns true once, then false; cancel(0) false | `cancelReturnsTrueOnceThenFalse` |
-| issue #5: cancelled later tasks do not run | `cancelLaterTasksDoNotRunTheEarlierOneDoes` |
+| iOS check | Android test | HarmonyOS test (`harmonyos/cyldeallocblockexecutor/test/CYLLifecycleCallbacks.test.mjs`) | Mini program test (`miniprogram/test/CYLLifecycleCallbacks.test.js`) |
+| :-- | :-- | :-- | :-- |
+| automatic timings, no override / override; cylPerformLifecycle order; nested cylPerformLifecycle; core block inside an app subclass's super call; core raw .end inside an app's cylPerformLifecycle; manual end after the override body; automatic afterSuper beside manual end; viewWillAppear .afterSuper fires (per swizzle order) | N/A on Android: one timing, no `super` hook, no method swizzling | N/A on HarmonyOS: one timing, no `super` hook, no method swizzling | N/A on the mini program: one timing, no `super` hook, no method swizzling |
+| appearance events fire; exchange swizzle after hooks; info.animated; disappearance events; traitCollectionDidChange; viewSafeAreaInsetsDidChange; viewLayoutMarginsDidChange; willMove/didMove with parent; didReceiveMemoryWarning; viewWillTransition with size | N/A on Android: UIKit methods; the Lifecycle events are covered by `attachToDispatchesLifecycleEventsThenDeallocOnDestroy` | N/A on HarmonyOS: UIKit methods; the ArkUI events are covered by `every lifecycle event is dispatched in the order the owner performs them, then dealloc after ABOUT_TO_DISAPPEAR` | N/A on the mini program: UIKit methods; the lifetimes are covered by `cylLifecycleBehavior: a registry per component, lifetimes and pageLifetimes dispatched, dealloc after detached` |
+| invoke once (manual end) | `invokeOnceRunsOnceUntilRearmedByKey` | `invokeOnce runs once until rearmed by key` | `invokeOnce runs once until rearmed by key` |
+| re-arm runs an invoke-once block again | `invokeOnceRunsOnceUntilRearmedByKey` | `invokeOnce runs once until rearmed by key` | `invokeOnce runs once until rearmed by key` |
+| replace by key (and replacement re-arms) | `replaceByKeyRearmsTheReplacement` | `replace by key re-arms the replacement` | `replace by key re-arms the replacement` |
+| order by identifier, cancel one; typed owner | `orderByIdentifierCancelOneAndTypedOwner` | `order by identifier, cancel one, typed owner` | `order by identifier, cancel one, typed owner` |
+| cancel all | `cancelAllRemovesUnkeyedCallbacksOfTheEvent` | `cancelAll removes the unkeyed callbacks of the event` | `cancelAll removes the unkeyed callbacks of the event` |
+| add/cancel from inside a block | `addAndCancelInsideACallback` | `add and cancel inside a callback` | `add and cancel inside a callback` |
+| one identifier sequence for dealloc and lifecycle; dealloc order, info, keyed replacement | `deallocSharesIdentifiersRunsInOrderWithInfoAndKeyedReplacement` | `dealloc shares identifiers, runs in order with info, keyed replacement` | `dealloc shares identifiers, runs in order with info, keyed replacement` |
+| KVO: no viewDidLoad, nothing to remove; observer removed by the dealloc block; issue #8 (view loaded / not loaded) | `observerRemovedByTheDeallocCallbackWhetherOrNotCreateRan` | `a listener removed by the dealloc callback, with or without ABOUT_TO_APPEAR` | `a listener removed by the dealloc callback, with or without ATTACHED` |
+| isolation: app cancel-all keeps the core's keyed blocks | `appCancelAllKeepsTheCoresKeyedCallbacks` | `app cancelAll keeps the core keyed callbacks` | `app cancelAll keeps the core keyed callbacks` |
+| isolation: app cancel-all keeps the core's keyed dealloc block | `cancelAllWillDeallocKeepsKeyedCallbacks` | `cancelAllWillDealloc keeps keyed callbacks` | `cancelAllWillDealloc keeps keyed callbacks` |
+| isolation: core re-arms by key, app's run-once block stays fired | `coreRearmsByKeyAppRunOnceBlockStaysFired` | `the core re-arms by key, the app run-once block stays fired` | `the core re-arms by key, the app run-once block stays fired` |
+| isolation: re-arm by event skips keyed blocks | `rearmByEventSkipsKeyedCallbacks` | `re-arm by event skips keyed callbacks` | `re-arm by event skips keyed callbacks` |
+| cancel by key returns true; removes only that block | `cancelByKeyRemovesOnlyThatCallback` | `cancel by key removes only that callback` | `cancel by key removes only that callback` |
+| cancel dealloc block by key | `cancelWillDeallocByKeyReturnsTrueOnce` | `cancel a willDealloc callback by key returns true once` | `cancel a willDealloc callback by key returns true once` |
+| issue #3: cyl_executeAtDealloc x3 | N/A on Android: deprecated iOS API | N/A on HarmonyOS: deprecated iOS API | N/A on the mini program: deprecated iOS API |
+| issue #3: cylWillDealloc x3 runs nothing early, each once, in order | `addingWillDeallocRunsNothingEarly` | `adding willDealloc runs nothing early, each runs once, in order` | `adding willDealloc runs nothing early, each runs once, in order` |
+| issue #5: identifiers ascend from 1, never 0 | `identifiersAscendFromOneNeverZero` | `identifiers ascend from one, never zero` | `identifiers ascend from one, never zero` |
+| issue #5: cancel returns true once, then false; cancel(0) false | `cancelReturnsTrueOnceThenFalse` | `cancel returns true once, then false; cancel(0) is false` | `cancel returns true once, then false; cancel(0) is false` |
+| issue #5: cancelled later tasks do not run | `cancelLaterTasksDoNotRunTheEarlierOneDoes` | `cancelled later tasks do not run, the earlier one does` | `cancelled later tasks do not run, the earlier one does` |
 
 Android only: `deallocRunsOnceAndCancelDuringItHasNoEffect`, `performDoesNothingWhenTheOwnerIsGone`, `extensionMatchesOwnersByIdentityNotEquals`, `extensionAttachesToTheLifecycle`, `concurrentAddsGetUniqueIdentifiers`. Result: 23 tests, 0 failures. Rows of the table: 17 ported to a test, 4 N/A on Android (each with its reason).
+
+## HarmonyOS port (ArkTS, `harmonyos/`)
+
+HAR module `cyldeallocblockexecutor` (ArkTS, no dependencies) inside a minimal hvigor project (`harmonyos/`: `build-profile.json5`, `AppScope`, `hvigor`). The registry is `src/main/ets/CYLLifecycleCallbacks.ts`: plain TypeScript without ArkUI imports (the same layout as `cylanimateditem` in CYLTabBarController), so Node runs the tests (type stripping, Node 22.18+) and the module compiles as ArkTS too (checked by compiling a copy named `.ets` with hvigor, which rejects `any` and the like). Build: `cd harmonyos && hvigorw assembleHar -p module=cyldeallocblockexecutor@default`. Tests: `node --test harmonyos/cyldeallocblockexecutor/test/*.test.mjs`.
+
+```ts
+import { CYLLifecycleCallbacks, CYLLifecycleEvent } from 'cyldeallocblockexecutor';
+
+@Component
+struct Page {
+  private callbacks: CYLLifecycleCallbacks<Page> = new CYLLifecycleCallbacks<Page>(this);
+  aboutToAppear() {
+    this.callbacks.willDealloc((owner: Page, id: number) => { /* remove the listener */ }, 'cyl.core.keyboardListener');
+    this.callbacks.perform(CYLLifecycleEvent.ABOUT_TO_APPEAR);
+  }
+  aboutToDisappear() {
+    this.callbacks.perform(CYLLifecycleEvent.ABOUT_TO_DISAPPEAR);
+    this.callbacks.dealloc(CYLLifecycleEvent.ABOUT_TO_DISAPPEAR);
+  }
+}
+```
+
+| Kotlin (Android) | ArkTS (HarmonyOS) |
+| :-- | :-- |
+| `CREATE` | `ABOUT_TO_APPEAR` (`aboutToAppear`) |
+| `START` / `RESUME` | `PAGE_SHOW` (`onPageShow`, @Entry components only) |
+| `PAUSE` / `STOP` | `PAGE_HIDE` (`onPageHide`, @Entry components only) |
+| (none) | `BACK_PRESS` (`onBackPress`, @Entry components only) |
+| `DESTROY` | `ABOUT_TO_DISAPPEAR` (`aboutToDisappear`), then `dealloc()` |
+| `LAYOUT` | `LAYOUT`, manual only |
+| `attachTo(lifecycle)` | none: ArkUI has no observer API for a component's lifecycle, the owner calls `perform` and `dealloc` |
+| `addCallback(event, invokeOnce, key) { }` | `addCallback(event, callback, invokeOnce = false, key = null)` |
+| `willDealloc(key) { }` | `willDealloc(callback, key = null)` |
+| `cancel(id)` / `cancel(key)` | `cancel(idOrKey: number | string)` |
+| `rearm(key)` / `rearm(event)` | `rearm(keyOrEvent: string | number)` (`rearm(event)` answers true) |
+| `dealloc()` | `dealloc(event = 0)` (the event the dealloc callbacks see in `info.event`) |
+
+Deviations from Kotlin, by platform limits. ArkTS has no overloads and no trailing lambda, so the callback comes before the optional parameters and `cancel` / `rearm` take a union; events are numbers (class constants, not an enum: Node's type stripping cannot run enums, and a number cannot be mistaken for a key); `CYLLifecycleInfo.event` is 0 when there is none; `extras` is a `Map<string, Object>`. The owner is held strongly (the registry is a field of its owner), so there is no `WeakReference`, no "owner is gone" case and no identity-keyed extension `cylLifecycleCallbacks()`. Identifiers are numbers (no 64-bit overflow in practice). Everything else (ids from 1, 0 illegal, replace by key re-arms, cancel true once, snapshot iteration, add after dealloc returns 0, one shared key space, keyed callbacks skipped by cancel-all and re-arm by event) is the same as Kotlin. Not ported: concurrency (ArkTS runs the UI on one thread; there is no lock and no `concurrentAddsGetUniqueIdentifiers`), `performDoesNothingWhenTheOwnerIsGone`, `extensionMatchesOwnersByIdentityNotEquals`, `extensionAttachesToTheLifecycle`.
+
+## Mini program port (JavaScript, `miniprogram/`)
+
+CommonJS module `cyl-dealloc-block-executor.js` (ES2017, no dependencies) with `package.json`. Tests: `cd miniprogram && npm test` (`node --test`, 23 tests, including the Behavior factory with a mocked `Behavior`).
+
+```js
+const { CYLLifecycleCallbacks, CYLLifecycleEvent, cylLifecycleBehavior } = require('cyl-dealloc-block-executor');
+Component({
+  behaviors: [cylLifecycleBehavior(Behavior)],   // this.cylLifecycle, dispatched and deallocated automatically
+  lifetimes: {
+    attached() {
+      this.cylLifecycle.willDealloc(() => wx.offThemeChange(listener), { key: 'cyl.core.themeListener' });
+    },
+  },
+});
+```
+
+| Kotlin (Android) | Mini program |
+| :-- | :-- |
+| `CREATE` | `CREATED` (`lifetimes.created`) |
+| `START` | `ATTACHED` (`lifetimes.attached`) |
+| `RESUME` | `READY` (`lifetimes.ready`) |
+| (none) | `MOVED` (`lifetimes.moved`) |
+| `DESTROY` | `DETACHED` (`lifetimes.detached`), then `willDealloc` callbacks |
+| `PAUSE` / `STOP` and page visibility | `SHOW` / `HIDE` (`pageLifetimes.show` / `hide`), `RESIZE` (`pageLifetimes.resize`, `extras.size`) |
+| `LAYOUT` | `LAYOUT`, manual only |
+| `attachTo(lifecycle)` | `cylLifecycleBehavior(Behavior)` |
+| `addCallback(event, invokeOnce, key) { }` | `addCallback(event, callback, { invokeOnce, key })` |
+| `willDealloc(key) { }` | `willDealloc(callback, { key })` |
+| `cancel(id)` / `cancel(key)` | `cancel(idOrKey)` (number or string) |
+| `rearm(key)` / `rearm(event)` | `rearm(keyOrEvent)` (string or number; `rearm(event)` answers true) |
+
+Deviations: the same as on HarmonyOS (no overloads, events are numbers, the owner is held strongly, no concurrency, no identity extension), with options objects instead of positional optional parameters. The component's `created` lifetime can not call `setData`, which `CREATED` callbacks inherit. `Behavior` is passed in (the global exists only in the mini program runtime), which also lets Node test it.
+
+Rows of the parity table: 21; 18 ported to a test on HarmonyOS and on the mini program, 3 N/A (each with its reason). Results: HarmonyOS 21 Node tests, mini program 23 (21 + 2 Behavior tests), 0 failures; HarmonyOS `assembleHar` succeeds. The hypium (`ohosTest`) form of the tests is not written: the registry has no ArkUI dependency, so the Node tests run the same code without an emulator.
 
 ## Task log
 
