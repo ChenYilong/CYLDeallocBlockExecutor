@@ -1,0 +1,6 @@
+# JitPack builds the Android modules in Android/ (the root of this repository is the iOS library).
+# Not run yet: needs the Android SDK that JitPack provides.
+jdk:
+  - openjdk17
+install:
+  - cd Android && ./gradlew :core:publishToMavenLocal :binding:publishReleasePublicationToMavenLocal

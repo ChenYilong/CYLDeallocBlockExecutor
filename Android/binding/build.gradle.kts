@@ -1,7 +1,12 @@
 plugins {
     id("com.android.library")
     kotlin("android")
+    `maven-publish`
 }
+
+// JitPack passes the commit or tag in VERSION.
+group = "com.github.ChenYilong"
+version = System.getenv("VERSION") ?: "1.4.0"
 
 android {
     namespace = "com.chenyilong.cyldeallocblockexecutor.binding"
@@ -12,6 +17,18 @@ android {
         targetCompatibility = JavaVersion.VERSION_17
     }
     testOptions { unitTests.isIncludeAndroidResources = true }
+    publishing { singleVariant("release") { withSourcesJar() } }
+}
+
+afterEvaluate {
+    publishing {
+        publications {
+            create<MavenPublication>("release") {
+                artifactId = "cyl-dealloc-block-executor-android"
+                from(components["release"])
+            }
+        }
+    }
 }
 
 kotlin { compilerOptions { jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17) } }
