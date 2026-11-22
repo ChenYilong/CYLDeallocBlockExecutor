@@ -36,7 +36,7 @@ enum CYLLifecycleHooks {
         #if DEBUG
         guard timing == .end, !model.isManualDispatch(event, timing: .end), classOverrides(viewController, event: event) else { return }
         print("CYLDeallocBlockExecutor: \(type(of: viewController)) overrides \(event.selector); its .end blocks of .\(event) need "
-              + "cyl_performLifecycle(...) or cyl_setManualLifecycleDispatch + cyl_invokeLifecycleCallbacks in that override.")
+              + "cylPerformLifecycle(...) or cylSetManualLifecycleDispatch + cylInvokeLifecycleCallbacks in that override.")
         #endif
     }
 
@@ -45,19 +45,19 @@ enum CYLLifecycleHooks {
      */
     private static func dispatch(_ viewController: UIViewController, _ event: CYLLifecycleEvent, _ info: CYLLifecycleInfo,
                                  callOriginal: () -> Void) {
-        guard let model = viewController.cyl_callbackModel(create: false) else {
+        guard let model = viewController.cylCallbackModel(create: false) else {
             callOriginal()
             return
         }
         if model.dispatchesAutomatically(event, timing: .beforeSuper) {
-            viewController.cyl_fireLifecycle(event, timing: .beforeSuper, info: info)
+            viewController.cylFireLifecycle(event, timing: .beforeSuper, info: info)
         }
         callOriginal()
         if model.dispatchesAutomatically(event, timing: .afterSuper) {
-            viewController.cyl_fireLifecycle(event, timing: .afterSuper, info: info)
+            viewController.cylFireLifecycle(event, timing: .afterSuper, info: info)
         }
         if model.dispatchesAutomatically(event, timing: .end), !classOverrides(viewController, event: event) {
-            viewController.cyl_fireLifecycle(event, timing: .end, info: info)
+            viewController.cylFireLifecycle(event, timing: .end, info: info)
         }
     }
 

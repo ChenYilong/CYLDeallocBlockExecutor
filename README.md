@@ -27,7 +27,7 @@ Hello block，byebye dealloc！一行代码代替dealloc完成“self-manager”
 -------------|-------------|-------------
 1 | 轻量级、无污染 | 基于 NSObject 分类，无污染，适用于任何 NSObject 子类对象，比基于子类化、继承的框架更加轻量级。只用 dealloc block 时不做任何 hook；第一次给 UIViewController 添加生命周期 block 时，才为 UIViewController 安装一次生命周期 hook
 2 | 高性能 | 使用 runtime 的对象关联（或称为关联引用）技术，随着关联对象的 dealloc，对应的 block 自发执行，性能消耗极低。
-3 | 简单，无学习成本 | 一行代码完成，仅需使用  `cyl_willDealloc(selfCallback:)`  中的 block 代替  `dealloc` 即可。自动检测对象的 dealloc 的时机，执行 block。生命周期同样一行：`cyl_addLifecycleCallback(for: .viewWillAppear) { owner, identifier, info in }`
+3 | 简单，无学习成本 | 一行代码完成，仅需使用  `cylWillDealloc(selfCallback:)`  中的 block 代替  `dealloc` 即可。自动检测对象的 dealloc 的时机，执行 block。生命周期同样一行：`cylAddLifecycleCallback(for: .viewWillAppear) { owner, identifier, info in }`
 4 | 将分散的代码集中起来 | 你可以使用 [CYLDeallocBlockExecutor](https://github.com/ChenYilong/CYLDeallocBlockExecutor) 将  `KVO`  或 `NSNotificationCenter` 的 `addObserver` 和 `removeObserver`  操作集中放在一个位置，让代码更加直观，易于维护，demo 中也给出了相应的使用方法。
 5 |支持CocoaPods |容易集成
 
@@ -98,12 +98,12 @@ pod update
 一行代码代替 dealloc：
 
  ```swift
-        foo.cyl_willDealloc { owner, identifier in
+        foo.cylWillDealloc { owner, identifier in
             // do something
         }
  ```
 
-这里注意：在 `cyl_willDealloc(selfCallback:)` 的参数 block 中不能使用 weak 修饰符修饰的 self，因为 weak 变量在 dealloc 中会被自定置为 nil。在使用 `cyl_willDealloc(selfCallback:)` 你需要遵循一个准则：
+这里注意：在 `cylWillDealloc(selfCallback:)` 的参数 block 中不能使用 weak 修饰符修饰的 self，因为 weak 变量在 dealloc 中会被自定置为 nil。在使用 `cylWillDealloc(selfCallback:)` 你需要遵循一个准则：
 
  > 参数 block 中的内容可以完全放入 dealloc。
 
@@ -111,7 +111,7 @@ pod update
 
 
  ```swift
-        cyl_willDealloc { owner, identifier in
+        cylWillDealloc { owner, identifier in
             NotificationCenter.default.removeObserver(owner.takeUnretainedValue())
         }
  ```
@@ -119,13 +119,13 @@ pod update
 
 ### 取消回调
 
-`cyl_willDealloc(selfCallback:)` 会返回任务标识（`UInt`），可用它取消；回调按添加顺序依次执行：
+`cylWillDealloc(selfCallback:)` 会返回任务标识（`UInt`），可用它取消；回调按添加顺序依次执行：
 
  ```swift
-let id = foo.cyl_willDealloc { owner, identifier in /* ... */ }
+let id = foo.cylWillDealloc { owner, identifier in /* ... */ }
 
-foo.cyl_cancelDeallocCallback(identifier: id)   // 取消单个，返回是否成功
-foo.cyl_cancelAllDeallocCallbacks()             // 取消全部
+foo.cylCancelDeallocCallback(identifier: id)   // 取消单个，返回是否成功
+foo.cylCancelAllDeallocCallbacks()             // 取消全部
  ```
 
 回调里的 `owner` 是 `Unmanaged<AnyObject>`（对应 Objective-C 的 `__unsafe_unretained id`），对象此时正在销毁：不要持有或让它逃出 block，需要时用 `owner.takeUnretainedValue()`。
@@ -135,7 +135,7 @@ foo.cyl_cancelAllDeallocCallbacks()             // 取消全部
 除了 dealloc，还可以在 UIViewController 的生命周期里执行 block，同样是一行代码，同样可以添加多个、按添加顺序执行、按标识取消：
 
  ```swift
-cyl_addLifecycleCallback(for: .viewWillAppear) { owner, identifier, info in
+cylAddLifecycleCallback(for: .viewWillAppear) { owner, identifier, info in
     // owner 的类型就是当前类，不需要捕获 self
 }
  ```
@@ -146,32 +146,32 @@ timing | 执行时机
 -------|------
 `.beforeSuper` | 顶部，`super` 之前
 `.afterSuper`（默认） | 顶部，`super` 之后
-`.end` | 底部，方法末尾（类重写了该方法时，需在重写里调用 `cyl_performLifecycle`，见 docs）
+`.end` | 底部，方法末尾（类重写了该方法时，需在重写里调用 `cylPerformLifecycle`，见 docs）
 
 支持的事件：`viewDidLoad`、`viewWillAppear`、`viewIsAppearing`、`viewDidAppear`、`viewWillLayoutSubviews`、`viewDidLayoutSubviews`、`viewWillDisappear`、`viewDidDisappear`、`viewSafeAreaInsetsDidChange`、`viewLayoutMarginsDidChange`、`traitCollectionDidChange`、`viewWillTransition`、`willMoveToParent`、`didMoveToParent`、`didReceiveMemoryWarning`。
 
 常用写法：
 
  ```swift
-// 只执行一次的布局 block（可用 cyl_rearmLifecycleCallbacks(for:) 重新启用）
-cyl_addLifecycleCallback(for: .viewDidLayoutSubviews, timing: .end, invokeOnce: true) { owner, _, _ in
+// 只执行一次的布局 block（可用 cylRearmLifecycleCallbacks(for:) 重新启用）
+cylAddLifecycleCallback(for: .viewDidLayoutSubviews, timing: .end, invokeOnce: true) { owner, _, _ in
     owner.setUpBadges()
 }
 
 // 深色模式切换时重新换肤
-cyl_addLifecycleCallback(for: .traitCollectionDidChange) { owner, _, info in
+cylAddLifecycleCallback(for: .traitCollectionDidChange) { owner, _, info in
     guard owner.traitCollection.hasDifferentColorAppearance(comparedTo: info.previousTraitCollection) else { return }
     owner.applyTheme()
 }
 
 // 用 key 替换：同一个 key 只保留最后添加的 block（setter 多次调用也只有一个）。
-// 带 key 的 block 归持有 key 的一方所有：cyl_cancelAll… 与按事件 re-arm 不会影响它，用 cyl_cancelDeallocCallback(key:) 等按 key 操作
-cyl_willDealloc(key: "theme.removeObserver") { owner, _, _ in
+// 带 key 的 block 归持有 key 的一方所有：cylCancelAll… 与按事件 re-arm 不会影响它，用 cylCancelDeallocCallback(key:) 等按 key 操作
+cylWillDealloc(key: "theme.removeObserver") { owner, _, _ in
     NotificationCenter.default.removeObserver(owner.takeUnretainedValue())
 }
  ```
 
-dealloc 也有了相同参数的版本：`cyl_willDealloc(callback:)`（owner、identifier、info），与生命周期 block 共用标识序列、锁和取消方式；原来的 `cyl_willDealloc(selfCallback:)` 不变。
+dealloc 也有了相同参数的版本：`cylWillDealloc(callback:)`（owner、identifier、info），与生命周期 block 共用标识序列、锁和取消方式；原来的 `cylWillDealloc(selfCallback:)` 不变。
 
 完整设计（自动派发、手动派发、与 CYLTabBarController 的对应关系）见 [docs/Lifecycle-Callbacks.md](docs/Lifecycle-Callbacks.md)。
 
@@ -179,9 +179,9 @@ dealloc 也有了相同参数的版本：`cyl_willDealloc(callback:)`（owner、
 
 Objective-C | Swift
 ------------|------
-`cyl_willDeallocWithSelfCallback:` | `cyl_willDealloc(selfCallback:)`
-`cyl_cancelDeallocCallbackWithIdentifier:` | `cyl_cancelDeallocCallback(identifier:)`
-`cyl_cancelAllDeallocCallbacks` | `cyl_cancelAllDeallocCallbacks()`
+`cyl_willDeallocWithSelfCallback:` | `cylWillDealloc(selfCallback:)`
+`cyl_cancelDeallocCallbackWithIdentifier:` | `cylCancelDeallocCallback(identifier:)`
+`cylCancelAllDeallocCallbacks` | `cylCancelAllDeallocCallbacks()`
 `cyl_executeAtDealloc:`（已废弃） | `cyl_executeAtDealloc(_:)`（已废弃）
 `CYLDeallocCallbackIllegalIdentifier` | `CYLDeallocCallbackIllegalIdentifier`
 
@@ -223,7 +223,7 @@ var themeMap: [String: Any]? {
         if let themeMap = newValue {
             // Need to removeObserver at dealloc
             // NOTE: owner is unretained because a weak reference is already nil during dealloc
-            cyl_willDealloc { owner, identifier in
+            cylWillDealloc { owner, identifier in
                 NotificationCenter.default.removeObserver(owner.takeUnretainedValue())
             }
             NotificationCenter.default.removeObserver(self, name: kThemeDidChangeNotification, object: nil)
@@ -278,7 +278,7 @@ class Holder: NSObject {
         get { objc_getAssociatedObject(self, &objectKey) as? NSObject }
         set {
             objc_setAssociatedObject(self, &objectKey, newValue, .OBJC_ASSOCIATION_ASSIGN)
-            newValue?.cyl_willDealloc { [weak self] _, _ in
+            newValue?.cylWillDealloc { [weak self] _, _ in
                 // owner 已在销毁中，这里只清掉 self 上的关联引用，避免悬垂指针
                 guard let self = self else { return }
                 objc_setAssociatedObject(self, &objectKey, nil, .OBJC_ASSOCIATION_ASSIGN)
@@ -339,7 +339,7 @@ override func viewDidLoad() {
     super.viewDidLoad()
     let observedTabBar = tabBar
     observedTabBar.addObserver(self, forKeyPath: "swappableImageViewDefaultOffset", options: .new, context: nil)
-    cyl_willDealloc(key: "kvo.swappableImageViewDefaultOffset") { owner, _, _ in
+    cylWillDealloc(key: "kvo.swappableImageViewDefaultOffset") { owner, _, _ in
         observedTabBar.removeObserver(owner.takeUnretainedValue() as! NSObject, forKeyPath: "swappableImageViewDefaultOffset")
     }
 }

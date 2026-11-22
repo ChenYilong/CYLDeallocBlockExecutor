@@ -70,7 +70,7 @@ final class CYLCallbackModel {
      */
     @discardableResult
     func addDeallocCallback(_ callback: @escaping CYLDeallocCallback, identifier: UInt, key: String? = nil) -> UInt {
-        guard identifier > 0 else { return CYLDeallocCallbackIllegalIdentifier }
+        guard identifier > 0 else { return cylDeallocCallbackIllegalIdentifier }
         lock.lock(); defer { lock.unlock() }
         if let key {
             if let previous = deallocKeys[key] {
@@ -86,7 +86,7 @@ final class CYLCallbackModel {
      * Returns true for every legal identifier, as the 1.3.0 API did.
      */
     func removeDeallocCallback(identifier: UInt) -> Bool {
-        guard identifier != CYLDeallocCallbackIllegalIdentifier else { return false }
+        guard identifier != cylDeallocCallbackIllegalIdentifier else { return false }
         lock.lock(); defer { lock.unlock() }
         deallocCallbacks.removeValue(forKey: identifier)
         deallocKeys = deallocKeys.filter { $0.value != identifier }
@@ -223,12 +223,12 @@ final class CYLCallbackModel {
 
     /**
      * Whether the automatic hook dispatches `event` at `timing`: some block waits for it and the owner did not declare that
-     * point manual; `.end` also waits while the owner runs `cyl_performLifecycle` for the event.
+     * point manual; `.end` also waits while the owner runs `cylPerformLifecycle` for the event.
      */
     func dispatchesAutomatically(_ event: CYLLifecycleEvent, timing: CYLLifecycleTiming) -> Bool {
         lock.lock(); defer { lock.unlock() }
         guard !manualPoints.contains(DispatchPoint(event: event, timing: timing)) else { return false }
-        // While an override runs cyl_performLifecycle, it fires .end itself at its outermost level.
+        // While an override runs cylPerformLifecycle, it fires .end itself at its outermost level.
         guard timing != .end || performingCounts[event] == nil else { return false }
         return lifecycleEntries.values.contains { $0.event == event && $0.timing == timing }
     }
@@ -245,27 +245,27 @@ extension NSObject {
     /**
      * The next identifier of this object and its model, created when missing; both under the dealloc lock, as in 1.3.0.
      */
-    func cyl_makeCallbackIdentifierAndModel() -> (UInt, CYLCallbackModel) {
+    func cylMakeCallbackIdentifierAndModel() -> (UInt, CYLCallbackModel) {
         cylDeallocCallbackLock.lock(); defer { cylDeallocCallbackLock.unlock() }
         let previous = (objc_getAssociatedObject(self, &cylGlobalIdentifierKey) as? NSNumber)?.uintValue ?? 0
         let identifier = previous + 1
         objc_setAssociatedObject(self, &cylGlobalIdentifierKey, NSNumber(value: identifier), .OBJC_ASSOCIATION_RETAIN_NONATOMIC)
-        return (identifier, cyl_callbackModelLocked(create: true)!)
+        return (identifier, cylCallbackModelLocked(create: true)!)
     }
 
     /**
      * The model of this object; created when `create` is true and it is missing.
      */
-    func cyl_callbackModel(create: Bool) -> CYLCallbackModel? {
+    func cylCallbackModel(create: Bool) -> CYLCallbackModel? {
         if let model = objc_getAssociatedObject(self, &cylCallbackModelKey) as? CYLCallbackModel {
             return model
         }
         guard create else { return nil }
         cylDeallocCallbackLock.lock(); defer { cylDeallocCallbackLock.unlock() }
-        return cyl_callbackModelLocked(create: true)
+        return cylCallbackModelLocked(create: true)
     }
 
-    private func cyl_callbackModelLocked(create: Bool) -> CYLCallbackModel? {
+    private func cylCallbackModelLocked(create: Bool) -> CYLCallbackModel? {
         if let model = objc_getAssociatedObject(self, &cylCallbackModelKey) as? CYLCallbackModel {
             return model
         }

@@ -9,7 +9,7 @@ import UIKit
 import ObjectiveC
 
 /**
- * The UIViewController lifecycle events a block can wait for. Dealloc has its own API (`cyl_willDealloc`).
+ * The UIViewController lifecycle events a block can wait for. Dealloc has its own API (`cylWillDealloc`).
  */
 public enum CYLLifecycleEvent: Int, CaseIterable {
     case viewDidLoad
@@ -70,7 +70,7 @@ public enum CYLLifecycleTiming: Int, CaseIterable {
     case afterSuper
     /**
      * At the bottom, after the owner's override. Automatic only for classes that do not override the method; otherwise
-     * dispatched by the owner (`cyl_performLifecycle` or `cyl_invokeLifecycleCallbacks`).
+     * dispatched by the owner (`cylPerformLifecycle` or `cylInvokeLifecycleCallbacks`).
      */
     case end
 }
@@ -151,16 +151,16 @@ extension CYLLifecycleCallbackOwner where Self: NSObject {
      * - Parameters:
      *   - event: the lifecycle event.
      *   - timing: before `super`, after `super` (default) or at the end of the method.
-     *   - invokeOnce: run once until `cyl_rearmLifecycleCallbacks(for:)` (or a replacement under the same key).
+     *   - invokeOnce: run once until `cylRearmLifecycleCallbacks(for:)` (or a replacement under the same key).
      *   - key: replaces the block added before under the same key.
      *   - callback: the owner, the identifier of this block and the info of the event.
-     * - Returns: The identifier, for `cyl_cancelLifecycleCallback(identifier:)`.
+     * - Returns: The identifier, for `cylCancelLifecycleCallback(identifier:)`.
      */
     @discardableResult
-    public func cyl_addLifecycleCallback(for event: CYLLifecycleEvent, timing: CYLLifecycleTiming = .afterSuper,
+    public func cylAddLifecycleCallback(for event: CYLLifecycleEvent, timing: CYLLifecycleTiming = .afterSuper,
                                          invokeOnce: Bool = false, key: String? = nil,
                                          callback: @escaping (_ owner: Self, _ identifier: UInt, _ info: CYLLifecycleInfo) -> Void) -> UInt {
-        let (identifier, model) = cyl_makeCallbackIdentifierAndModel()
+        let (identifier, model) = cylMakeCallbackIdentifierAndModel()
         model.addLifecycleCallback({ owner, identifier, info in
             if let typedOwner = owner as? Self {
                 callback(typedOwner, identifier, info)
@@ -182,8 +182,8 @@ extension NSObject {
      * - Returns: Whether a block had this identifier.
      */
     @discardableResult
-    public func cyl_cancelLifecycleCallback(identifier: UInt) -> Bool {
-        cyl_callbackModel(create: false)?.removeLifecycleCallback(identifier: identifier) ?? false
+    public func cylCancelLifecycleCallback(identifier: UInt) -> Bool {
+        cylCallbackModel(create: false)?.removeLifecycleCallback(identifier: identifier) ?? false
     }
 
     /**
@@ -192,8 +192,8 @@ extension NSObject {
      * - Returns: Whether a block had this key.
      */
     @discardableResult
-    public func cyl_cancelLifecycleCallback(key: String) -> Bool {
-        guard let model = cyl_callbackModel(create: false), let identifier = model.lifecycleIdentifier(key: key) else { return false }
+    public func cylCancelLifecycleCallback(key: String) -> Bool {
+        guard let model = cylCallbackModel(create: false), let identifier = model.lifecycleIdentifier(key: key) else { return false }
         return model.removeLifecycleCallback(identifier: identifier)
     }
 
@@ -203,86 +203,86 @@ extension NSObject {
      * - Returns: Whether a block had this key.
      */
     @discardableResult
-    public func cyl_rearmLifecycleCallback(key: String) -> Bool {
-        guard let model = cyl_callbackModel(create: false), let identifier = model.lifecycleIdentifier(key: key) else { return false }
+    public func cylRearmLifecycleCallback(key: String) -> Bool {
+        guard let model = cylCallbackModel(create: false), let identifier = model.lifecycleIdentifier(key: key) else { return false }
         return model.rearmLifecycleCallback(identifier: identifier)
     }
 
     /**
      * Cancels the blocks of `event` added without a key, of one timing or of all timings (nil). Keyed blocks belong to
-     * whoever holds the key (`cyl_cancelLifecycleCallback(key:)`), so an app cannot remove a library's blocks this way.
+     * whoever holds the key (`cylCancelLifecycleCallback(key:)`), so an app cannot remove a library's blocks this way.
      */
-    public func cyl_cancelAllLifecycleCallbacks(for event: CYLLifecycleEvent, timing: CYLLifecycleTiming? = nil) {
-        cyl_callbackModel(create: false)?.removeAllLifecycleCallbacks(event: event, timing: timing)
+    public func cylCancelAllLifecycleCallbacks(for event: CYLLifecycleEvent, timing: CYLLifecycleTiming? = nil) {
+        cylCallbackModel(create: false)?.removeAllLifecycleCallbacks(event: event, timing: timing)
     }
 
     /**
      * Lets the invoke-once blocks of `event` added without a key (one timing or all) run once more; keyed blocks are
-     * re-armed with `cyl_rearmLifecycleCallback(key:)`. Touches no view: call `view.setNeedsLayout()` yourself when a
+     * re-armed with `cylRearmLifecycleCallback(key:)`. Touches no view: call `view.setNeedsLayout()` yourself when a
      * layout event should come.
      */
-    public func cyl_rearmLifecycleCallbacks(for event: CYLLifecycleEvent, timing: CYLLifecycleTiming? = nil) {
-        cyl_callbackModel(create: false)?.rearmLifecycleCallbacks(event: event, timing: timing)
+    public func cylRearmLifecycleCallbacks(for event: CYLLifecycleEvent, timing: CYLLifecycleTiming? = nil) {
+        cylCallbackModel(create: false)?.rearmLifecycleCallbacks(event: event, timing: timing)
     }
 
     /**
-     * Declares that the owner dispatches `events` at `timings` itself (`cyl_invokeLifecycleCallbacks`); the automatic
+     * Declares that the owner dispatches `events` at `timings` itself (`cylInvokeLifecycleCallbacks`); the automatic
      * hook then skips those points. Other timings of the same events stay automatic.
      */
-    public func cyl_setManualLifecycleDispatch(_ manual: Bool, for events: Set<CYLLifecycleEvent>,
+    public func cylSetManualLifecycleDispatch(_ manual: Bool, for events: Set<CYLLifecycleEvent>,
                                                timings: Set<CYLLifecycleTiming> = Set(CYLLifecycleTiming.allCases)) {
-        cyl_callbackModel(create: true)?.setManualDispatch(manual, events: events, timings: timings)
+        cylCallbackModel(create: true)?.setManualDispatch(manual, events: events, timings: timings)
     }
 
     /**
      * Runs an override so that its `.end` blocks fire after its body: `callSuper`, `body`, then `.end`.
      * On a view controller, `.beforeSuper` / `.afterSuper` come from the automatic hook inside `callSuper`, and `.end`
-     * fires only at the outermost `cyl_performLifecycle` of the event (a subclass and its superclass can both use it)
+     * fires only at the outermost `cylPerformLifecycle` of the event (a subclass and its superclass can both use it)
      * and not when the owner declared `.end` manual. Other owners (no hook) get all three timings from the outermost call.
      *
      *     override func viewDidLoad() {
-     *         cyl_performLifecycle(.viewDidLoad, callSuper: { super.viewDidLoad() }) {
+     *         cylPerformLifecycle(.viewDidLoad, callSuper: { super.viewDidLoad() }) {
      *             // the override's own work
      *         }
      *     }
      */
-    public func cyl_performLifecycle(_ event: CYLLifecycleEvent, info: CYLLifecycleInfo = CYLLifecycleInfo(),
+    public func cylPerformLifecycle(_ event: CYLLifecycleEvent, info: CYLLifecycleInfo = CYLLifecycleInfo(),
                                      callSuper: () -> Void, body: () -> Void = {}) {
-        guard let model = cyl_callbackModel(create: true) else { return }
+        guard let model = cylCallbackModel(create: true) else { return }
         let outermost = !model.isPerforming(event)
         let hooked = self is UIViewController
         model.beginPerforming(event)
         defer { model.endPerforming(event) }
         if outermost && !hooked {
-            cyl_fireLifecycle(event, timing: .beforeSuper, info: info)
+            cylFireLifecycle(event, timing: .beforeSuper, info: info)
         }
         callSuper()
         if outermost && !hooked {
-            cyl_fireLifecycle(event, timing: .afterSuper, info: info)
+            cylFireLifecycle(event, timing: .afterSuper, info: info)
         }
         body()
         if outermost && !model.isManualDispatch(event, timing: .end) {
-            cyl_fireLifecycle(event, timing: .end, info: info)
+            cylFireLifecycle(event, timing: .end, info: info)
         }
     }
 
     /**
      * Runs the blocks of `event` at `timing` now. On a view controller, declare the point manual first
-     * (`cyl_setManualLifecycleDispatch`), or the automatic hook runs the same blocks too (asserted in debug builds).
+     * (`cylSetManualLifecycleDispatch`), or the automatic hook runs the same blocks too (asserted in debug builds).
      */
-    public func cyl_invokeLifecycleCallbacks(for event: CYLLifecycleEvent, timing: CYLLifecycleTiming,
+    public func cylInvokeLifecycleCallbacks(for event: CYLLifecycleEvent, timing: CYLLifecycleTiming,
                                              info: CYLLifecycleInfo = CYLLifecycleInfo()) {
-        guard let model = cyl_callbackModel(create: false) else { return }
+        guard let model = cylCallbackModel(create: false) else { return }
         assert(!(self is UIViewController) || model.isManualDispatch(event, timing: timing) || model.isPerforming(event),
-               "CYLDeallocBlockExecutor: call cyl_setManualLifecycleDispatch(true, for: [.\(event)], timings: [.\(timing)]) first.")
-        cyl_fireLifecycle(event, timing: timing, info: info)
+               "CYLDeallocBlockExecutor: call cylSetManualLifecycleDispatch(true, for: [.\(event)], timings: [.\(timing)]) first.")
+        cylFireLifecycle(event, timing: timing, info: info)
     }
 
     /**
      * Runs the blocks waiting for `event` at `timing`, outside every lock, skipping blocks cancelled meanwhile.
      */
-    func cyl_fireLifecycle(_ event: CYLLifecycleEvent, timing: CYLLifecycleTiming, info: CYLLifecycleInfo) {
-        guard let model = cyl_callbackModel(create: false) else { return }
+    func cylFireLifecycle(_ event: CYLLifecycleEvent, timing: CYLLifecycleTiming, info: CYLLifecycleInfo) {
+        guard let model = cylCallbackModel(create: false) else { return }
         var info = info
         info.event = event
         info.timing = timing

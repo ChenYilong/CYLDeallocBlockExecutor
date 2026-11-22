@@ -35,7 +35,7 @@ final class OverridingViewController: UIViewController {
 
 final class PerformingViewController: UIViewController {
     override func viewDidLoad() {
-        cyl_performLifecycle(.viewDidLoad, callSuper: { super.viewDidLoad() }) {
+        cylPerformLifecycle(.viewDidLoad, callSuper: { super.viewDidLoad() }) {
             log.append("body")
         }
     }
@@ -45,19 +45,19 @@ final class RawViewController: UIViewController {
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
         log.append("body")
-        cyl_invokeLifecycleCallbacks(for: .viewDidLayoutSubviews, timing: .end)
+        cylInvokeLifecycleCallbacks(for: .viewDidLayoutSubviews, timing: .end)
     }
 }
 
 class PerformBaseViewController: UIViewController {
     override func viewDidLoad() {
-        cyl_performLifecycle(.viewDidLoad, callSuper: { super.viewDidLoad() }) { log.append("baseBody") }
+        cylPerformLifecycle(.viewDidLoad, callSuper: { super.viewDidLoad() }) { log.append("baseBody") }
     }
 }
 
 final class PerformSubViewController: PerformBaseViewController {
     override func viewDidLoad() {
-        cyl_performLifecycle(.viewDidLoad, callSuper: { super.viewDidLoad() }) { log.append("subBody") }
+        cylPerformLifecycle(.viewDidLoad, callSuper: { super.viewDidLoad() }) { log.append("subBody") }
     }
 }
 
@@ -65,20 +65,20 @@ final class PerformSubViewController: PerformBaseViewController {
 class CoreLayoutViewController: UIViewController {
     override init(nibName: String?, bundle: Bundle?) {
         super.init(nibName: nibName, bundle: bundle)
-        cyl_setManualLifecycleDispatch(true, for: [.viewDidLayoutSubviews], timings: [.end])
-        cyl_addLifecycleCallback(for: .viewDidLayoutSubviews, key: "core.after") { _, _, _ in log.append("core-after") }
+        cylSetManualLifecycleDispatch(true, for: [.viewDidLayoutSubviews], timings: [.end])
+        cylAddLifecycleCallback(for: .viewDidLayoutSubviews, key: "core.after") { _, _, _ in log.append("core-after") }
     }
     required init?(coder: NSCoder) { fatalError() }
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
         log.append("core-body")
-        cyl_invokeLifecycleCallbacks(for: .viewDidLayoutSubviews, timing: .end)
+        cylInvokeLifecycleCallbacks(for: .viewDidLayoutSubviews, timing: .end)
     }
 }
 
 final class AppPerformLayoutViewController: CoreLayoutViewController {
     override func viewDidLayoutSubviews() {
-        cyl_performLifecycle(.viewDidLayoutSubviews, callSuper: { super.viewDidLayoutSubviews() }) { log.append("app-body") }
+        cylPerformLifecycle(.viewDidLayoutSubviews, callSuper: { super.viewDidLayoutSubviews() }) { log.append("app-body") }
     }
 }
 
@@ -86,7 +86,7 @@ final class AppPerformLayoutViewController: CoreLayoutViewController {
 class CoreLikeViewController: UIViewController {
     override init(nibName: String?, bundle: Bundle?) {
         super.init(nibName: nibName, bundle: bundle)
-        cyl_addLifecycleCallback(for: .viewWillAppear, key: "core.viewWillAppear") { _, _, _ in log.append("core") }
+        cylAddLifecycleCallback(for: .viewWillAppear, key: "core.viewWillAppear") { _, _, _ in log.append("core") }
     }
     required init?(coder: NSCoder) { fatalError() }
 }
@@ -130,7 +130,7 @@ final class KVOObserverViewController: UIViewController {
         // README scenario: add in viewDidLoad, remove at dealloc, no flag.
         let observed = target
         observed.addObserver(self, forKeyPath: "value", options: .new, context: nil)
-        cyl_willDealloc(key: "kvo.value") { owner, _, _ in
+        cylWillDealloc(key: "kvo.value") { owner, _, _ in
             observed.removeObserver(owner.takeUnretainedValue() as! NSObject, forKeyPath: "value")
         }
     }
@@ -148,7 +148,7 @@ func runTests(window: UIWindow) {
     log = []
     let plain = PlainViewController()
     for timing in CYLLifecycleTiming.allCases {
-        plain.cyl_addLifecycleCallback(for: .viewDidLoad, timing: timing) { _, _, info in log.append("\(info.timing)") }
+        plain.cylAddLifecycleCallback(for: .viewDidLoad, timing: timing) { _, _, info in log.append("\(info.timing)") }
     }
     plain.loadViewIfNeeded()
     check(log == ["beforeSuper", "afterSuper", "end"], "automatic timings, no override", "\(log)")
@@ -157,26 +157,26 @@ func runTests(window: UIWindow) {
     log = []
     let overriding = OverridingViewController()
     for timing in CYLLifecycleTiming.allCases {
-        overriding.cyl_addLifecycleCallback(for: .viewDidLoad, timing: timing) { _, _, info in log.append("\(info.timing)") }
+        overriding.cylAddLifecycleCallback(for: .viewDidLoad, timing: timing) { _, _, info in log.append("\(info.timing)") }
     }
     overriding.loadViewIfNeeded()
     check(log == ["app-before-super", "beforeSuper", "afterSuper", "app-after-super"], "automatic timings, override", "\(log)")
 
-    // 3. cyl_performLifecycle: all timings, no double firing.
+    // 3. cylPerformLifecycle: all timings, no double firing.
     log = []
     let performing = PerformingViewController()
     for timing in CYLLifecycleTiming.allCases {
-        performing.cyl_addLifecycleCallback(for: .viewDidLoad, timing: timing) { _, _, info in log.append("\(info.timing)") }
+        performing.cylAddLifecycleCallback(for: .viewDidLoad, timing: timing) { _, _, info in log.append("\(info.timing)") }
     }
     performing.loadViewIfNeeded()
-    check(log == ["beforeSuper", "afterSuper", "body", "end"], "cyl_performLifecycle order, no double fire", "\(log)")
+    check(log == ["beforeSuper", "afterSuper", "body", "end"], "cylPerformLifecycle order, no double fire", "\(log)")
 
     // 4. Raw manual .end with automatic .afterSuper on the same event (CYLTabBarController's layout block).
     log = []
     let raw = RawViewController()
-    raw.cyl_setManualLifecycleDispatch(true, for: [.viewDidLayoutSubviews], timings: [.end])
-    raw.cyl_addLifecycleCallback(for: .viewDidLayoutSubviews, timing: .afterSuper) { _, _, _ in log.append("afterSuper") }
-    raw.cyl_addLifecycleCallback(for: .viewDidLayoutSubviews, timing: .end, invokeOnce: true, key: "layoutBlock") { _, _, _ in log.append("end1") }
+    raw.cylSetManualLifecycleDispatch(true, for: [.viewDidLayoutSubviews], timings: [.end])
+    raw.cylAddLifecycleCallback(for: .viewDidLayoutSubviews, timing: .afterSuper) { _, _, _ in log.append("afterSuper") }
+    raw.cylAddLifecycleCallback(for: .viewDidLayoutSubviews, timing: .end, invokeOnce: true, key: "layoutBlock") { _, _, _ in log.append("end1") }
     raw.loadViewIfNeeded()
     raw.view.frame = CGRect(x: 0, y: 0, width: 100, height: 100)
     raw.view.setNeedsLayout(); raw.view.layoutIfNeeded()
@@ -185,11 +185,11 @@ func runTests(window: UIWindow) {
     check(log.filter { $0 == "afterSuper" }.count == 2 && log.filter { $0 == "body" }.count == 2, "automatic afterSuper beside manual end", "\(log)")
     check(log.prefix(3) == ["afterSuper", "body", "end1"], "manual end after the override body", "\(log)")
     log = []
-    raw.cyl_rearmLifecycleCallback(key: "layoutBlock")
+    raw.cylRearmLifecycleCallback(key: "layoutBlock")
     raw.view.setNeedsLayout(); raw.view.layoutIfNeeded()
     check(log.contains("end1"), "re-arm runs an invoke-once block again", "\(log)")
     log = []
-    raw.cyl_addLifecycleCallback(for: .viewDidLayoutSubviews, timing: .end, invokeOnce: true, key: "layoutBlock") { _, _, _ in log.append("end2") }
+    raw.cylAddLifecycleCallback(for: .viewDidLayoutSubviews, timing: .end, invokeOnce: true, key: "layoutBlock") { _, _, _ in log.append("end2") }
     raw.view.setNeedsLayout(); raw.view.layoutIfNeeded()
     check(log.contains("end2") && !log.contains("end1"), "replace by key (and replacement re-arms)", "\(log)")
 
@@ -199,19 +199,19 @@ func runTests(window: UIWindow) {
     var ids: [UInt] = []
     var ownerTyped = false
     for index in 0..<3 {
-        ids.append(order.cyl_addLifecycleCallback(for: .viewWillLayoutSubviews) { owner, identifier, _ in
+        ids.append(order.cylAddLifecycleCallback(for: .viewWillLayoutSubviews) { owner, identifier, _ in
             ownerTyped = owner === order
             log.append("\(index):\(identifier)")
         })
     }
-    order.cyl_cancelLifecycleCallback(identifier: ids[1])
+    order.cylCancelLifecycleCallback(identifier: ids[1])
     order.loadViewIfNeeded()
     order.view.setNeedsLayout(); order.view.layoutIfNeeded()
     check(log.first == "0:\(ids[0])" && log.dropFirst().first == "2:\(ids[2])" && !log.contains("1:\(ids[1])"),
           "order by identifier, cancel one", "\(log) \(ids)")
     check(ownerTyped, "typed owner")
     log = []
-    order.cyl_cancelAllLifecycleCallbacks(for: .viewWillLayoutSubviews)
+    order.cylCancelAllLifecycleCallbacks(for: .viewWillLayoutSubviews)
     order.view.setNeedsLayout(); order.view.layoutIfNeeded()
     check(log.isEmpty, "cancel all", "\(log)")
 
@@ -219,12 +219,12 @@ func runTests(window: UIWindow) {
     log = []
     let mutating = PlainViewController()
     var laterID: UInt = 0
-    mutating.cyl_addLifecycleCallback(for: .viewDidLoad) { owner, _, _ in
+    mutating.cylAddLifecycleCallback(for: .viewDidLoad) { owner, _, _ in
         log.append("first")
-        owner.cyl_cancelLifecycleCallback(identifier: laterID)
-        owner.cyl_addLifecycleCallback(for: .viewWillLayoutSubviews) { _, _, _ in log.append("added") }
+        owner.cylCancelLifecycleCallback(identifier: laterID)
+        owner.cylAddLifecycleCallback(for: .viewWillLayoutSubviews) { _, _, _ in log.append("added") }
     }
-    laterID = mutating.cyl_addLifecycleCallback(for: .viewDidLoad) { _, _, _ in log.append("later") }
+    laterID = mutating.cylAddLifecycleCallback(for: .viewDidLoad) { _, _, _ in log.append("later") }
     mutating.loadViewIfNeeded()
     mutating.view.setNeedsLayout(); mutating.view.layoutIfNeeded()
     check(log.first == "first" && !log.contains("later") && log.contains("added"), "add/cancel from inside a block", "\(log)")
@@ -245,7 +245,7 @@ func runTests(window: UIWindow) {
     let appearing = PlainViewController()
     var animatedFlags: [Bool?] = []
     for event in [CYLLifecycleEvent.viewWillAppear, .viewIsAppearing, .viewDidAppear] {
-        appearing.cyl_addLifecycleCallback(for: event) { _, _, info in log.append("\(event)"); animatedFlags.append(info.animated) }
+        appearing.cylAddLifecycleCallback(for: event) { _, _, info in log.append("\(event)"); animatedFlags.append(info.animated) }
     }
     appearing.loadViewIfNeeded()
     appearing.beginAppearanceTransition(true, animated: true); appearing.endAppearanceTransition()
@@ -257,8 +257,8 @@ func runTests(window: UIWindow) {
     // 9. Disappearance.
     log = []
     let next = PlainViewController()
-    appearing.cyl_addLifecycleCallback(for: .viewWillDisappear) { _, _, _ in log.append("willDisappear") }
-    appearing.cyl_addLifecycleCallback(for: .viewDidDisappear) { _, _, _ in log.append("didDisappear") }
+    appearing.cylAddLifecycleCallback(for: .viewWillDisappear) { _, _, _ in log.append("willDisappear") }
+    appearing.cylAddLifecycleCallback(for: .viewDidDisappear) { _, _, _ in log.append("didDisappear") }
     appearing.beginAppearanceTransition(false, animated: false); appearing.endAppearanceTransition()
     check(log == ["willDisappear", "didDisappear"], "disappearance events", "\(log)")
     _ = next
@@ -267,12 +267,12 @@ func runTests(window: UIWindow) {
     log = []
     var previous: UITraitCollection?
     appear(appearing, in: window)
-    appearing.cyl_addLifecycleCallback(for: .traitCollectionDidChange) { owner, _, info in
+    appearing.cylAddLifecycleCallback(for: .traitCollectionDidChange) { owner, _, info in
         previous = info.previousTraitCollection
         log.append("trait:\(owner.traitCollection.userInterfaceStyle.rawValue)")
     }
-    appearing.cyl_addLifecycleCallback(for: .viewSafeAreaInsetsDidChange) { _, _, _ in log.append("safeArea") }
-    appearing.cyl_addLifecycleCallback(for: .viewLayoutMarginsDidChange) { _, _, _ in log.append("margins") }
+    appearing.cylAddLifecycleCallback(for: .viewSafeAreaInsetsDidChange) { _, _, _ in log.append("safeArea") }
+    appearing.cylAddLifecycleCallback(for: .viewLayoutMarginsDidChange) { _, _, _ in log.append("margins") }
     window.overrideUserInterfaceStyle = .dark
     window.layoutIfNeeded(); appearing.view.layoutIfNeeded()
     RunLoop.main.run(until: Date().addingTimeInterval(0.3))
@@ -288,14 +288,14 @@ func runTests(window: UIWindow) {
     log = []
     let child = PlainViewController()
     var parents: [UIViewController?] = []
-    child.cyl_addLifecycleCallback(for: .willMoveToParent) { _, _, info in log.append("will"); parents.append(info.parent) }
-    child.cyl_addLifecycleCallback(for: .didMoveToParent) { _, _, info in log.append("did"); parents.append(info.parent) }
+    child.cylAddLifecycleCallback(for: .willMoveToParent) { _, _, info in log.append("will"); parents.append(info.parent) }
+    child.cylAddLifecycleCallback(for: .didMoveToParent) { _, _, info in log.append("did"); parents.append(info.parent) }
     appearing.addChild(child); child.didMove(toParent: appearing)
     check(log == ["will", "did"] && parents.allSatisfy { $0 === appearing }, "willMove/didMove with parent", "\(log)")
 
     // 12. Memory warning.
     log = []
-    appearing.cyl_addLifecycleCallback(for: .didReceiveMemoryWarning) { _, _, _ in log.append("memory") }
+    appearing.cylAddLifecycleCallback(for: .didReceiveMemoryWarning) { _, _, _ in log.append("memory") }
     UIApplication.shared.perform(NSSelectorFromString("_performMemoryWarning"))
     RunLoop.main.run(until: Date().addingTimeInterval(0.3))
     if !log.contains("memory") { appearing.didReceiveMemoryWarning() }
@@ -306,11 +306,11 @@ func runTests(window: UIWindow) {
     log = []
     autoreleasepool {
         let object = PlainViewController()
-        let a = object.cyl_willDealloc { _, identifier in log.append("old:\(identifier)") }
-        let b = object.cyl_addLifecycleCallback(for: .viewDidLoad) { _, _, _ in }
-        let c = object.cyl_willDealloc(callback: { _, identifier, info in log.append("new:\(identifier):\(info.isDealloc):\(info.timing)") })
-        object.cyl_willDealloc(key: "k") { _, _, _ in log.append("key1") }
-        object.cyl_willDealloc(key: "k") { _, _, _ in log.append("key2") }
+        let a = object.cylWillDealloc { _, identifier in log.append("old:\(identifier)") }
+        let b = object.cylAddLifecycleCallback(for: .viewDidLoad) { _, _, _ in }
+        let c = object.cylWillDealloc(callback: { _, identifier, info in log.append("new:\(identifier):\(info.isDealloc):\(info.timing)") })
+        object.cylWillDealloc(key: "k") { _, _, _ in log.append("key1") }
+        object.cylWillDealloc(key: "k") { _, _, _ in log.append("key2") }
         check(a < b && b < c, "one identifier sequence for dealloc and lifecycle", "\(a) \(b) \(c)")
     }
     check(log.count == 3 && log[0].hasPrefix("old:") && log[1] == "new:3:true:end" && log[2] == "key2", "dealloc order, info, keyed replacement", "\(log)")
@@ -328,36 +328,36 @@ func runTests(window: UIWindow) {
     kvoTarget.value = 1
     check(observedWhileAlive && kvoTarget.observationInfo == nil, "KVO: observer removed by the dealloc block (README, no flag)")
 
-    // 16. Nested cyl_performLifecycle (base and subclass).
+    // 16. Nested cylPerformLifecycle (base and subclass).
     log = []
     let nested = PerformSubViewController()
     for timing in CYLLifecycleTiming.allCases {
-        nested.cyl_addLifecycleCallback(for: .viewDidLoad, timing: timing) { _, _, info in log.append("\(info.timing)") }
+        nested.cylAddLifecycleCallback(for: .viewDidLoad, timing: timing) { _, _, info in log.append("\(info.timing)") }
     }
     nested.loadViewIfNeeded()
-    check(log == ["beforeSuper", "afterSuper", "baseBody", "subBody", "end"], "nested cyl_performLifecycle fires each timing once", "\(log)")
+    check(log == ["beforeSuper", "afterSuper", "baseBody", "subBody", "end"], "nested cylPerformLifecycle fires each timing once", "\(log)")
 
-    // 17. Core override with raw .end, app subclass with cyl_performLifecycle.
+    // 17. Core override with raw .end, app subclass with cylPerformLifecycle.
     log = []
     let coreApp = AppPerformLayoutViewController(nibName: nil, bundle: nil)
-    coreApp.cyl_addLifecycleCallback(for: .viewDidLayoutSubviews, timing: .end) { _, _, _ in log.append("end-block") }
+    coreApp.cylAddLifecycleCallback(for: .viewDidLayoutSubviews, timing: .end) { _, _, _ in log.append("end-block") }
     coreApp.loadViewIfNeeded()
     log = []
     coreApp.view.setNeedsLayout(); coreApp.view.layoutIfNeeded()
-    check(log == ["core-after", "core-body", "end-block", "app-body"], "core raw .end inside an app's cyl_performLifecycle", "\(log)")
+    check(log == ["core-after", "core-body", "end-block", "app-body"], "core raw .end inside an app's cylPerformLifecycle", "\(log)")
 
     // 18. UIKit subclasses.
     for (name, controller) in [("UITableViewController", UITableViewController(style: .insetGrouped) as UIViewController),
                                ("UINavigationController", UINavigationController(rootViewController: UIViewController()))] {
         log = []
-        controller.cyl_addLifecycleCallback(for: .viewDidLayoutSubviews, timing: .afterSuper) { _, _, _ in log.append("after") }
-        controller.cyl_addLifecycleCallback(for: .viewDidLayoutSubviews, timing: .end) { _, _, _ in log.append("end") }
+        controller.cylAddLifecycleCallback(for: .viewDidLayoutSubviews, timing: .afterSuper) { _, _, _ in log.append("after") }
+        controller.cylAddLifecycleCallback(for: .viewDidLayoutSubviews, timing: .end) { _, _, _ in log.append("end") }
         controller.loadViewIfNeeded()
         controller.view.frame = CGRect(x: 0, y: 0, width: 300, height: 500)
         controller.view.setNeedsLayout(); controller.view.layoutIfNeeded()
         print("INFO \(name): viewDidLayoutSubviews .afterSuper fired: \(log.contains("after")), .end fired: \(log.contains("end"))")
         log = []
-        controller.cyl_addLifecycleCallback(for: .viewWillAppear) { _, _, _ in log.append("willAppear") }
+        controller.cylAddLifecycleCallback(for: .viewWillAppear) { _, _, _ in log.append("willAppear") }
         controller.beginAppearanceTransition(true, animated: false); controller.endAppearanceTransition()
         check(log.contains("willAppear"), "\(name): viewWillAppear .afterSuper fires", "\(log)")
     }
@@ -368,15 +368,15 @@ func runTests(window: UIWindow) {
     autoreleasepool {
         let isolated = PlainViewController()
         let observed = isolationTarget
-        isolated.cyl_addLifecycleCallback(for: .viewWillLayoutSubviews, key: "cyl.core.willLayout") { _, _, _ in log.append("core") }
-        isolated.cyl_addLifecycleCallback(for: .viewWillLayoutSubviews) { _, _, _ in log.append("app") }
+        isolated.cylAddLifecycleCallback(for: .viewWillLayoutSubviews, key: "cyl.core.willLayout") { _, _, _ in log.append("core") }
+        isolated.cylAddLifecycleCallback(for: .viewWillLayoutSubviews) { _, _, _ in log.append("app") }
         observed.addObserver(isolated, forKeyPath: "value", options: .new, context: nil)
-        isolated.cyl_willDealloc(key: "cyl.core.kvo") { owner, _, _ in
+        isolated.cylWillDealloc(key: "cyl.core.kvo") { owner, _, _ in
             observed.removeObserver(owner.takeUnretainedValue() as! NSObject, forKeyPath: "value")
         }
         // The app's broad calls.
-        isolated.cyl_cancelAllLifecycleCallbacks(for: .viewWillLayoutSubviews)
-        isolated.cyl_cancelAllDeallocCallbacks()
+        isolated.cylCancelAllLifecycleCallbacks(for: .viewWillLayoutSubviews)
+        isolated.cylCancelAllDeallocCallbacks()
         isolated.loadViewIfNeeded()
         isolated.view.setNeedsLayout(); isolated.view.layoutIfNeeded()
         check(log.contains("core") && !log.contains("app"), "isolation: app cancel-all keeps the core's keyed blocks", "\(log)")
@@ -386,30 +386,30 @@ func runTests(window: UIWindow) {
     // 20. The core re-arms its block by key; the app's run-once block does not run again.
     log = []
     let rearmed = PlainViewController()
-    rearmed.cyl_addLifecycleCallback(for: .viewWillLayoutSubviews, invokeOnce: true, key: "cyl.core.layoutBlock") { _, _, _ in log.append("core") }
-    rearmed.cyl_addLifecycleCallback(for: .viewWillLayoutSubviews, invokeOnce: true) { _, _, _ in log.append("app") }
+    rearmed.cylAddLifecycleCallback(for: .viewWillLayoutSubviews, invokeOnce: true, key: "cyl.core.layoutBlock") { _, _, _ in log.append("core") }
+    rearmed.cylAddLifecycleCallback(for: .viewWillLayoutSubviews, invokeOnce: true) { _, _, _ in log.append("app") }
     rearmed.loadViewIfNeeded()
     rearmed.view.setNeedsLayout(); rearmed.view.layoutIfNeeded()
     log = []
-    rearmed.cyl_rearmLifecycleCallback(key: "cyl.core.layoutBlock")
+    rearmed.cylRearmLifecycleCallback(key: "cyl.core.layoutBlock")
     rearmed.view.setNeedsLayout(); rearmed.view.layoutIfNeeded()
     check(log == ["core"], "isolation: core re-arms by key, app's run-once block stays fired", "\(log)")
     log = []
-    rearmed.cyl_rearmLifecycleCallbacks(for: .viewWillLayoutSubviews)
+    rearmed.cylRearmLifecycleCallbacks(for: .viewWillLayoutSubviews)
     rearmed.view.setNeedsLayout(); rearmed.view.layoutIfNeeded()
     check(log == ["app"], "isolation: re-arm by event skips keyed blocks", "\(log)")
     log = []
-    check(rearmed.cyl_cancelLifecycleCallback(key: "cyl.core.layoutBlock"), "cancel by key returns true")
-    rearmed.cyl_rearmLifecycleCallbacks(for: .viewWillLayoutSubviews)
+    check(rearmed.cylCancelLifecycleCallback(key: "cyl.core.layoutBlock"), "cancel by key returns true")
+    rearmed.cylRearmLifecycleCallbacks(for: .viewWillLayoutSubviews)
     rearmed.view.setNeedsLayout(); rearmed.view.layoutIfNeeded()
     check(log == ["app"], "cancel by key removes only that block", "\(log)")
     let deallocKeyed = NSObject()
-    deallocKeyed.cyl_willDealloc(key: "k") { _, _, _ in log.append("never") }
-    check(deallocKeyed.cyl_cancelDeallocCallback(key: "k") && !deallocKeyed.cyl_cancelDeallocCallback(key: "k"), "cancel dealloc block by key")
+    deallocKeyed.cylWillDealloc(key: "k") { _, _, _ in log.append("never") }
+    check(deallocKeyed.cylCancelDeallocCallback(key: "k") && !deallocKeyed.cylCancelDeallocCallback(key: "k"), "cancel dealloc block by key")
 
     // 13. Size transition: rotate the scene (asynchronous), then finish.
     var sizes: [CGSize] = []
-    appearing.cyl_addLifecycleCallback(for: .viewWillTransition, timing: .beforeSuper) { _, _, info in
+    appearing.cylAddLifecycleCallback(for: .viewWillTransition, timing: .beforeSuper) { _, _, info in
         if let size = info.size { sizes.append(size) }
     }
     if #available(iOS 16.0, *) {

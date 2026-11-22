@@ -23,7 +23,7 @@ class ViewController: UITableViewController {
         _number = 5
         aNumber = 6
 
-        cyl_willDealloc { [weak self] owner, identifier in
+        cylWillDealloc { [weak self] owner, identifier in
             // During dealloc a weak reference is already nil.
             let n1 = self?.aNumber
             // The unretained owner still has an address, but its ivars are already torn down.
@@ -35,15 +35,15 @@ class ViewController: UITableViewController {
         tableView.delegate = self
 
         // Lifecycle blocks: the owner arrives typed, so no capture of self is needed.
-        cyl_addLifecycleCallback(for: .viewWillAppear) { owner, identifier, info in
+        cylAddLifecycleCallback(for: .viewWillAppear) { owner, identifier, info in
             owner.showInfo("viewWillAppear (animated: \(info.animated ?? false)). Task: \(identifier)")
         }
         // Once, at the end of the first layout pass (like CYLTabBarController's one-time layout block).
-        cyl_addLifecycleCallback(for: .viewDidLayoutSubviews, timing: .end, invokeOnce: true) { owner, _, _ in
+        cylAddLifecycleCallback(for: .viewDidLayoutSubviews, timing: .end, invokeOnce: true) { owner, _, _ in
             owner.tableViewScrollToBottom(animated: false)
         }
         // Re-apply the skin when the appearance (light / dark) changes.
-        cyl_addLifecycleCallback(for: .traitCollectionDidChange) { owner, _, info in
+        cylAddLifecycleCallback(for: .traitCollectionDidChange) { owner, _, info in
             guard owner.traitCollection.hasDifferentColorAppearance(comparedTo: info.previousTraitCollection) else { return }
             owner.view.themeMap = ["BackgroundColor": "randomColor"]
         }
@@ -54,7 +54,7 @@ class ViewController: UITableViewController {
             for _ in 0..<100000 {
                 for _ in 0..<3 {
                     // Add task
-                    let identifier = object.cyl_willDealloc { [weak self] object, identifier in
+                    let identifier = object.cylWillDealloc { [weak self] object, identifier in
                         self?.showInfo("Object: \(object.takeUnretainedValue()) dealloc. Task: \(identifier)")
                     }
                     showInfo("Object: \(object) created. Task: \(identifier)")
@@ -79,8 +79,8 @@ class ViewController: UITableViewController {
     }
 
     override func didReceiveMemoryWarning() {
-        // 模拟对self多次执行 `cyl_willDealloc` 方法
-        cyl_willDealloc { _, identifier in
+        // 模拟对self多次执行 `cylWillDealloc` 方法
+        cylWillDealloc { _, identifier in
             NSLog("🔴类名与方法名：\(#function)（在第\(#line)行），描述：顺序执行：\(identifier)")
         }
     }

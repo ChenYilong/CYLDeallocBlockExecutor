@@ -20,8 +20,12 @@ public typealias CYLDeallocSelfCallback = (_ owner: Unmanaged<AnyObject>, _ iden
 /// `info.timing` is `.end`). The owner is unretained for the same reason as in `CYLDeallocSelfCallback`.
 public typealias CYLDeallocCallback = (_ owner: Unmanaged<AnyObject>, _ identifier: UInt, _ info: CYLLifecycleInfo) -> Void
 
-/// Illegal identifier.
-public let CYLDeallocCallbackIllegalIdentifier: UInt = 0
+/// The identifier no callback ever gets (`0`).
+public let cylDeallocCallbackIllegalIdentifier: UInt = 0
+
+/// Illegal identifier (1.3.0 name).
+@available(*, deprecated, renamed: "cylDeallocCallbackIllegalIdentifier")
+public let CYLDeallocCallbackIllegalIdentifier: UInt = cylDeallocCallbackIllegalIdentifier
 
 private var executorsKey: UInt8 = 0
 
@@ -33,17 +37,17 @@ extension NSObject {
     ///
     /// - Returns: The task identifier.
     @discardableResult
-    public func cyl_willDealloc(selfCallback: @escaping CYLDeallocSelfCallback) -> UInt {
-        cyl_willDealloc(callback: { owner, identifier, _ in selfCallback(owner, identifier) })
+    public func cylWillDealloc(selfCallback: @escaping CYLDeallocSelfCallback) -> UInt {
+        cylWillDealloc(callback: { owner, identifier, _ in selfCallback(owner, identifier) })
     }
 
     /// Add a dealloc callback with the same parameters as the lifecycle callbacks (owner, identifier, info).
-    /// Shares the identifier sequence, the lock and the cancel API of `cyl_willDealloc(selfCallback:)`.
+    /// Shares the identifier sequence, the lock and the cancel API of `cylWillDealloc(selfCallback:)`.
     ///
     /// - Returns: The task identifier.
     @discardableResult
-    public func cyl_willDealloc(callback: @escaping CYLDeallocCallback) -> UInt {
-        let (identifier, model) = cyl_makeCallbackIdentifierAndModel()
+    public func cylWillDealloc(callback: @escaping CYLDeallocCallback) -> UInt {
+        let (identifier, model) = cylMakeCallbackIdentifierAndModel()
         return model.addDeallocCallback(callback, identifier: identifier)
     }
 
@@ -52,8 +56,8 @@ extension NSObject {
     ///
     /// - Returns: The task identifier.
     @discardableResult
-    public func cyl_willDealloc(key: String, callback: @escaping CYLDeallocCallback) -> UInt {
-        let (identifier, model) = cyl_makeCallbackIdentifierAndModel()
+    public func cylWillDealloc(key: String, callback: @escaping CYLDeallocCallback) -> UInt {
+        let (identifier, model) = cylMakeCallbackIdentifierAndModel()
         return model.addDeallocCallback(callback, identifier: identifier, key: key)
     }
 
@@ -61,8 +65,8 @@ extension NSObject {
     ///
     /// - Returns: Remove success or not.
     @discardableResult
-    public func cyl_cancelDeallocCallback(identifier: UInt) -> Bool {
-        guard let model = cyl_callbackModel(create: false) else { return false }
+    public func cylCancelDeallocCallback(identifier: UInt) -> Bool {
+        guard let model = cylCallbackModel(create: false) else { return false }
         return model.removeDeallocCallback(identifier: identifier)
     }
 
@@ -70,18 +74,40 @@ extension NSObject {
     ///
     /// - Returns: Whether a callback had this key.
     @discardableResult
-    public func cyl_cancelDeallocCallback(key: String) -> Bool {
-        guard let model = cyl_callbackModel(create: false), let identifier = model.deallocIdentifier(key: key) else { return false }
+    public func cylCancelDeallocCallback(key: String) -> Bool {
+        guard let model = cylCallbackModel(create: false), let identifier = model.deallocIdentifier(key: key) else { return false }
         return model.removeDeallocCallback(identifier: identifier)
     }
 
     /// Remove all dealloc callbacks added without a key (every 1.3.0 callback); keyed callbacks belong to whoever holds
-    /// the key (`cyl_cancelDeallocCallback(key:)`).
-    public func cyl_cancelAllDeallocCallbacks() {
-        cyl_callbackModel(create: false)?.removeAllDeallocCallbacks()
+    /// the key (`cylCancelDeallocCallback(key:)`).
+    public func cylCancelAllDeallocCallbacks() {
+        cylCallbackModel(create: false)?.removeAllDeallocCallbacks()
     }
 
-    @available(*, deprecated, message: "Deprecated in 1.2.0. Use `cyl_willDealloc(selfCallback:)` instead.")
+    // MARK: 1.3.0 names
+
+    /// 1.3.0 name of `cylWillDealloc(selfCallback:)`.
+    @available(*, deprecated, renamed: "cylWillDealloc(selfCallback:)")
+    @discardableResult
+    public func cyl_willDealloc(selfCallback: @escaping CYLDeallocSelfCallback) -> UInt {
+        cylWillDealloc(selfCallback: selfCallback)
+    }
+
+    /// 1.3.0 name of `cylCancelDeallocCallback(identifier:)`.
+    @available(*, deprecated, renamed: "cylCancelDeallocCallback(identifier:)")
+    @discardableResult
+    public func cyl_cancelDeallocCallback(identifier: UInt) -> Bool {
+        cylCancelDeallocCallback(identifier: identifier)
+    }
+
+    /// 1.3.0 name of `cylCancelAllDeallocCallbacks()`.
+    @available(*, deprecated, renamed: "cylCancelAllDeallocCallbacks()")
+    public func cyl_cancelAllDeallocCallbacks() {
+        cylCancelAllDeallocCallbacks()
+    }
+
+    @available(*, deprecated, message: "Deprecated in 1.2.0. Use `cylWillDealloc(selfCallback:)` instead.")
     public func cyl_executeAtDealloc(_ block: @escaping CYLDeallocExecutorBlock) {
         let executor = CYLDeallocExecutor(block: block)
         cylDeallocCallbackLock.lock(); defer { cylDeallocCallbackLock.unlock() }
