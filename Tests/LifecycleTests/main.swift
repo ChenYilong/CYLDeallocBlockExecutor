@@ -139,11 +139,14 @@ final class KVOObserverViewController: UIViewController {
 
 var executeRuns: [String] = []
 
-/// The 1.2.0 API is deprecated on purpose: this test calls it anyway (three expected deprecation warnings).
-func executeAtDeallocThreeTimes(on object: NSObject) {
-    object.cyl_executeAtDealloc { executeRuns.append("a") }
-    object.cyl_executeAtDealloc { executeRuns.append("b") }
-    object.cyl_executeAtDealloc { executeRuns.append("c") }
+/// The 1.2.0 API is deprecated on purpose: the test calls it from a deprecated context, reached by selector, so the build has no warning.
+final class DeprecatedAPICaller: NSObject {
+    @available(*, deprecated)
+    @objc func addThreeBlocks(_ object: NSObject) {
+        object.cyl_executeAtDealloc { executeRuns.append("a") }
+        object.cyl_executeAtDealloc { executeRuns.append("b") }
+        object.cyl_executeAtDealloc { executeRuns.append("c") }
+    }
 }
 
 /// Issue #8: a view-like observer that outlives its view controller.
@@ -432,7 +435,7 @@ func runTests(window: UIWindow) {
     executeRuns = []
     autoreleasepool {
         let multi = NSObject()
-        executeAtDeallocThreeTimes(on: multi)
+        _ = DeprecatedAPICaller().perform(NSSelectorFromString("addThreeBlocks:"), with: multi)
         check(executeRuns.isEmpty, "issue #3: cyl_executeAtDealloc x3, no block runs when a later one is added", "\(executeRuns)")
     }
     check(executeRuns.sorted() == ["a", "b", "c"], "issue #3: cyl_executeAtDealloc x3, every block runs exactly once at dealloc", "\(executeRuns)")
