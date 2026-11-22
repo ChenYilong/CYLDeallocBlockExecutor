@@ -4,6 +4,18 @@ This document tracks the lifecycle block API of CYLDeallocBlockExecutor: blocks 
 
 ## Task log
 
+### TODO: all-platform interface design aligned with iOS (2026-11-23, branch `feat/lifecycle-callbacks`, PR #12)
+
+**Context.** The iOS API (this document) is the reference. Table, evidence rule, per-platform score and progress: [Cross-Platform-API.md](Cross-Platform-API.md). Platforms: Android (Kotlin), Flutter (Dart), React Native (TypeScript), HarmonyOS (ArkTS), WeChat Mini Program.
+
+**Requirements (English translation of the prompt).**
+
+- Continue with the all-platform interface design and the interfaces aligned with the iOS side; design a scoring system. Column 1 is iOS; add one column per platform.
+- Find the related document (create it if missing, insert if it exists), in English: a table with column 1 (the feature, iOS), column 2 the feature description, then the matching API or feature per platform, TODO by default.
+- Score: no TODO = full score, all TODO = 0. Loop: (1) search the existing code to match TODO cells; (2) score; (3) work through the TODO cells one by one and replace TODO with the implementation; (4) score again; repeat until full score.
+
+**Prompt (verbatim).** 继续完成全平台接口设计与iOS端对齐接口，设计评分系统，第一列 ios, 增加各个平台对应接口。为一列，找到下面描述中相关的文档，如果没有就新建，如果有就插入：全英文写入：制作一个表格，第一列为，第二列为功能描述，第三列为 对应的api或者功能。第三列默认为TODO。制作评分系统，第三列没有TODO 为满分，全部是TODO为0分。制作表格以及评分系统完成后，第一步 尝试搜索现有代码，尝试匹配TODO项，寻找对应的api和功能。第二：打分。第三：。开始逐一处理TODO。并更新TODO为对应实现。第四步骤：打分。如此循环往复一直到满分为止。
+
 ### DONE: resolve this repository's GitHub issues (2026-11-22, branch `feat/lifecycle-callbacks`, PR #12)
 
 **Result.** 7 / 7 rows, 100 / 100 ([Issues.md](Issues.md)). Tests 57/57 in Debug and Release on iOS 27.2, Debug on iOS 17.5. Transcriptions posted on #7 and #8; #5, #7 and #8 closed after the advisor's review.
