@@ -4,6 +4,30 @@ This document tracks the lifecycle block API of CYLDeallocBlockExecutor: blocks 
 
 ## Task log
 
+### TODO: all platforms, step 1 Android (2026-11-23, branch `feat/lifecycle-callbacks-android`)
+
+**Context.** The callback registry exists on iOS only (Swift, PR #12). The owner wants the same logic on Android, Flutter, React Native, the WeChat Mini Program and HarmonyOS, installed as a dependency of the CYLTabBarController core. Flutter and React Native get it through their native cores, so the order is Android, HarmonyOS, Mini Program. This section is step 1, Android (Kotlin).
+
+**Requirements (English translation of the prompt).**
+
+- Build the core code for the other platforms (Android, Flutter, React Native, Mini Program, HarmonyOS). The logic is the same as the iOS one.
+- Install it in the CYLTabBarController core dependencies.
+
+**Prompt (verbatim).** "please  build core code for other platform like android flutter react native miniplatform and harmonyos. logic is same as what we done on ios, and install in the CYLTabBarController core dependence"
+
+**Rubric for Android (100 / 60).**
+
+| Part | Points | What counts |
+| :-- | :-: | :-- |
+| Library and tests | 40 | `android/` Gradle module `cyldeallocblockexecutor` (Kotlin), JVM unit tests with JUnit, no emulator, all passing |
+| Parity table | 15 | every iOS check in `Tests/LifecycleTests/main.swift` maps to an Android test or is marked "N/A on Android: reason" |
+| Integration in CYLTabBarController | 30 | Android core depends on the library and uses it for the layout block; the Android example and the Flutter / React Native Android builds work |
+| CI and docs | 15 | Android job in `.github/workflows/ci.yml`, JitPack build, this document |
+
+60 = library, tests and the parity table pass (55) plus the dependency declared in CYLTabBarController.
+
+**Plan.** (1) Library module, tests, JitPack, CI. (2) Parity table. (3) CYLTabBarController Android core integration (draft PR #823). (4) JitPack check.
+
 ### DONE: resolve this repository's GitHub issues (2026-11-22, branch `feat/lifecycle-callbacks`, PR #12)
 
 **Result.** 7 / 7 rows, 100 / 100 ([Issues.md](Issues.md)). Tests 57/57 in Debug and Release on iOS 27.2, Debug on iOS 17.5. Transcriptions posted on #7 and #8; #5, #7 and #8 closed after the advisor's review.
