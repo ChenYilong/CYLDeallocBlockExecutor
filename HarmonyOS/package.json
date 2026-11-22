@@ -1,0 +1,8 @@
+{
+  "name": "cyl-dealloc-block-executor-harmonyos",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --import ./test/register.mjs --test \"test/*.test.ts\""
+  }
+}

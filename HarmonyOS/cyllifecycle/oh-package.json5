@@ -1,0 +1,9 @@
+{
+  "name": "cyllifecycle",
+  "version": "1.4.0",
+  "description": "Lifecycle and teardown blocks, aligned with the iOS CYLDeallocBlockExecutor API.",
+  "main": "Index.ets",
+  "author": "ChenYilong",
+  "license": "MIT",
+  "dependencies": {}
+}

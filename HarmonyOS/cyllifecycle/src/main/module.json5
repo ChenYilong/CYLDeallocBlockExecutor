@@ -1,0 +1,7 @@
+{
+  "module": {
+    "name": "cyllifecycle",
+    "type": "har",
+    "deviceTypes": ["phone", "tablet"]
+  }
+}

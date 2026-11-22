@@ -1,0 +1,6 @@
+{
+  "modelVersion": "6.0.1",
+  "description": "Lifecycle and teardown blocks for HarmonyOS, aligned with the iOS CYLDeallocBlockExecutor API.",
+  "dependencies": {},
+  "devDependencies": {}
+}

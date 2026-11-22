@@ -1,0 +1,10 @@
+{
+  "name": "cyl-dealloc-block-executor-miniprogram",
+  "version": "1.4.0",
+  "private": true,
+  "description": "Lifecycle and teardown blocks for WeChat Mini Program pages and components, aligned with the iOS CYLDeallocBlockExecutor API.",
+  "main": "index.js",
+  "scripts": {
+    "test": "node --test \"test/*.test.js\""
+  }
+}
