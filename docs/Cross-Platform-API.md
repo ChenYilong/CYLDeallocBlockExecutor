@@ -21,10 +21,13 @@ A cell counts only when it has evidence:
 | Round | Step | Android | Flutter | RN | HarmonyOS | Mini Program | Total | Score |
 | :-- | :-- | :-- | :-- | :-- | :-- | :-- | :-- | :-- |
 | 0 | Tables created | 0 / 29 | 0 / 29 | 0 / 29 | 0 / 29 | 0 / 29 | 0 / 145 | 0 |
+| 1 | Search of the existing code (2026-11-23): no cell has an API in this repository plus a run check, so none counts | 0 / 29 | 0 / 29 | 0 / 29 | 0 / 29 | 0 / 29 | 0 / 145 | 0 |
 
 ## Progress
 
-Round 0: tables generated from the two iOS tables. Next: round 1, search the existing code for matches (read-only in `CYLTabBarController/CrossPlatform/*`), then the advisor's per-platform design.
+Round 0: tables generated from the two iOS tables.
+
+Round 1 (read-only search of `CYLTabBarController/CrossPlatform/*`, 2026-11-23): the code uses the native lifecycle hooks directly inside components (HarmonyOS `aboutToDisappear` in `CYLTabBarController.ets`, `CYLAnimatedItemView.ets`, `CYLRiveIcon.ets`, `CYLSVGAView.ets`; Mini Program `onUnload` in the RiveViewer pages; no Kotlin, Dart or React Native match). None of it is a lifecycle-callback API with several blocks, identifiers, keys or timings, and none is in this repository with a test, so every cell stays `TODO`. These files are the native hook points the new APIs wrap. Next: the advisor's per-platform design, then implement one platform at a time, with a headless test each.
 
 ## Table
 
