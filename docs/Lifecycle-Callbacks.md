@@ -88,6 +88,44 @@ Android only: `deallocRunsOnceAndCancelDuringItHasNoEffect`, `performDoesNothing
 
 **Plan.** (1) Library module, tests, JitPack, CI. (2) Parity table. (3) CYLTabBarController Android core integration (draft PR #823). (4) JitPack check.
 
+### TODO: all platforms, step 2 HarmonyOS (2026-11-23, branch `feat/lifecycle-callbacks-android`)
+
+**Context.** Step 1 (Android, Kotlin) is done. This section is step 2, HarmonyOS (ArkTS, `harmonyos/`), ported from the Kotlin sources (repository rule: HarmonyOS internals are ported from the Android Kotlin code), with the same API names and semantics.
+
+**Prompt (verbatim).** "please  build core code for other platform like android flutter react native miniplatform and harmonyos. logic is same as what we done on ios, and install in the CYLTabBarController core dependence"
+
+**Rubric for HarmonyOS (100 / 60).**
+
+| Part | Points | What counts |
+| :-- | :-: | :-- |
+| Library and tests | 40 | HAR module `cyldeallocblockexecutor` (ArkTS); hypium tests written, and executed when the toolchain allows it (otherwise stated as not executed) |
+| Parity table | 15 | every row of the table above has a HarmonyOS column entry: a test name or "N/A: reason" |
+| Integration in CYLTabBarController | 30 | the core `cyltabbar` module depends on it (vendored, pinned commit) and the keyboard listener is cleaned up through a keyed `willDealloc`; `assembleHar` and `assembleHap` build |
+| CI and docs | 15 | parity column, mapping table with deviations, README of the module (CI job only if trivial) |
+
+60 = library, tests and the parity column (55) plus the dependency declared in CYLTabBarController.
+
+**Plan.** (1) HAR module `cyldeallocblockexecutor` plus a minimal hvigor project, compiled with hvigorw. (2) hypium tests. (3) Parity column. (4) Vendor into CYLTabBarController's `harmonyos-cyltabbar` and use it for the keyboard listener (and the theme listener when the controller adds one). (5) `assembleHar` for both libraries and `assembleHap` for `entry`.
+
+### TODO: all platforms, step 3 Mini program (2026-11-23, branch `feat/lifecycle-callbacks-android`)
+
+**Context.** Step 1 (Android, Kotlin) is done. This section is step 3, Mini program (JavaScript, `miniprogram/`), ported from the Kotlin sources (repository rule: HarmonyOS internals are ported from the Android Kotlin code), with the same API names and semantics.
+
+**Prompt (verbatim).** "please  build core code for other platform like android flutter react native miniplatform and harmonyos. logic is same as what we done on ios, and install in the CYLTabBarController core dependence"
+
+**Rubric for Mini program (100 / 60).**
+
+| Part | Points | What counts |
+| :-- | :-: | :-- |
+| Library and tests | 40 | plain CommonJS module (ES2017, no dependencies) and `node:test` tests, all passing |
+| Parity table | 15 | every row of the table above has a Mini program column entry: a test name or "N/A: reason" |
+| Integration in CYLTabBarController | 30 | the `cyl-tab-bar` component registers its cleanup as a keyed `willDealloc` and dispatches dealloc in `detached`, behavior unchanged; the package tests pass plus tests for the cleanup |
+| CI and docs | 15 | parity column, node job in `.github/workflows/ci.yml`, this document |
+
+60 = library, tests and the parity column (55) plus the dependency declared in CYLTabBarController.
+
+**Plan.** (1) CommonJS module `cyl-dealloc-block-executor.js`, `package.json`, tests with `node --test`. (2) Behavior factory `cylLifecycleBehavior` tested with a mocked Behavior / Component. (3) Parity column. (4) CI node job. (5) Vendor into `wechat-miniprogram-cyltabbar/src/cyl-dealloc-block-executor/` and move the detached cleanup of `cyl-tab-bar` onto a keyed `willDealloc`.
+
 ### DONE: resolve this repository's GitHub issues (2026-11-22, branch `feat/lifecycle-callbacks`, PR #12)
 
 **Result.** 7 / 7 rows, 100 / 100 ([Issues.md](Issues.md)). Tests 57/57 in Debug and Release on iOS 27.2, Debug on iOS 17.5. Transcriptions posted on #7 and #8; #5, #7 and #8 closed after the advisor's review.
