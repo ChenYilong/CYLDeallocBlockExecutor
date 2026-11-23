@@ -60,3 +60,8 @@ CYLLifecycleLog.sink = { message in os_log("%{public}@", message) }
 |:--|:--|:--|:--|
 | iOS | `CYLLifecycleLog.isEnabled`, `.sink` | Android | `LifecycleLog.enabled`, `.sink`, `.describer` |
 | Flutter | `LifecycleLog.enabled`, `.sink`, `.describer` | React Native, HarmonyOS, Mini Program | `LifecycleLog.enabled`, `.sink` |
+
+## iOS: the owner of a global scroll moment / iOS：全局滚动时机的 owner
+
+- [EN] On iOS a `CYLLifecycleCenter` observer of `scrollWillBeginDragging`, `scrollDidEndDragging` or `scrollDidEndScrolling` hears each moment once, and its `owner` is the **`UIScrollView`** that scrolled (not a cell, a view or a view controller that subscribed to it). `ownerType:` therefore filters on the scroll view's class. The blocks you add on a view or a view controller with `cylAddLifecycleCallback(for:)` still run first, with that object as the owner. On the other platforms the owner of a global scroll moment is the controller's owner (the page, the widget).
+- [CN] iOS 上，`CYLLifecycleCenter` 的 `scrollWillBeginDragging`、`scrollDidEndDragging`、`scrollDidEndScrolling` 观察者对每个时机只收到一次，其 `owner` 是发生滚动的 **`UIScrollView`**（不是订阅它的 cell、视图或视图控制器），因此 `ownerType:` 按滚动视图的类过滤。在视图或视图控制器上用 `cylAddLifecycleCallback(for:)` 添加的 block 仍然先执行，owner 是该对象本身。其他平台上，全局滚动时机的 owner 是控制器的所有者（页面、组件）。
