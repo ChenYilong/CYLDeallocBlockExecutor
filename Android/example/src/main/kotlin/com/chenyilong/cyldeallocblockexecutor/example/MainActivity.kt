@@ -21,7 +21,8 @@ class MainActivity : FragmentActivity() {
     private fun record(name: String) {
         count += 1
         Log.i("CYL", "EVENT $count $name")
-        if (::out.isInitialized) out.append("$count $name\n")
+        // Appending to a view inside a layout block would trigger another layout: keep layout events out of the screen text.
+        if (::out.isInitialized && !name.endsWith("Subviews")) out.append("$count $name\n")
     }
 
     class Child : Fragment() {
