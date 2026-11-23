@@ -133,3 +133,19 @@ The 195 / 205 above counts cells that name an API and a test that ran. It does n
 Risks the tests do not cover (assigned to the sessions): (1) iOS: `CYLVisibilityState` KVO on the tab buttons swaps their class at runtime (any exact-class check breaks), and `cylAdoptTabButton` repeats the forward at every tab bar layout; (2) iOS: the badge event may be posted on an inner badge host view and never reach the item through the forward; (3) every platform: a forward makes the global observers fire twice (button and item), so observers must be idempotent or the forwarded fire should skip the center; (4) HarmonyOS: `{ key: '...' }` object literals passed to an inline option type are likely rejected by ArkTS, so export named option interfaces; (5) Android CI may hit a second HTTP 429 from Robolectric's own runtime download (set `robolectric.dependency.repo.url` to the Google mirror). To reach 60 everywhere: build once on a real toolchain, and have one component post `cyl.animation.*` and pause on scroll.
 
 Audit follow-up (2026-11-23): risk (3) is fixed on every platform (a forwarded fire or post runs the target's own blocks only; the global observers hear it once, from the source) and `LifecycleCenter.whileUserScrolls` exists everywhere (tests: Android core 41, React Native 51, HarmonyOS 47, Mini Program 46; Flutter and iOS written statically). The effect scores do not move until the items that need a real toolchain are done by the sessions (Xcode, hvigor, WeChat DevTools, `flutter test`) and a component posts `cyl.animation.*` and pauses on scroll.
+
+### Advisor re-score: effect (2026-11-23, after the animation, badge and scroll work)
+
+Rule: work that was never compiled or run on its platform earns at most half credit for its row. "Verified how": **run here** (Gradle / Robolectric / Node on this machine), **CI** (GitHub Actions, run 45097936737 on `3a59366`), **static** (written, not compiled).
+
+| Platform | Before | Now | Verified how | What blocks 100 |
+|:---|---:|---:|:---|:---|
+| Android | 65 | ~78 | run here (Robolectric: events, pause, generic scroll source; host relay compiles); CI core and binding green | pause does nothing for Rive / GIF / SVGA players; no demo calls `observeScrolling`; never run on a device |
+| Mini Program | 70 | ~76 | run here (101 / 101, mocked `wx`); CI Node suites green | example pages do not route `onPageScroll` to the controller; WeChat DevTools never run |
+| iOS | 59 | ~62 | CI: Swift suite compiles and runs on macos-26, 79 / 80 passed on `3a59366`; the one failure (a global scroll observer heard one drag five times, once per subview) is fixed in `273a577`, CI pending | animation events and pause are static; GIF path posts nothing; speed-0 pause unverified per engine; KVO class swap open; no demo row or screenshot |
+| HarmonyOS | 55 | ~58 | static (no hvigor); Node suite green | not built; no demo enables `pausesWhileUserScrolls` or calls `scrollStarted()`; `Object` (not `unknown`) used in `.ets` |
+| React Native | 53 | ~58 | static; Node suite green | no type check or Codegen run; `scrollHandlers` only feed the JS registry, there is no JS-to-native pause path (a host prop such as `animationsPaused` is missing); no example |
+| Flutter | 41 | ~48 | CI: `flutter analyze` and `flutter test` green on `3a59366` | same missing JS/Dart-to-native pause path as React Native; native event relay static |
+
+Average about 63 / 100: above the 60 pass line on average, still under it on iOS, HarmonyOS, React Native and Flutter. Findings of this re-score: (1) no demo wires a scroll source except iOS, whose global observers install the content scroll view of every view controller that appears; (2) the TypeScript and Dart registries are separate from the native ones, so scrolling a React Native or Flutter list cannot pause native tab icons yet; (3) HarmonyOS `.ets` must not use `unknown` (reverted in CYLTabBarController).
+
