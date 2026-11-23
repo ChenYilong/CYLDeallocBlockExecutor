@@ -21,6 +21,11 @@
     {
       "name": "cyldeallocblockexecutor",
       "srcPath": "./cyldeallocblockexecutor"
+    },
+    {
+      "name": "entry",
+      "srcPath": "./entry",
+      "targets": [{ "name": "default", "applyToProducts": ["default"] }]
     }
   ]
 }

@@ -9,4 +9,6 @@ mkdir -p "$DST"
 rsync -a --delete --exclude '._*' --exclude node_modules --exclude oh_modules --exclude build --exclude .hvigor "$SRC"/ "$DST"/
 cd "$DST"
 export DEVECO_SDK_HOME=$D/sdk NODE_HOME=$D/tools/node PATH=$D/tools/node/bin:$D/tools/ohpm/bin:$D/tools/hvigor/bin:$PATH
-exec hvigorw assembleHar --mode module -p module=cyldeallocblockexecutor@default -p product=default --no-daemon
+ohpm install --all >/dev/null
+MODULE="${1:-cyldeallocblockexecutor}"; TASK=assembleHar; [ "$MODULE" = entry ] && TASK=assembleHap
+exec hvigorw $TASK --mode module -p module=$MODULE@default -p product=default --no-daemon

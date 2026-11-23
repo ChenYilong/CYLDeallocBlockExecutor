@@ -1,0 +1,4 @@
+{ "string": [
+  { "name": "module_desc", "value": "CYLLifecycleBridge device check" },
+  { "name": "EntryAbility_label", "value": "CYLLifecycle" }
+] }

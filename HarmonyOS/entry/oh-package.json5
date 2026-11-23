@@ -1,0 +1,11 @@
+{
+  "name": "entry",
+  "version": "1.0.0",
+  "description": "Runs CYLLifecycleBridge on a HarmonyOS device and prints the events it fires.",
+  "main": "",
+  "author": "ChenYilong",
+  "license": "MIT",
+  "dependencies": {
+    "cyldeallocblockexecutor": "file:../cyldeallocblockexecutor"
+  }
+}
