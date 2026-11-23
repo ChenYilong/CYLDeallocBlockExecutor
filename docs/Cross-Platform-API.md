@@ -108,3 +108,26 @@ Round 6 (Android binding, 2026-11-23): `Android/binding` is an Android library: 
 PR #13 (branch `feat/lifecycle-callbacks-android`, an earlier separate Android / HarmonyOS / Mini Program port) was closed as superseded by this line: older base, a different design, and lowercase folders that collide with `Android/`, `HarmonyOS/` and `MiniProgram/` on a case-insensitive file system. Its branch is kept, so it can be reopened. Written statically for you to test (2026-11-23): HarmonyOS hvigor project files and a `cyldeallocblockexecutor` HAR module whose `Index.ets` re-exports `../src` (path and `.ts` extension resolution untested); Android JitPack setup (`jitpack.yml`, `maven-publish` in `:core` and `:binding`, Gradle wrapper 8.14.3; only `publishToMavenLocal` was run here, the POM of the binding points at `cyl-dealloc-block-executor-core`). CI jobs `node-suites` and `android` were added to `ci.yml` without a run.
 
 Round 9 (design v5, 2026-11-23): the registry gained custom events (`addCustomCallback`, `postLifecycleEvent`), global observers (`LifecycleCenter`) and forwarding (`forwardLifecycleEvents`) on every platform, and the controllers gained the window, screen and scroll sources named in the table. Flutter's `scrollLifecycle(child:)` and `setScreenVisible` and its registry additions are written but not run, so those eight cells stay `TODO` (rule 5). iOS (`CYLLifecycleCenter.swift`, `CYLLifecycleSources.swift`, the model and hook changes, and `runObservableTests` in `Tests/LifecycleTests/main.swift`) is written statically: the owner builds it and runs `bash Tests/run-lifecycle-tests.sh <simulator UDID>`. Known limits: Android's `observeScrolling` takes a `RecyclerView` (other scroll views are not covered yet); the Mini Program has no drag-end event, so its end is a quiet period (`scrollEndDelay`, 150 ms); HarmonyOS reports a stop as a drag end without deceleration; React Native reports screen visibility from navigation focus and `setScreenVisible` only (no `measureInWindow`); on iOS the derived events have only the `.afterSuper` timing.
+
+### Advisor audit: effect (2026-11-23)
+
+The 195 / 205 above counts cells that name an API and a test that ran. It does not measure whether the feature works on the platform. Scored on effect with the rubric below, the average is about **57 / 100**, under the 60 pass line on four of six platforms: the target scenario (pause every animation while the user scrolls, know when an animation starts or pauses) does not work end to end anywhere yet, because no component posts `cyl.animation.*` and nothing pauses.
+
+| Part | Points |
+| :-- | --: |
+| Library API against the iOS reference | 20 |
+| Library verified (tests that ran, device or emulator) | 25 |
+| Real sources wired (window, screen, scroll, teardown) | 15 |
+| CYLTabBarController uses it and posts the badge and animation events | 25 |
+| Docs and CI | 15 |
+
+| Platform | API | Verified | Sources | Integration | Docs / CI | Total | Main reason |
+| :-- | --: | --: | --: | --: | --: | --: | :-- |
+| iOS | 20 | 10 | 7 | 12 | 10 | **59** | v1 to v4 ran on the simulator; design v5, the log and the CYLTabBarController changes never compiled |
+| Android | 20 | 18 | 11 | 8 | 8 | **65** | 50 Gradle / Robolectric tests; scrolling covers `RecyclerView` only; the CYLTabBarController Android build was not green since the migration; no badge or animation events |
+| Flutter | 18 | 8 | 5 | 4 | 6 | **41** | v5 and the log never ran; the wrapper is unchanged and nothing reaches Dart; no Flutter CI job |
+| React Native | 18 | 14 | 8 | 4 | 9 | **53** | adapter tests with fake sources only; `native.ts` never executed; the wrapper is unchanged |
+| HarmonyOS | 18 | 10 | 8 | 11 | 8 | **55** | never built with hvigor; `cylanimateditem`'s "no dependencies" contract changed |
+| Mini Program | 19 | 17 | 9 | 15 | 10 | **70** | real component code passes 99 tests under mocks; no DevTools run, no IntersectionObserver, no events posted |
+
+Risks the tests do not cover (assigned to the sessions): (1) iOS: `CYLVisibilityState` KVO on the tab buttons swaps their class at runtime (any exact-class check breaks), and `cylAdoptTabButton` repeats the forward at every tab bar layout; (2) iOS: the badge event may be posted on an inner badge host view and never reach the item through the forward; (3) every platform: a forward makes the global observers fire twice (button and item), so observers must be idempotent or the forwarded fire should skip the center; (4) HarmonyOS: `{ key: '...' }` object literals passed to an inline option type are likely rejected by ArkTS, so export named option interfaces; (5) Android CI may hit a second HTTP 429 from Robolectric's own runtime download (set `robolectric.dependency.repo.url` to the Google mirror). To reach 60 everywhere: build once on a real toolchain, and have one component post `cyl.animation.*` and pause on scroll.
