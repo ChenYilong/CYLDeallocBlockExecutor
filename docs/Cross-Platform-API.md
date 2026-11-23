@@ -208,3 +208,12 @@ Effect re-score, all platforms (2026-11-24, same rubric; evidence in the rounds 
 | Flutter | ~72 | ~72 | `analyze`, `test` 42 / 42 | no run on a device or emulator |
 
 Average about **82 / 100** (was about 74). No platform is at 100: every row still has a named run that has not happened. The cell score stays 205 / 205.
+
+Update (2026-11-24, after the Android leftovers and the first Flutter run on emulator `emulator-5640`, API 35, arm64; PR #18 commit `d660e7c`, PR #20):
+
+| Platform | Was | Now | New evidence | Still blocks 100 |
+|:---|---:|---:|:---|:---|
+| Android | 95 | **97** | dark mode on and off gave two `traitCollectionDidChange`; rotation there and back gave `viewWillTransition` and `viewSafeAreaInsetsDidChange`, on the list and the `ScrollView` screen; `RUNNING_LOW` trim gave `didReceiveMemoryWarning` on the list; the timer-based `ScrollView` source paired pauses 2 = resumes 2 | memory trim not seen on the `ScrollView` screen (`am send-trim-memory` works once per process start); React Native and Flutter hosts on Android |
+| Flutter | ~72 | **82** | `Flutter/example` built (arm64 debug APK) and run: start-up events, two slow swipes (2 / 2), one real fling (`willDecelerate=true`, then `scrollDidEndScrolling` at the end of the ballistic scroll, 3 / 3), screenshot | teardown, `didLeaveScreen`, dark mode, rotation and memory warning not observed; JIT debug timings on a machine at load average 200 to 600; native channels (`animationsPaused`) never run |
+
+Average about **84 / 100**. Still not 100 anywhere: each row names a run that has not happened. Cell score 205 / 205.
