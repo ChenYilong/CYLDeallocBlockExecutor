@@ -1,416 +1,157 @@
-# CYLDeallocBlockExecutor【你好 block，再见 dealloc】
+# CYLDeallocBlockExecutor【你好 block，再见 dealloc】/ Hello block, bye-bye dealloc
 
-Hello block，byebye dealloc！一行代码代替dealloc完成“self-manager”
+Hello block，byebye dealloc！一行代码代替 dealloc 完成“self-manager”。
+Hello block, bye-bye dealloc! One line replaces `dealloc` for "self-management".
 
 <p align="center">
 <a href=""><img src="https://img.shields.io/badge/pod-v1.3.0-brightgreen.svg"></a> <a href=""><img src="https://img.shields.io/badge/Swift-5.0-orange.svg"></a> <a href=""><img src="https://img.shields.io/badge/platform-iOS%2015.0%2B-ff69b4.svg"></a> <a href="https://github.com/ChenYilong/CYLDeallocBlockExecutor/actions/workflows/ci.yml"><img src="https://github.com/ChenYilong/CYLDeallocBlockExecutor/actions/workflows/ci.yml/badge.svg"></a>
 </a>
 
+中英文对照：每段先中文，后英文；代码只写一份。更详细的用法见 `docs/`（相对路径链接）。
+Chinese first, English second in every pair; code is written once. Details are in `docs/` (relative links).
 
-## 导航
+## 导航 / Contents
 
-  1.  [ 与其他框架的区别 ](https://github.com/ChenYilong/CYLDeallocBlockExecutor#与其他框架的区别) 
-  2.  [ 使用CYLDeallocBlockExecutor ](https://github.com/ChenYilong/CYLDeallocBlockExecutor#使用cyldeallocblockexecutor) 
-    1.   [第一步：使用cocoaPods导入CYLDeallocBlockExecutor](https://github.com/ChenYilong/CYLDeallocBlockExecutor#第一步使用cocoapods导入CYLDeallocBlockExecutor) 
-    2.  [第二步：一行代码搞定](https://github.com/ChenYilong/CYLDeallocBlockExecutor#第二步一行代码搞定) 
-    3.  [第三步](https://github.com/ChenYilong/CYLDeallocBlockExecutor#第三步) 
-    4.  [生命周期 block](https://github.com/ChenYilong/CYLDeallocBlockExecutor#生命周期-block) 
-  3.  [ 运行Demo ](https://github.com/ChenYilong/CYLDeallocBlockExecutor#运行demo)
-  4.  [应用场景](https://github.com/ChenYilong/CYLDeallocBlockExecutor#应用场景) 
-    1.  [管理KVO与NSNotificationCenter的removeObserver操作](https://github.com/ChenYilong/CYLDeallocBlockExecutor#管理kvo与nsnotificationcenter的removeobserver操作) 
-    2.   [模拟weak修饰的property的生命周期](https://github.com/ChenYilong/CYLDeallocBlockExecutor#模拟weak修饰的property的生命周期)  
-    3.   [更加安全地在 viewDidLoad 里管理应用的生命周期](https://github.com/ChenYilong/CYLDeallocBlockExecutor#更加安全地在viewdidload里管理应用的生命周期) 
+1. [与其他框架的区别 / Differences](#与其他框架的区别--differences)
+2. [平台与文档 / Platforms and documents](#平台与文档--platforms-and-documents)
+3. [各平台基本用法 / Basic use per platform](#各平台基本用法--basic-use-per-platform)
+4. [应用场景：CYLTabBarController 换肤 / Scenario: skin switching in CYLTabBarController](#应用场景cyltabbarcontroller-换肤--scenario-skin-switching-in-cyltabbarcontroller)
+5. [运行 Demo / Run the demo](#运行-demo--run-the-demo)
 
-## 与其他框架的区别
+## 与其他框架的区别 / Differences
 
- -| 特点 |解释
--------------|-------------|-------------
-1 | 轻量级、无污染 | 基于 NSObject 分类，无污染，适用于任何 NSObject 子类对象，比基于子类化、继承的框架更加轻量级。只用 dealloc block 时不做任何 hook；第一次给 UIViewController 添加生命周期 block 时，才为 UIViewController 安装一次生命周期 hook
-2 | 高性能 | 使用 runtime 的对象关联（或称为关联引用）技术，随着关联对象的 dealloc，对应的 block 自发执行，性能消耗极低。
-3 | 简单，无学习成本 | 一行代码完成，仅需使用  `cylWillDealloc(selfCallback:)`  中的 block 代替  `dealloc` 即可。自动检测对象的 dealloc 的时机，执行 block。生命周期同样一行：`cylAddLifecycleCallback(for: .viewWillAppear) { owner, identifier, info in }`
-4 | 将分散的代码集中起来 | 你可以使用 [CYLDeallocBlockExecutor](https://github.com/ChenYilong/CYLDeallocBlockExecutor) 将  `KVO`  或 `NSNotificationCenter` 的 `addObserver` 和 `removeObserver`  操作集中放在一个位置，让代码更加直观，易于维护，demo 中也给出了相应的使用方法。
-5 |支持CocoaPods |容易集成
+| | 中文 | English |
+|:--|:--|:--|
+| 1 | 轻量、无污染：基于 `NSObject` 扩展，适用于任何对象，只用 dealloc block 时不做任何 hook。 | Light and clean: an `NSObject` extension for any object; with only dealloc blocks nothing is hooked. |
+| 2 | 高性能：对象关联随对象销毁而自动执行 block。 | Fast: the associated object runs the block by itself when the owner is destroyed. |
+| 3 | 简单：一行代码代替 `dealloc`；自动检测销毁时机。 | Simple: one line replaces `dealloc`; the destruction moment is detected for you. |
+| 4 | 把分散的代码集中：`addObserver` 与 `removeObserver` 写在同一处，即使在分类里。 | Keeps code together: `addObserver` and `removeObserver` live in one place, even in a category. |
+| 5 | 生命周期 block（1.4.0，未发布）：`UIViewController` 的 15 个事件，可选时机、只执行一次、按 key 替换。 | Lifecycle blocks (1.4.0, unreleased): 15 `UIViewController` events, with timing, run-once and replace-by-key. |
+| 6 | 多平台（1.4.0，未发布）：同一套设计，Android、Flutter、React Native、HarmonyOS、微信小程序。 | Cross-platform (1.4.0, unreleased): one design for Android, Flutter, React Native, HarmonyOS and the WeChat Mini Program. |
 
-（学习交流群：523070828）
+（学习交流群：523070828 / Discussion group: 523070828）
 
+## 平台与文档 / Platforms and documents
 
+| 平台 / Platform | 位置 / Location | 详细用法 / Details |
+|:--|:--|:--|
+| iOS (Swift) | `CYLDeallocBlockExecutor/` | [docs/Usage-iOS.md](docs/Usage-iOS.md), [docs/Lifecycle-Callbacks.md](docs/Lifecycle-Callbacks.md) |
+| Android (Kotlin) | `Android/` | [docs/Usage-Android.md](docs/Usage-Android.md) |
+| Flutter (Dart) | `Flutter/` | [docs/Usage-Flutter.md](docs/Usage-Flutter.md) |
+| React Native (TypeScript) | `ReactNative/` | [docs/Usage-ReactNative.md](docs/Usage-ReactNative.md) |
+| HarmonyOS (ArkTS) | `HarmonyOS/` | [docs/Usage-HarmonyOS.md](docs/Usage-HarmonyOS.md) |
+| WeChat Mini Program | `MiniProgram/` | [docs/Usage-MiniProgram.md](docs/Usage-MiniProgram.md) |
 
-## 使用[CYLDeallocBlockExecutor](https://github.com/ChenYilong/CYLDeallocBlockExecutor)
+| 中文 | English |
+|:--|:--|
+| 每个功能在每个平台上的对应接口和测试证据，以及评分：[docs/Cross-Platform-API.md](docs/Cross-Platform-API.md)。已解决的 GitHub issues：[docs/Issues.md](docs/Issues.md)。 | Every feature's matching API and test evidence on each platform, with the score: [docs/Cross-Platform-API.md](docs/Cross-Platform-API.md). Resolved GitHub issues: [docs/Issues.md](docs/Issues.md). |
 
-三步完成：
+## 各平台基本用法 / Basic use per platform
 
-  1.  [ 第一步：使用cocoaPods导入CYLDeallocBlockExecutor ](https://github.com/ChenYilong/CYLDeallocBlockExecutor#第一步使用cocoapods导入CYLDeallocBlockExecutor) 
-  2.  [第二步：一行代码搞定](https://github.com/ChenYilong/CYLDeallocBlockExecutor#第二步一行代码搞定) 
-  3.  [第三步](https://github.com/ChenYilong/CYLDeallocBlockExecutor#第三步) 
+| 中文 | English |
+|:--|:--|
+| 所有平台的概念相同：给对象添加 block；block 收到 `owner` 和自己的标识；可以添加多个、按标识或 key 取消；key 相同则替换。销毁块在对象销毁时运行（没有确定销毁的平台上，在明确的销毁事件里运行）。 | The idea is the same everywhere: add blocks to an object; a block gets `owner` and its own identifier; add several, cancel by identifier or key; the same key replaces. Teardown blocks run when the object is destroyed (on platforms without deterministic destruction, in the explicit teardown event). |
 
+### iOS (Swift)
 
-### 第一步：使用CocoaPods导入CYLDeallocBlockExecutor
-
-
-在 `Podfile` 中进行如下导入：
-
-
- ```ruby
+```ruby
 pod 'CYLDeallocBlockExecutor'
- ```
+```
 
-
-
-然后使用 `cocoaPods` 进行安装：
-
-如果尚未安装 CocoaPods, 运行以下命令进行安装:
-
-
- ```bash
-gem install cocoapods
- ```
-
-
-安装成功后就可以安装依赖了：
-
-建议使用如下方式：
-
- ```bash
- # 禁止升级CocoaPods的spec仓库，否则会卡在 Analyzing dependencies ，非常慢 
- pod update --verbose --no-repo-update
- ```
-
-
-如果提示找不到库，则可去掉 --no-repo-update
-
-
- ```bash
-pod update
- ```
-
-
-
-### 第二步：导入头文件
-
-导入头文件：
-
- ```swift
-// 无需导入头文件：库本身即为 Swift，随 Pod 引入即可
- ```
-
-使用方法：
-
-一行代码代替 dealloc：
-
- ```swift
-        foo.cylWillDealloc { owner, identifier in
-            // do something
-        }
- ```
-
-这里注意：在 `cylWillDealloc(selfCallback:)` 的参数 block 中不能使用 weak 修饰符修饰的 self，因为 weak 变量在 dealloc 中会被自定置为 nil。在使用 `cylWillDealloc(selfCallback:)` 你需要遵循一个准则：
-
- > 参数 block 中的内容可以完全放入 dealloc。
-
-因为该 block 就是在 dealloc 执行的时候执行的！
-
-
- ```swift
-        cylWillDealloc { owner, identifier in
-            NotificationCenter.default.removeObserver(owner.takeUnretainedValue())
-        }
- ```
-
-
-### 取消回调
-
-`cylWillDealloc(selfCallback:)` 会返回任务标识（`UInt`），取消时传入的就是这个返回值（`cylWillDealloc(callback:)` 和 `cylWillDealloc(key:callback:)` 也一样）；回调按添加顺序依次执行：
-
- ```swift
-let id = foo.cylWillDealloc { owner, identifier in /* ... */ }
-
-foo.cylCancelDeallocCallback(identifier: id)   // 取消单个：真的取消了返回 true；已取消过或不存在返回 false
-foo.cylCancelAllDeallocCallbacks()             // 取消全部
- ```
-
-关于标识：
-
-- 传入的值就是 `cylWillDealloc` 返回的值，没有别的来源。
-- 有效的 block 永远不会返回 `0`（`cylDeallocCallbackIllegalIdentifier`）；`0` 只表示非法标识，取消它总是返回 `false`。
-- 同一个对象上的标识从 `1` 开始递增（`1, 2, 3…`），dealloc 时 block 按标识从小到大执行。所以可以比较标识来取消"晚于某个任务"的所有任务：
-
- ```swift
-let first = foo.cylWillDealloc { _, _ in /* 任务 1 */ }
-let second = foo.cylWillDealloc { _, _ in /* 任务 2 */ }
-let third = foo.cylWillDealloc { _, _ in /* 任务 3 */ }
-
-// 只保留 first：取消所有标识大于 first 的任务（在对象销毁之前调用）
-[second, third].filter { $0 > first }.forEach { foo.cylCancelDeallocCallback(identifier: $0) }
- ```
-
-- 带 key 的 block（`cylWillDealloc(key:callback:)` / `cylCancelDeallocCallback(key:)`）是 1.4.0 新增的，尚未发布；不需要保存标识，用 key 取消即可。
-- 对象开始销毁后（block 正在执行时）已经不能再取消了，取消要在销毁之前调用。
-
-回调里的 `owner` 是 `Unmanaged<AnyObject>`（对应 Objective-C 的 `__unsafe_unretained id`），对象此时正在销毁：不要持有或让它逃出 block，需要时用 `owner.takeUnretainedValue()`。
-
-### 观察者比被观察的控制器活得久（issue #8）
-
-iOS 11 以后，`UIViewController` 可能比观察它的 `view` 先销毁（这是释放顺序问题，不是循环引用）。观察者只要在被观察的控制器销毁时注册一个 dealloc block，在里面移除观察并清掉对控制器的引用，就不会崩溃：
-
- ```swift
-final class ObserverView: UIView {
-    unowned(unsafe) var viewController: UIViewController?
-
-    func observe(_ viewController: UIViewController) {
-        self.viewController = viewController
-        viewController.addObserver(self, forKeyPath: "view", options: .new, context: nil)
-        // 弱引用捕获观察者；控制器先销毁时，由控制器的 dealloc block 完成清理
-        viewController.cylWillDealloc { [weak self] owner, _ in
-            guard let self else { return }
-            (owner.takeUnretainedValue() as! NSObject).removeObserver(self, forKeyPath: "view")
-            self.viewController = nil
-        }
-    }
-
-    override func observeValue(forKeyPath keyPath: String?, of object: Any?, change: [NSKeyValueChangeKey: Any]?, context: UnsafeMutableRawPointer?) {
-        // 处理 view 的变化
-    }
-
-    deinit {
-        // 反过来，观察者先销毁时，控制器还活着，要在这里移除观察
-        viewController?.removeObserver(self, forKeyPath: "view")
-    }
-}
- ```
-
-控制器销毁后，观察者继续存活不会出错，之后它自己销毁也没有问题（视图已加载或未加载都一样）。对应测试：`Tests/LifecycleTests/main.swift` 的 "issue #8" 检查。
-
-### 生命周期 block
-
-除了 dealloc，还可以在 UIViewController 的生命周期里执行 block，同样是一行代码，同样可以添加多个、按添加顺序执行、按标识取消：
-
- ```swift
-cylAddLifecycleCallback(for: .viewWillAppear) { owner, identifier, info in
-    // owner 的类型就是当前类，不需要捕获 self
-}
- ```
-
-执行时机由 `timing` 参数控制（以调用 UIKit 实现的 `super` 为界）：
-
-timing | 执行时机
--------|------
-`.beforeSuper` | 顶部，`super` 之前
-`.afterSuper`（默认） | 顶部，`super` 之后
-`.end` | 底部，方法末尾（类重写了该方法时，需在重写里调用 `cylPerformLifecycle`，见 docs）
-
-支持的事件：`viewDidLoad`、`viewWillAppear`、`viewIsAppearing`、`viewDidAppear`、`viewWillLayoutSubviews`、`viewDidLayoutSubviews`、`viewWillDisappear`、`viewDidDisappear`、`viewSafeAreaInsetsDidChange`、`viewLayoutMarginsDidChange`、`traitCollectionDidChange`、`viewWillTransition`、`willMoveToParent`、`didMoveToParent`、`didReceiveMemoryWarning`。
-
-常用写法：
-
- ```swift
-// 只执行一次的布局 block（可用 cylRearmLifecycleCallbacks(for:) 重新启用）
-cylAddLifecycleCallback(for: .viewDidLayoutSubviews, timing: .end, invokeOnce: true) { owner, _, _ in
-    owner.setUpBadges()
-}
-
-// 深色模式切换时重新换肤
-cylAddLifecycleCallback(for: .traitCollectionDidChange) { owner, _, info in
-    guard owner.traitCollection.hasDifferentColorAppearance(comparedTo: info.previousTraitCollection) else { return }
-    owner.applyTheme()
-}
-
-// 用 key 替换：同一个 key 只保留最后添加的 block（setter 多次调用也只有一个）。
-// 带 key 的 block 归持有 key 的一方所有：cylCancelAll… 与按事件 re-arm 不会影响它，用 cylCancelDeallocCallback(key:) 等按 key 操作
-cylWillDealloc(key: "theme.removeObserver") { owner, _, _ in
+```swift
+// Replace dealloc
+foo.cylWillDealloc { owner, identifier in
     NotificationCenter.default.removeObserver(owner.takeUnretainedValue())
 }
- ```
+// A lifecycle block
+cylAddLifecycleCallback(for: .viewWillAppear) { owner, identifier, info in /* ... */ }
+```
 
-dealloc 也有了相同参数的版本：`cylWillDealloc(callback:)`（owner、identifier、info），与生命周期 block 共用标识序列、锁和取消方式；原来的 `cylWillDealloc(selfCallback:)` 不变。
+[docs/Usage-iOS.md](docs/Usage-iOS.md)
 
-完整设计（自动派发、手动派发、与 CYLTabBarController 的对应关系）见 [docs/Lifecycle-Callbacks.md](docs/Lifecycle-Callbacks.md)。
+### Android (Kotlin)
 
-### 从 Objective-C 版本迁移
+```kotlin
+AndroidBinding.install(application)            // once, in Application.onCreate
+LifecycleRegistry.of(activity).addLifecycleCallback<MainActivity>(LifecycleEvent.viewWillAppear) { owner, id, info -> /* ... */ }
+```
 
-Objective-C | Swift
-------------|------
-`cyl_willDeallocWithSelfCallback:` | `cylWillDealloc(selfCallback:)`
-`cyl_cancelDeallocCallbackWithIdentifier:` | `cylCancelDeallocCallback(identifier:)`
-`cyl_cancelAllDeallocCallbacks` | `cylCancelAllDeallocCallbacks()`
-`cyl_executeAtDealloc:`（已废弃） | `cyl_executeAtDealloc(_:)`（已废弃）
-`CYLDeallocCallbackIllegalIdentifier` | `cylDeallocCallbackIllegalIdentifier`
+[docs/Usage-Android.md](docs/Usage-Android.md)
 
-行为变化（1.4.0，尚未发布）：`cylCancelDeallocCallback(identifier:)` 只在真的取消了一个 block 时返回 `true`。1.3.0 的 `cyl_cancelDeallocCallbackWithIdentifier:` 对任何非 0 标识都返回 `YES`（对象上还没有任何 block 时返回 `NO`）。
+### Flutter (Dart)
 
-### 第三步
+```dart
+class _PageState extends State<Page> with CYLLifecycleMixin<Page> {
+  // lifecycle.addLifecycleCallback<_PageState>(LifecycleEvent.viewWillAppear, (owner, id, info) { ... });
+}
+```
 
-没有第三步！
+[docs/Usage-Flutter.md](docs/Usage-Flutter.md)
 
+### React Native (TypeScript)
 
-## 运行Demo
+```tsx
+const { registry, onLayout } = useLifecycle(owner);
+registry.addLifecycleCallback('viewWillAppear', (o, id, info) => { /* ... */ });
+```
 
-示例 Demo 展示了一个自动换皮肤的功能，
+[docs/Usage-ReactNative.md](docs/Usage-ReactNative.md)
 
-在 demo 中我们使用了 UIView 的一个分类来管理皮肤，并在分类中设置了一个皮肤主题属性，并且使用了通知进行换皮肤操作，所有的 `addObserver` 和 `removeObserver` 操作都在皮肤属性的 setter 方法中实现。
+### HarmonyOS (ArkTS)
 
+```typescript
+private lifecycle = new LifecycleController<Page>(this);   // forward aboutToAppear, onPageShow, ...
+this.lifecycle.registry.addDeallocCallback((owner, id, info) => { /* ... */ }, { key: 'theme' });
+```
 
-运行好 demo后，请点击设备屏幕，会触发换主题（背景）的事件。
+[docs/Usage-HarmonyOS.md](docs/Usage-HarmonyOS.md)
 
+### WeChat Mini Program (JavaScript)
 
-## 应用场景
+```javascript
+Page(withLifecycle({ onLoad() { this.cylController.registry.addDeallocCallback((page) => { /* ... */ }); } }));
+```
 
-### 管理KVO与NSNotificationCenter的removeObserver操作
+[docs/Usage-MiniProgram.md](docs/Usage-MiniProgram.md)
 
-在 `KVO` 、 `NSNotificationCenter` 在 `addObserver` 后，都需要在  `dealloc`  方法中进行 `removeObserver`  操作，一方面代码分散，不易维护，
+## 应用场景：CYLTabBarController 换肤 / Scenario: skin switching in CYLTabBarController
 
+| 中文 | English |
+|:--|:--|
+| 原来的换肤 Demo：所有操作都在 setter 里，无需 `dealloc`。把它用到 CYLTabBarController（假设它已依赖本库）：监听与移除配对、深色模式变化时重新换肤、换肤后让只执行一次的布局 block 重新执行。六个平台的写法见 [docs/Scenario-Theme-CYLTabBarController.md](docs/Scenario-Theme-CYLTabBarController.md)。 | The original skin demo keeps everything in a setter, with no `dealloc`. Applied to CYLTabBarController (assuming it already depends on this library): pair the observer with its removal, re-apply the skin on dark-mode changes, and let the one-time layout block run once more after a skin change. The shape on all six platforms is in [docs/Scenario-Theme-CYLTabBarController.md](docs/Scenario-Theme-CYLTabBarController.md). |
 
-另一方面如果想在分类中使用 `KVO` 、 `NSNotificationCenter` ，而你又想在  `dealloc`  中进行 `removeObserver` 操作，那应该怎么办？
-
-答：你需要借助 [CYLDeallocBlockExecutor](https://github.com/ChenYilong/CYLDeallocBlockExecutor) ！
-
-Demo 中给出了一个换皮肤的 Demo，演示：
-
-所有的的操作全部都在 Setter 方法中进行，无需借助 Dealloc 方法。
-
- ```swift
+```swift
 var themeMap: [String: Any]? {
     get { objc_getAssociatedObject(self, &themeMapKey) as? [String: Any] }
     set {
         objc_setAssociatedObject(self, &themeMapKey, newValue, .OBJC_ASSOCIATION_COPY_NONATOMIC)
-        if let themeMap = newValue {
-            // Need to removeObserver at dealloc
-            // NOTE: owner is unretained because a weak reference is already nil during dealloc
-            cylWillDealloc { owner, identifier in
-                NotificationCenter.default.removeObserver(owner.takeUnretainedValue())
-            }
+        guard let themeMap = newValue else {
             NotificationCenter.default.removeObserver(self, name: kThemeDidChangeNotification, object: nil)
-            NotificationCenter.default.addObserver(self,
-                                                   selector: #selector(themeChanged(_:)),
-                                                   name: kThemeDidChangeNotification,
-                                                   object: nil)
-            themeChanged(with: themeMap)
-        } else {
-            NotificationCenter.default.removeObserver(self, name: kThemeDidChangeNotification, object: nil)
+            return
         }
+        // the removal is paired with the add, replaced by key: setting the map twice keeps one block
+        cylWillDealloc(key: "theme.removeObserver") { owner, _, _ in
+            NotificationCenter.default.removeObserver(owner.takeUnretainedValue())
+        }
+        NotificationCenter.default.removeObserver(self, name: kThemeDidChangeNotification, object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(themeChanged(_:)), name: kThemeDidChangeNotification, object: nil)
+        themeChanged(with: themeMap)
     }
 }
- ```
-
-对应的时序图如下所示：
-
+```
 
 ![CYLDeallocBlockExecutor](assets/16911207374398.jpg)
 
+| 中文 | English |
+|:--|:--|
+| 时序图从第 8 步开始看：本库从这里起作用。其他场景（KVO、模拟 `weak`、取代 flag、观察者比控制器活得久）见 [docs/Usage-iOS.md](docs/Usage-iOS.md)。 | In the sequence diagram start at step 8: that is where this library acts. The other scenarios (KVO, simulating `weak`, replacing flags, an observer that outlives its controller) are in [docs/Usage-iOS.md](docs/Usage-iOS.md). |
 
-直接从看图里的第8步骤开始看：
- [CYLDeallocBlockExecutor](https://github.com/ChenYilong/CYLDeallocBlockExecutor) 所起作用的地方从第8步骤开始。
+## 运行 Demo / Run the demo
 
-### 模拟weak修饰的property的生命周期
-
-我曾经在我的一篇博文中使用过类似的策略：
-
-
-全文见： [《runtime 如何实现 weak 属性》]( https://github.com/ChenYilong/iOSInterviewQuestions/blob/master/01《招聘一个靠谱的iOS》面试题参考答案/《招聘一个靠谱的iOS》面试题参考答案（上）.md#8-runtime-如何实现-weak-属性 ) 
-
-下面做下简要叙述：
-
-
-我们都知道@property的 weak 属性：
-
-
- > weak 此特质表明该属性定义了一种“非拥有关系” (nonowning relationship)。为这种属性设置新值时，设置方法既不保留新值，也不释放旧值。此特质同 assign 类似， 然而在属性所指的对象遭到摧毁时，属性值也会清空(nil out)。
-
-
-那么如何让不使用weak修饰的@property，拥有weak的效果？
-
-代码如下所示：
-
-
- ```swift
-private var objectKey: UInt8 = 0
-
-class Holder: NSObject {
-    // 不使用 weak 修饰，却拥有 weak 的效果：object 销毁时自动置 nil
-    var object: NSObject? {
-        get { objc_getAssociatedObject(self, &objectKey) as? NSObject }
-        set {
-            objc_setAssociatedObject(self, &objectKey, newValue, .OBJC_ASSOCIATION_ASSIGN)
-            newValue?.cylWillDealloc { [weak self] _, _ in
-                // owner 已在销毁中，这里只清掉 self 上的关联引用，避免悬垂指针
-                guard let self = self else { return }
-                objc_setAssociatedObject(self, &objectKey, nil, .OBJC_ASSOCIATION_ASSIGN)
-            }
-        }
-    }
-}
- ```
-
-这样就达到了当 object 为 nil 时，自动将 self.object 置 nil 的目的，从而就模拟了weak修饰的property的生命周期。
-
-### 更加安全地在 viewDidLoad 里管理应用的生命周期
-
-在我的一个框架 [CYLTabBarController](https://github.com/ChenYilong/CYLTabBarController) 中，有一个KVO注册与反注册的实现：
-
- ```swift
-override func viewDidLoad() {
-    super.viewDidLoad()
-    // 处理tabBar，使用自定义 tabBar 添加 发布按钮
-    setUpTabBar()
-    // KVO注册监听
-    if !isObservingSwappableImageViewDefaultOffset {
-        tabBar.addObserver(self, forKeyPath: "swappableImageViewDefaultOffset", options: .new, context: CYLSwappableImageViewDefaultOffsetContext)
-        isObservingSwappableImageViewDefaultOffset = true
-    }
-    delegate = self
-}
-
-deinit {
-    // KVO反注册
-    if isObservingSwappableImageViewDefaultOffset {
-        tabBar.removeObserver(self, forKeyPath: "swappableImageViewDefaultOffset")
-    }
-}
- ```
-
-也许你会很奇怪为什么有一个flag在做判断，那是因为 viewDidLoad 在一些场景下没有被调用，但 dealloc 却被调用了。。。什么场景？当 [CYLTabBarController](https://github.com/ChenYilong/CYLTabBarController) 被作为StoryBoard的初始控制器，但是你又重写了下面的方法：
-
- ```swift
-func application(_ application: UIApplication,
-                 didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
-    if !isUserLogin {
-        let login = UIStoryboard(name: "Main", bundle: nil).instantiateViewController(withIdentifier: "LoginViewController")
-        window?.rootViewController = login
-    }
-    return true
-}
- ```
-
-Demo 我已经放在仓库里，叫做 CYLTabBarControllerTestDemo
-，[CYLTabBarController](https://github.com/ChenYilong/CYLTabBarController) 版本 1.5.5 及之前的版本因为没有 flag 判断，直接会 crash 掉。Demo 的 Podfile 现已固定到 CYLTabBarController 最新提交。
-这种场景下我这里采用了 flag 来规避，其实也可以用 CYLDeallocBlockExecutor 来达到目的。在 viewDidLoad 做 dealloc 该做的事，即使 viewDidLoad 没有被调用，也没有关系，block里的内容也不会被执行。
-
-用本库改写后不再需要 flag：在添加监听的地方，同时添加移除监听的 dealloc block。注意要直接捕获被监听的对象，不要在 block 里通过 owner 读取（dealloc 时 owner 的属性可能已经释放）：
-
- ```swift
-override func viewDidLoad() {
-    super.viewDidLoad()
-    let observedTabBar = tabBar
-    observedTabBar.addObserver(self, forKeyPath: "swappableImageViewDefaultOffset", options: .new, context: nil)
-    cylWillDealloc(key: "kvo.swappableImageViewDefaultOffset") { owner, _, _ in
-        observedTabBar.removeObserver(owner.takeUnretainedValue() as! NSObject, forKeyPath: "swappableImageViewDefaultOffset")
-    }
-}
- ```
-
-同时，如果用 KVO 监听 iVar，如果由于不能确定 iVar 是否为 nil，那么你就可以做出判断，只在有值时监听。同时，释放 KVO 的行为，就可以借助本库，放在这个是否有值的判断里。这样就达到了只在有值时监听，同时在 self 销毁时释放的效果。
-
-（更多iOS开发干货，欢迎关注  [微博@iOS程序犭袁](http://weibo.com/luohanchenyilong/) ）
-
-
-## 补充知识
-
-### `__unsafe_unretained` 与 Swift
-
-Objective-C 中 `__unsafe_unretained` 的行为对应 Swift 中的 `unowned(unsafe)`：不改变引用计数，对象释放后也不会自动置 `nil`，继续访问会得到未定义行为。因此回调里的 `owner` 只能在 block 内部临时使用。
-
-在销毁阶段，`weak` 引用已经被置 `nil`，所以必须使用不持有的引用（本库用 `Unmanaged<AnyObject>`）才能拿到“正在销毁”的对象。
+| 中文 | English |
+|:--|:--|
+| `Example` 演示自动换肤：用 `UIView` 的扩展管理皮肤，用通知触发，所有 `addObserver` 与 `removeObserver` 都在 setter 里。运行后点击屏幕换主题（背景）。`CYLTabBarControllerTestDemo` 演示没有 flag 的 KVO。 | `Example` shows automatic skin switching: a `UIView` extension manages the skin, a notification triggers it, and every `addObserver` / `removeObserver` is in the setter. Tap the screen to change the theme (background). `CYLTabBarControllerTestDemo` shows KVO without a flag. |
 
 ----------
-Posted by [微博@iOS程序犭袁](http://weibo.com/luohanchenyilong/)  
+Posted by [微博@iOS程序犭袁](http://weibo.com/luohanchenyilong/)
 原创文章，版权声明：自由转载-非商用-非衍生-保持署名 | [Creative Commons BY-NC-ND 3.0](http://creativecommons.org/licenses/by-nc-nd/3.0/deed.zh)
-
