@@ -621,6 +621,29 @@ func runObservableTests(window: UIWindow) {
     screenController.endAppearanceTransition()
     check(log == ["appear", "enter", "disappear", "leave"], "view controller screen events follow the appearance events", "\(log)")
 
+    // A forward does not make a global observer hear the same moment twice; whileUserScrolls pauses and resumes.
+    CYLLifecycleCenter.reset()
+    var heard: [String] = []
+    let forwardSource = NSObject()
+    let forwardTarget = NSObject()
+    CYLLifecycleCenter.addCallback(for: .didEnterScreen) { owner, _, _ in heard.append(owner === forwardSource ? "source" : "target") }
+    CYLLifecycleCenter.addCallback(forCustomEvent: "cyl.badge.didShow") { owner, _, _ in heard.append(owner === forwardSource ? "source" : "target") }
+    forwardSource.cylForwardLifecycleEvents(to: forwardTarget)
+    forwardSource.cylFireDerived(.didEnterScreen)
+    forwardSource.cylPostLifecycleEvent("cyl.badge.didShow")
+    check(heard == ["source", "source"], "forwarding: a global observer hears each moment once", "\(heard)")
+    CYLLifecycleCenter.reset()
+    var scrollCalls: [String] = []
+    let cancelScroll = CYLLifecycleCenter.whileUserScrolls(pause: { scrollCalls.append("pause") }, resume: { scrollCalls.append("resume") })
+    let scroller = NSObject()
+    scroller.cylFireDerived(.scrollWillBeginDragging)
+    scroller.cylFireDerived(.scrollDidEndScrolling)
+    check(scrollCalls == ["pause", "resume"], "whileUserScrolls pauses and resumes", "\(scrollCalls)")
+    cancelScroll()
+    scroller.cylFireDerived(.scrollWillBeginDragging)
+    check(scrollCalls == ["pause", "resume"], "whileUserScrolls: the returned function cancels both observers")
+    CYLLifecycleCenter.reset()
+
     // Debug log: off by default, then names the owner, event, timing and the number of blocks; dealloc observers.
     CYLLifecycleLog.isEnabled = false
     var lines: [String] = []

@@ -109,7 +109,13 @@ class LifecycleRegistry(owner: Any) {
     }
 
     /** Runs the blocks of the custom event [name] (the owner's, then forwards, then the global observers), in identifier order. */
-    fun postLifecycleEvent(name: String, userInfo: Map<String, Any?>? = null) {
+    fun postLifecycleEvent(name: String, userInfo: Map<String, Any?>? = null) = post(name, userInfo, forwarded = false)
+
+    /**
+     * A forwarded post runs the target's own blocks only: the source already told the global observers once, so an observer never
+     * hears the same moment twice (once from the source, once from each target).
+     */
+    private fun post(name: String, userInfo: Map<String, Any?>?, forwarded: Boolean) {
         val target = owner.get() ?: return
         val info = LifecycleInfo(timing = LifecycleTiming.afterSuper, customEvent = name, userInfo = userInfo)
         val snapshot = synchronized(lock) {
@@ -122,8 +128,8 @@ class LifecycleRegistry(owner: Any) {
             }
             if (run) e.callback(target, e.identifier, info)
         }
-        for (t in liveForwards(null)) t.postLifecycleEvent(name, userInfo)
-        LifecycleCenter.dispatch(target, null, name, LifecycleTiming.afterSuper, info)
+        for (t in liveForwards(null)) t.post(name, userInfo, forwarded = true)
+        if (!forwarded) LifecycleCenter.dispatch(target, null, name, LifecycleTiming.afterSuper, info)
     }
 
     // forwarding
@@ -275,7 +281,7 @@ class LifecycleRegistry(owner: Any) {
         }
     }
 
-    private fun fire(event: LifecycleEvent, timing: LifecycleTiming, info: LifecycleInfo) {
+    private fun fire(event: LifecycleEvent, timing: LifecycleTiming, info: LifecycleInfo, forwarded: Boolean = false) {
         val target = owner.get() ?: return
         val snapshot = synchronized(lock) {
             entries.filter { it.event == event && it.timing == timing && !(it.invokeOnce && it.fired) }
@@ -288,7 +294,7 @@ class LifecycleRegistry(owner: Any) {
             }
             if (run) e.callback(target, e.identifier, info.copy(event = event, timing = timing))
         }
-        for (t in liveForwards(event)) t.fire(event, timing, info)
-        LifecycleCenter.dispatch(target, event, null, timing, info.copy(event = event, timing = timing))
+        for (t in liveForwards(event)) t.fire(event, timing, info, forwarded = true)
+        if (!forwarded) LifecycleCenter.dispatch(target, event, null, timing, info.copy(event = event, timing = timing))
     }
 }

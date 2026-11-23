@@ -39,6 +39,7 @@ class _ScrollHostState extends State<_ScrollHost> with CYLLifecycleMixin<_Scroll
 
 void main() {
   debugLogTests();
+  forwardAndScrollHelperTests();
   late Owner owner;
   late LifecycleRegistry r;
   late List<String> log;
@@ -199,6 +200,40 @@ void debugLogTests() {
       expect(seen.length, 1);
       expect(AnimationEvents.didResume, 'cyl.animation.didResume');
       expect(BadgeEvents.animationDidStop, 'cyl.badge.animationDidStop');
+    });
+  });
+}
+
+void forwardAndScrollHelperTests() {
+  group('forwarding and the scroll helper', () {
+    setUp(LifecycleCenter.reset);
+    tearDown(LifecycleCenter.reset);
+
+    test('a forward does not make a global observer hear the same moment twice', () {
+      final owner = Owner();
+      final item = Owner();
+      final r = LifecycleRegistry.of(owner)..hookInstalled = true;
+      final ri = LifecycleRegistry.of(item)..hookInstalled = true;
+      final heard = <String>[];
+      LifecycleCenter.addCallback<Object>(LifecycleEvent.didEnterScreen, (o, i, x) => heard.add(identical(o, owner) ? 'source' : 'target'));
+      LifecycleCenter.addCustomCallback<Object>('cyl.badge.didShow', (o, i, x) => heard.add(identical(o, owner) ? 'source' : 'target'));
+      r.forwardLifecycleEvents(ri);
+      r.fireAutomatic(LifecycleEvent.didEnterScreen, LifecycleTiming.afterSuper, info(LifecycleEvent.didEnterScreen));
+      r.postLifecycleEvent('cyl.badge.didShow');
+      expect(heard, ['source', 'source']);
+    });
+
+    test('whileUserScrolls pauses on the first drag, resumes when scrolling ended, and cancels', () {
+      final r = LifecycleRegistry.of(Owner())..hookInstalled = true;
+      final calls = <String>[];
+      final cancel = LifecycleCenter.whileUserScrolls(pause: () => calls.add('pause'), resume: () => calls.add('resume'));
+      r.fireAutomatic(LifecycleEvent.scrollWillBeginDragging, LifecycleTiming.afterSuper, info(LifecycleEvent.scrollWillBeginDragging));
+      r.fireAutomatic(LifecycleEvent.scrollDidEndScrolling, LifecycleTiming.afterSuper, info(LifecycleEvent.scrollDidEndScrolling));
+      expect(calls, ['pause', 'resume']);
+      cancel();
+      calls.clear();
+      r.fireAutomatic(LifecycleEvent.scrollWillBeginDragging, LifecycleTiming.afterSuper, info(LifecycleEvent.scrollWillBeginDragging));
+      expect(calls, isEmpty);
     });
   });
 }

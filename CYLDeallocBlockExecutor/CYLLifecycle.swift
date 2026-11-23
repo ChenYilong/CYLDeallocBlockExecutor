@@ -342,7 +342,7 @@ extension NSObject {
     /**
      * Runs the blocks waiting for `event` at `timing`, outside every lock, skipping blocks cancelled meanwhile.
      */
-    func cylFireLifecycle(_ event: CYLLifecycleEvent, timing: CYLLifecycleTiming, info: CYLLifecycleInfo) {
+    func cylFireLifecycle(_ event: CYLLifecycleEvent, timing: CYLLifecycleTiming, info: CYLLifecycleInfo, forwarded: Bool = false) {
         var info = info
         info.event = event
         info.timing = timing
@@ -354,10 +354,13 @@ extension NSObject {
                 callback(self, identifier, info)
             }
             for target in model.forwardTargets(for: event) {
-                target.cylFireLifecycle(event, timing: timing, info: info)
+                target.cylFireLifecycle(event, timing: timing, info: info, forwarded: true)
             }
         }
-        CYLLifecycleCenter.dispatch(owner: self, event: event, custom: nil, timing: timing, info: info)
+        // A forwarded fire runs the target's own blocks only: the source already told the global observers once.
+        if !forwarded {
+            CYLLifecycleCenter.dispatch(owner: self, event: event, custom: nil, timing: timing, info: info)
+        }
     }
 
     /**
@@ -400,6 +403,14 @@ extension NSObject {
      * Runs the blocks of the custom event `name`: the owner's, then the forwards', then the global observers'.
      */
     public func cylPostLifecycleEvent(_ name: String, userInfo: [String: Any]? = nil) {
+        cylPostLifecycleEvent(name, userInfo: userInfo, forwarded: false)
+    }
+
+    /**
+     * A forwarded post runs the target's own blocks only: the source already told the global observers once, so an observer never
+     * hears the same moment twice (once from the source, once from each target).
+     */
+    func cylPostLifecycleEvent(_ name: String, userInfo: [String: Any]?, forwarded: Bool) {
         var info = CYLLifecycleInfo()
         info.customEvent = name
         info.userInfo = userInfo
@@ -410,10 +421,12 @@ extension NSObject {
                 callback(self, identifier, info)
             }
             for target in model.forwardTargets(for: nil) {
-                target.cylPostLifecycleEvent(name, userInfo: userInfo)
+                target.cylPostLifecycleEvent(name, userInfo: userInfo, forwarded: true)
             }
         }
-        CYLLifecycleCenter.dispatch(owner: self, event: nil, custom: name, timing: .afterSuper, info: info)
+        if !forwarded {
+            CYLLifecycleCenter.dispatch(owner: self, event: nil, custom: name, timing: .afterSuper, info: info)
+        }
     }
 
     /**

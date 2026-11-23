@@ -1,6 +1,6 @@
+const { LifecycleCenter } = require('./center.js');
 const { LifecycleLog } = require('./log.js');
 const { allTimings } = require('./types.js');
-const { LifecycleCenter } = require('./center.js');
 const cylWeakRef = (o) => (typeof WeakRef === 'function' ? new WeakRef(o) : { deref: () => o });
 
 const kindOf = (e       )       => (e.event !== null ? 'lifecycle' : e.custom !== undefined ? 'custom' : 'dealloc');
@@ -117,6 +117,14 @@ class LifecycleRegistry {
 
   /** Runs the blocks of the custom event `name` (the owner's, then the global observers'), in identifier order. */
   postLifecycleEvent(name        , userInfo                          )       {
+    this.post(name, userInfo, false);
+  }
+
+  /**
+   * A forwarded post runs the target's own blocks only: the source already told the global observers once, so an observer
+   * never hears the same moment twice (once from the source, once from each target).
+   */
+          post(name        , userInfo                                     , forwarded         )       {
     const owner = this.owner.deref();
     if (owner === undefined) return;
     const info                = { event: null, timing: 'afterSuper', customEvent: name, userInfo };
@@ -129,13 +137,8 @@ class LifecycleRegistry {
       if (e.invokeOnce) e.fired = true;
       e.callback(owner, e.identifier, { ...info });
     }
-    for (const f of this.liveForwards(undefined)) f.firePosted(name, userInfo);
-    LifecycleCenter.dispatch(owner, null, name, 'afterSuper', info);
-  }
-
-  /** Runs a posted event that came through a forward (the target's own blocks and the global observers). */
-          firePosted(name        , userInfo                          )       {
-    this.postLifecycleEvent(name, userInfo);
+    for (const f of this.liveForwards(undefined)) f.post(name, userInfo, true);
+    if (!forwarded) LifecycleCenter.dispatch(owner, null, name, 'afterSuper', info);
   }
 
   // forwarding
@@ -303,7 +306,7 @@ class LifecycleRegistry {
     }
   }
 
-          fire(event                , timing                 , info                        )       {
+          fire(event                , timing                 , info                        , forwarded = false)       {
     const owner = this.owner.deref();
     if (owner === undefined) return;
     const snapshot = this.entries
@@ -316,8 +319,8 @@ class LifecycleRegistry {
       e.callback(owner, e.identifier, { ...info, event, timing });
     }
     const full                = { ...info, event, timing };
-    for (const t of this.liveForwards(event)) t.fire(event, timing, info);
-    LifecycleCenter.dispatch(owner, event, undefined, timing, full);
+    for (const t of this.liveForwards(event)) t.fire(event, timing, info, true);
+    if (!forwarded) LifecycleCenter.dispatch(owner, event, undefined, timing, full);
   }
 }
 

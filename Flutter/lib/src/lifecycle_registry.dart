@@ -132,7 +132,14 @@ class LifecycleRegistry {
 
   /// Runs the blocks of the custom event [name]: the owner's, the forwards',
   /// then the global observers', in identifier order.
-  void postLifecycleEvent(String name, {Map<String, Object?>? userInfo}) {
+  void postLifecycleEvent(String name, {Map<String, Object?>? userInfo}) =>
+      _post(name, userInfo, forwarded: false);
+
+  /// A forwarded post runs the target's own blocks only: the source already
+  /// told the global observers once, so an observer never hears the same moment
+  /// twice (once from the source, once from each target).
+  void _post(String name, Map<String, Object?>? userInfo,
+      {required bool forwarded}) {
     final owner = _owner.target;
     if (owner == null) return;
     final info = LifecycleInfo(
@@ -153,9 +160,11 @@ class LifecycleRegistry {
       e.callback(owner, e.identifier, info);
     }
     for (final t in _liveForwards(null)) {
-      t.postLifecycleEvent(name, userInfo: userInfo);
+      t._post(name, userInfo, forwarded: true);
     }
-    LifecycleCenter.dispatch(owner, null, name, LifecycleTiming.afterSuper, info);
+    if (!forwarded) {
+      LifecycleCenter.dispatch(owner, null, name, LifecycleTiming.afterSuper, info);
+    }
   }
 
   // MARK: forwarding
@@ -365,7 +374,8 @@ class LifecycleRegistry {
     }
   }
 
-  void _fire(LifecycleEvent event, LifecycleTiming timing, LifecycleInfo info) {
+  void _fire(LifecycleEvent event, LifecycleTiming timing, LifecycleInfo info,
+      {bool forwarded = false}) {
     final owner = _owner.target;
     if (owner == null) return;
     final snapshot = _entries
@@ -386,9 +396,11 @@ class LifecycleRegistry {
           info.copyWith(event: event, timing: timing));
     }
     for (final t in _liveForwards(event)) {
-      t._fire(event, timing, info);
+      t._fire(event, timing, info, forwarded: true);
     }
-    LifecycleCenter.dispatch(
-        owner, event, null, timing, info.copyWith(event: event, timing: timing));
+    if (!forwarded) {
+      LifecycleCenter.dispatch(
+          owner, event, null, timing, info.copyWith(event: event, timing: timing));
+    }
   }
 }

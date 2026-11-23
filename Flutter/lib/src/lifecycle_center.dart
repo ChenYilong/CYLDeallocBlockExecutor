@@ -89,6 +89,25 @@ class LifecycleCenter {
     return id;
   }
 
+  /// The ready-made version of "pause every animation while the user scrolls,
+  /// resume afterwards": [pause] runs when any observed scroll source starts to
+  /// be dragged, [resume] when it stopped for good. Returns a function that
+  /// removes both observers; they use the keys `<key>.pause` and `<key>.resume`
+  /// (default key `cyl.scroll`), so calling it again replaces the earlier pair.
+  static void Function() whileUserScrolls(
+      {String key = 'cyl.scroll',
+      required void Function() pause,
+      required void Function() resume}) {
+    addCallback<Object>(LifecycleEvent.scrollWillBeginDragging, (o, i, x) => pause(),
+        key: '$key.pause');
+    addCallback<Object>(LifecycleEvent.scrollDidEndScrolling, (o, i, x) => resume(),
+        key: '$key.resume');
+    return () {
+      cancelCallback(key: '$key.pause');
+      cancelCallback(key: '$key.resume');
+    };
+  }
+
   /// Cancels one observer by [identifier] or by [key]; true when one was removed.
   static bool cancelCallback({int? identifier, String? key}) {
     assert((identifier == null) != (key == null),

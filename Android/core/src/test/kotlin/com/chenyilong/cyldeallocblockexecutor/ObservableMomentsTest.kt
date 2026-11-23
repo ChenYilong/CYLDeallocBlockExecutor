@@ -135,6 +135,43 @@ class ObservableMomentsTest {
     }
 }
 
+class ScrollHelperAndForwardTest {
+    @BeforeTest fun reset() = LifecycleCenter.reset()
+    @AfterTest fun clean() = LifecycleCenter.reset()
+
+    @Test fun aForwardDoesNotMakeAGlobalObserverHearTheSameMomentTwice() {
+        val owner = Any()
+        val item = Any()
+        val r = LifecycleRegistry.of(owner).also { it.hookInstalled = true }
+        val ri = LifecycleRegistry.of(item).also { it.hookInstalled = true }
+        val heard = mutableListOf<String>()
+        LifecycleCenter.addCallback<Any>(LifecycleEvent.didEnterScreen) { o, _, _ -> heard.add(if (o === owner) "source" else "target") }
+        LifecycleCenter.addCustomCallback<Any>("cyl.badge.didShow") { o, _, _ -> heard.add(if (o === owner) "source" else "target") }
+        r.forwardLifecycleEvents(ri)
+        r.fireAutomatic(LifecycleEvent.didEnterScreen, LifecycleTiming.afterSuper)
+        r.postLifecycleEvent("cyl.badge.didShow")
+        assertEquals(listOf("source", "source"), heard)
+    }
+
+    @Test fun whileUserScrollsPausesOnTheFirstDragResumesWhenScrollingEndedAndCancels() {
+        val r = LifecycleRegistry.of(Any()).also { it.hookInstalled = true }
+        val calls = mutableListOf<String>()
+        val cancel = LifecycleCenter.whileUserScrolls(pause = { calls.add("pause"); Unit }, resume = { calls.add("resume"); Unit })
+        r.fireAutomatic(LifecycleEvent.scrollWillBeginDragging, LifecycleTiming.afterSuper)
+        r.fireAutomatic(LifecycleEvent.scrollDidEndDragging, LifecycleTiming.afterSuper, LifecycleInfo(willDecelerate = true))
+        r.fireAutomatic(LifecycleEvent.scrollDidEndScrolling, LifecycleTiming.afterSuper)
+        assertEquals(listOf("pause", "resume"), calls)
+        LifecycleCenter.whileUserScrolls(pause = { calls.add("pause2"); Unit }, resume = { calls.add("resume2"); Unit })
+        calls.clear()
+        r.fireAutomatic(LifecycleEvent.scrollWillBeginDragging, LifecycleTiming.afterSuper)
+        assertEquals(listOf("pause2"), calls)
+        cancel()
+        calls.clear()
+        r.fireAutomatic(LifecycleEvent.scrollWillBeginDragging, LifecycleTiming.afterSuper)
+        assertEquals(emptyList(), calls)
+    }
+}
+
 class DebugLogTest {
     @kotlin.test.AfterTest fun clean() {
         LifecycleLog.enabled = false

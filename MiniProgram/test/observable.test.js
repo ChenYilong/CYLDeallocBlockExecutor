@@ -189,3 +189,35 @@ test('the animation and badge event names are the documented ones', () => {
   assert.equal(BadgeEvents.didShow, 'cyl.badge.didShow');
   assert.equal(BadgeEvents.animationDidStop, 'cyl.badge.animationDidStop');
 });
+
+test('a forward does not make a global observer hear the same moment twice', () => {
+  const item = {};
+  const ri = LifecycleRegistry.of(item);
+  ri.hookInstalled = true;
+  const heard           = [];
+  LifecycleCenter.addCallback('didEnterScreen', (o) => heard.push(o === owner ? 'source' : 'target'));
+  LifecycleCenter.addCustomCallback('cyl.badge.didShow', (o) => heard.push(o === owner ? 'source' : 'target'));
+  r.forwardLifecycleEvents(ri);
+  r.fireAutomatic('didEnterScreen', 'afterSuper');
+  r.postLifecycleEvent('cyl.badge.didShow');
+  assert.deepEqual(heard, ['source', 'source']);
+});
+
+test('whileUserScrolls pauses on the first drag, resumes when scrolling ended, and cancels', () => {
+  const calls           = [];
+  const cancel = LifecycleCenter.whileUserScrolls(() => calls.push('pause'), () => calls.push('resume'));
+  r.fireAutomatic('scrollWillBeginDragging', 'afterSuper');
+  r.fireAutomatic('scrollDidEndDragging', 'afterSuper', { willDecelerate: true });
+  r.fireAutomatic('scrollDidEndScrolling', 'afterSuper');
+  assert.deepEqual(calls, ['pause', 'resume']);
+  // a second call replaces the first pair
+  LifecycleCenter.whileUserScrolls(() => calls.push('pause2'), () => calls.push('resume2'));
+  calls.length = 0;
+  r.fireAutomatic('scrollWillBeginDragging', 'afterSuper');
+  assert.deepEqual(calls, ['pause2']);
+  cancel();
+  LifecycleCenter.whileUserScrolls(() => calls.push('x'), () => calls.push('y'))();
+  calls.length = 0;
+  r.fireAutomatic('scrollWillBeginDragging', 'afterSuper');
+  assert.deepEqual(calls, []);
+});

@@ -91,6 +91,21 @@ public enum CYLLifecycleCenter {
     }
 
     /**
+     * The ready-made version of "pause every animation while the user scrolls, resume afterwards": `pause` runs when any observed
+     * scroll source starts to be dragged, `resume` when it stopped for good. Returns a function that removes both observers; they use
+     * the keys `<key>.pause` and `<key>.resume` (default key `cyl.scroll`), so calling it again replaces the earlier pair.
+     */
+    @discardableResult
+    public static func whileUserScrolls(key: String = "cyl.scroll", pause: @escaping () -> Void, resume: @escaping () -> Void) -> () -> Void {
+        addCallback(for: .scrollWillBeginDragging, key: "\(key).pause") { _, _, _ in pause() }
+        addCallback(for: .scrollDidEndScrolling, key: "\(key).resume") { _, _, _ in resume() }
+        return {
+            cancelCallback(key: "\(key).pause")
+            cancelCallback(key: "\(key).resume")
+        }
+    }
+
+    /**
      * Cancels one observer.
      *
      * - Returns: Whether an observer had this identifier.

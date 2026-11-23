@@ -61,6 +61,21 @@ export class LifecycleCenter {
     return identifier;
   }
 
+  /**
+   * The ready-made version of "pause every animation while the user scrolls, resume afterwards": `pause` runs when any observed scroll
+   * source starts to be dragged, `resume` when it stopped for good. Returns a function that removes both observers. The two
+   * observers use the keys `<key>.pause` and `<key>.resume` (default key `cyl.scroll`), so calling it again replaces the earlier pair.
+   */
+  static whileUserScrolls(pause: () => void, resume: () => void, options: { key?: string } = {}): () => void {
+    const key = options.key ?? 'cyl.scroll';
+    LifecycleCenter.addCallback('scrollWillBeginDragging', () => pause(), { key: `${key}.pause` });
+    LifecycleCenter.addCallback('scrollDidEndScrolling', () => resume(), { key: `${key}.resume` });
+    return () => {
+      LifecycleCenter.cancelCallback({ key: `${key}.pause` });
+      LifecycleCenter.cancelCallback({ key: `${key}.resume` });
+    };
+  }
+
   /** Cancels one observer by `identifier` or by `key`; true when one was removed. */
   static cancelCallback(target: { identifier: number } | { key: string }): boolean {
     const before = LifecycleCenter.entries.length;
