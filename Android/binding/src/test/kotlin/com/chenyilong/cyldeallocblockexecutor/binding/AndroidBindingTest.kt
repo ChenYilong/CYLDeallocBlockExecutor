@@ -134,7 +134,7 @@ class AndroidBindingTest {
             s.onActivity { a ->
                 val c = Configuration(a.resources.configuration)
                 c.uiMode = (c.uiMode and Configuration.UI_MODE_NIGHT_MASK.inv()) or Configuration.UI_MODE_NIGHT_YES
-                a.resources.updateConfiguration(c, a.resources.displayMetrics)
+                // Like a device: the application callback runs before the activity resources are updated.
                 app.onConfigurationChanged(c)
             }
             assertEquals(listOf("traitCollectionDidChange"), log)
@@ -148,7 +148,7 @@ class AndroidBindingTest {
                 LifecycleRegistry.of(a).addLifecycleCallback<HostActivity>(LifecycleEvent.viewWillTransition) { _, _, info -> size = info.size }
                 val c = Configuration(a.resources.configuration)
                 c.screenWidthDp = c.screenHeightDp.also { c.screenHeightDp = c.screenWidthDp }
-                a.resources.updateConfiguration(c, a.resources.displayMetrics)
+                // Like a device: the application callback runs before the activity resources are updated.
                 app.onConfigurationChanged(c)
                 assertEquals(com.chenyilong.cyldeallocblockexecutor.Size(c.screenWidthDp, c.screenHeightDp), size)
             }

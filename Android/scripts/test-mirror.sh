@@ -5,6 +5,6 @@ set -euo pipefail
 SRC="$(cd "$(dirname "$0")/.." && pwd)"
 DST=/tmp/xpr/cyl-android
 mkdir -p "$DST"
-rsync -a --delete --exclude '._*' --exclude build --exclude .gradle --exclude .kotlin "$SRC"/ "$DST"/
+rsync -a --delete --exclude '._*' --exclude build --exclude .gradle --exclude .kotlin --exclude local.properties "$SRC"/ "$DST"/
 cd "$DST"
 exec ./scripts/gradle.sh "${@:-test}"
