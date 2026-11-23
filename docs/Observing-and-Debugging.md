@@ -31,6 +31,17 @@ CYLLifecycleCenter.addDeallocObserver { description, _ in print("destroyed \(des
 |:--|:--|
 | 其他平台同名：Android `LifecycleCenter.addCallback(event) { … }`、Flutter `LifecycleCenter.addCallback<Object>(LifecycleEvent…, (o, i, x) { … })`、React Native / HarmonyOS / 小程序 `LifecycleCenter.addCallback('scrollWillBeginDragging', (o, id, info) => …)`。每个平台的来源见 [Cross-Platform-API.md](Cross-Platform-API.md)。 | The other platforms use the same names: Android `LifecycleCenter.addCallback(event) { … }`, Flutter `LifecycleCenter.addCallback<Object>(LifecycleEvent…, (o, i, x) { … })`, React Native / HarmonyOS / Mini Program `LifecycleCenter.addCallback('scrollWillBeginDragging', (o, id, info) => …)`. The sources of each platform are in [Cross-Platform-API.md](Cross-Platform-API.md). |
 
+## Pause while the user scrolls, in one call / 滚动时暂停，一行搞定
+
+| 中文 | English |
+|:--|:--|
+| `whileUserScrolls` 是上面两条全局观察者的现成封装：任意被观察的滚动源开始拖动时执行 `pause`，彻底停止后执行 `resume`；返回的函数同时取消两者。同一个 key 再调用一次会替换原来的一对。转发不会让全局观察者对同一时机触发两次。 | `whileUserScrolls` is the ready-made form of the two global observers above: `pause` runs when any observed scroll source starts to be dragged, `resume` when it stopped for good; the returned function cancels both. Calling it again with the same key replaces the earlier pair. A forward does not make a global observer fire twice for one moment. |
+
+```swift
+let stop = CYLLifecycleCenter.whileUserScrolls(pause: { animations.pauseAll() }, resume: { animations.resumeAll() })
+// later: stop()
+```
+
 ## Debug log / 调试日志
 
 | 中文 | English |
