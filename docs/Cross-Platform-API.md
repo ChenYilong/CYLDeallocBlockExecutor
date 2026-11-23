@@ -171,3 +171,25 @@ Update after the gap work (2026-11-23, same rule: code never built or run on its
 
 Average about 74 / 100.
 
+
+
+### Round 16 (2026-11-24, branch `docs/effect-score-round-16`, base `c85c10c`): flick bug, scroll parity, iOS effect re-score
+
+Task log (verbatim, 2026-11-24): "advisor点评目前全平台接口实现得分 以及下一步计划与建议。并立即让默认模型sonnet按照建议去实现。将得分优化到100" (in English: the advisor reviews the all-platform score, plans and advises; the default model implements it at once; raise the score to 100).
+
+- **Real bug found by the host app.** CYLTabBarController PR #823 (Mac session, real `axe` flicks, iOS 27.2 simulator) saw `scrollDidEndScrolling` never arrive after a flick: pause / resume counts 3 / 1 and 4 / 1. Cause: KVO on `contentOffset` cannot see the end of a deceleration, because UIKit clears `isDecelerating` after the last offset change. Fixed in library PR #16 (merge commit `c85c10c`, fix `08baf66`): a 60 Hz timer polls `isDecelerating`. Regression test added; library suite 82 / 82 in Debug and Release (iOS 17 simulator), `pod lib lint`, SPM, Carthage green in CI. With `08baf66` pinned in PR #823 the real flicks gave 1 / 1, 2 / 2, 3 / 3, 4 / 4.
+- **Scroll-end parity on the other platforms (read the sources, no run needed).** Android ends on `SCROLL_STATE_IDLE` after settling (`RecyclerViewScrolling.kt`), Flutter on `ScrollEndNotification` while dragging or decelerating (`lifecycle_mixin.dart`), React Native on `onMomentumScrollEnd` (`controller.ts`), HarmonyOS on `onScrollStop` (`controller.ts`). None ends on the drag alone, so the iOS bug class does not exist there. The Mini Program has no scroll source of its own (the page forwards `scroll-view` events).
+- **N/A audit.** `viewWillLayoutSubviews` on Android and HarmonyOS: accepted (no pre-layout hook outside a custom view). Mini Program "typed owner": **not justified** as N/A. The package is plain JavaScript, but WeChat projects use TypeScript, so a `index.d.ts` with a generic owner type is possible. Open item, not yet written.
+
+Effect re-score, iOS only (rubric of the audit above; evidence listed):
+
+| Part | Points | Evidence |
+|:---|--:|:---|
+| Library API against the iOS reference | 20 | all events and the center, 82 / 82 |
+| Library verified | 22 | simulator Debug and Release, `pod lib lint`, SPM, Carthage in CI, a real-app flick run (3 / 1 before, 4 / 4 after) |
+| Real sources wired | 13 | window, screen, scroll (drag, flick), teardown run in a host app |
+| CYLTabBarController uses it | 17 | PR #823: all 25 CI checks green, demos build, real-app scroll pause / resume; the PR is a draft |
+| Docs and CI | 13 | task log, round notes, 9 library CI jobs |
+| **Total** | **85** | |
+
+What still blocks iOS 100: library 1.4.0 is not tagged or on CocoaPods trunk (needs the owner), PR #823 still pins a commit and stays a draft until then, no on-device run (only simulators).
