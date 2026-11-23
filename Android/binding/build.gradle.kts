@@ -53,6 +53,13 @@ System.getenv("CYL_ROBOLECTRIC_DIR")?.let { dir ->
     }
 }
 
+// Robolectric downloads its android-all runtime jar at the first test: Maven Central answers HTTP 429 to the shared CI runners (all 12
+// binding tests failed on it), so the download goes to Google's mirror of Maven Central.
+tasks.withType<Test>().configureEach {
+    systemProperty("robolectric.dependency.repo.url", "https://maven-central.storage-download.googleapis.com/maven2")
+    systemProperty("robolectric.dependency.repo.id", "central-mirror")
+}
+
 // Consumers (CYLTabBarController's Android core) build with Kotlin 2.0.x and lock kotlin-stdlib 2.0.21: compile for the 2.0 language
 // and API level and depend on the 2.0.21 standard library, so the published POM and the class metadata stay readable for them.
 kotlin {
