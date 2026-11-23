@@ -247,4 +247,28 @@ class AndroidBindingTest {
             "scrollWillBeginDragging", "scrollDidEndDragging true", "scrollDidEndScrolling",
         ), log)
     }
+
+    @Test fun observeScrollingOnAPlainScrollViewBeginsAndEndsAfterIdle() {
+        ActivityScenario.launch(HostActivity::class.java).use { s ->
+            s.onActivity { a ->
+                val owner = Any()
+                val sv = android.widget.ScrollView(a)
+                sv.addView(android.view.View(a), android.view.ViewGroup.LayoutParams(100, 5000))
+                a.setContentView(sv, android.view.ViewGroup.LayoutParams(100, 100))
+                val c = AndroidBinding.controllerOf(owner)
+                for (e in listOf(LifecycleEvent.scrollWillBeginDragging, LifecycleEvent.scrollDidEndDragging, LifecycleEvent.scrollDidEndScrolling)) {
+                    c.registry.addLifecycleCallback<Any>(e) { _, _, info -> log.add("${e.name}${info.willDecelerate?.let { " $it" } ?: ""}") }
+                }
+                val stop = AndroidBinding.observeScrolling(owner, sv as android.view.View, 100)
+                // [hidden API] the framework calls it from onScrollChanged. 框架在 onScrollChanged 中调用它。
+                val dispatch = android.view.ViewTreeObserver::class.java.getDeclaredMethod("dispatchOnScrollChanged")
+                dispatch.isAccessible = true
+                dispatch.invoke(sv.viewTreeObserver)
+                dispatch.invoke(sv.viewTreeObserver)
+                org.robolectric.shadows.ShadowLooper.idleMainLooper(300, java.util.concurrent.TimeUnit.MILLISECONDS)
+                stop()
+            }
+        }
+        assertEquals(listOf("scrollWillBeginDragging", "scrollDidEndDragging false", "scrollDidEndScrolling"), log)
+    }
 }
