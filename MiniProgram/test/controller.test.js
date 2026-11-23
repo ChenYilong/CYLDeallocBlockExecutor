@@ -155,3 +155,28 @@ test('onPageScroll: the first event begins, a quiet period ends (debounced end)'
   await new Promise((resolve) => setTimeout(resolve, 40))
   assert.equal(log.length, 4, 'a detached page ends nothing later')
 })
+
+test('observeScreen: an IntersectionObserver callback reports enter and leave, and the returned function disconnects', () => {
+  const calls = []
+  let callback
+  const api = {
+    createIntersectionObserver(owner, options) {
+      calls.push(['create', owner === c.owner, options.thresholds])
+      return {
+        relativeToViewport(margins) { calls.push(['viewport', margins]); return this },
+        observe(selector, cb) { calls.push(['observe', selector]); callback = cb },
+        disconnect() { calls.push(['disconnect']) },
+      }
+    },
+  }
+  on('didEnterScreen')
+  on('didLeaveScreen')
+  const stop = c.observeScreen('.cyl-animated-item', { margins: { top: 10 } }, api)
+  callback({ intersectionRatio: 0.5 })
+  callback({ intersectionRatio: 0.7 })
+  callback({ intersectionRatio: 0 })
+  stop()
+  assert.deepEqual(log, ['didEnterScreen/afterSuper', 'didLeaveScreen/afterSuper'])
+  assert.deepEqual(calls, [['create', true, [0, 0.01]], ['viewport', { top: 10 }], ['observe', '.cyl-animated-item'], ['disconnect']])
+  assert.equal(typeof c.observeScreen('.x', {}, undefined), 'function', 'without wx it does nothing and still returns a function')
+})
