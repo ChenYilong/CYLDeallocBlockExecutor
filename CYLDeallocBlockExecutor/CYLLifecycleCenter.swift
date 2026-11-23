@@ -149,12 +149,60 @@ public enum CYLLifecycleCenter {
         }
     }
 
+    private struct DeallocObserver {
+        let identifier: UInt
+        let key: String?
+        let callback: (_ description: String, _ info: CYLLifecycleInfo) -> Void
+    }
+
+    private static var deallocObservers: [DeallocObserver] = []
+
+    /**
+     * Observes the teardown of every object that has blocks, to know when any control (or any object) goes away. The callback gets
+     * a description (class name and address), never the owner: it is being destroyed. For logging and bookkeeping, not cleanup.
+     */
+    @discardableResult
+    public static func addDeallocObserver(key: String? = nil,
+                                          callback: @escaping (_ description: String, _ info: CYLLifecycleInfo) -> Void) -> UInt {
+        lock.lock(); defer { lock.unlock() }
+        if let key {
+            deallocObservers.removeAll { $0.key == key }
+        }
+        let identifier = nextIdentifier
+        nextIdentifier += 1
+        deallocObservers.append(DeallocObserver(identifier: identifier, key: key, callback: callback))
+        return identifier
+    }
+
+    @discardableResult
+    public static func cancelDeallocObserver(identifier: UInt) -> Bool {
+        lock.lock(); defer { lock.unlock() }
+        let before = deallocObservers.count
+        deallocObservers.removeAll { $0.identifier == identifier }
+        return deallocObservers.count < before
+    }
+
+    /**
+     * Called by an object's model while the object is being destroyed (`owner` is only described, never handed out).
+     */
+    static func dispatchDealloc(owner: AnyObject) {
+        let description = CYLLifecycleLog.describe(owner)
+        CYLLifecycleLog.log("dealloc \(description)")
+        lock.lock()
+        let observers = deallocObservers
+        lock.unlock()
+        for observer in observers {
+            observer.callback(description, CYLLifecycleInfo.dealloc)
+        }
+    }
+
     /**
      * For tests: removes every observer and forgets the scroll state.
      */
     static func reset() {
         lock.lock(); defer { lock.unlock() }
         entries = []
+        deallocObservers = []
         scrollingOwners.removeAllObjects()
         refreshFlags()
     }

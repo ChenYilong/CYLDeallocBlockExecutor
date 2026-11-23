@@ -348,8 +348,9 @@ extension NSObject {
         info.timing = timing
         // The owner's own blocks, then the forwards (an object that shows through this one), then the global observers.
         if let model = cylCallbackModel(create: false) {
-            for (identifier, callback) in model.takeLifecycleCallbacks(event: event, timing: timing)
-            where model.containsLifecycleCallback(identifier: identifier) {
+            let blocks = model.takeLifecycleCallbacks(event: event, timing: timing)
+            CYLLifecycleLog.log("\(CYLLifecycleLog.describe(self)) \(event)/\(timing): \(blocks.count) block(s)")
+            for (identifier, callback) in blocks where model.containsLifecycleCallback(identifier: identifier) {
                 callback(self, identifier, info)
             }
             for target in model.forwardTargets(for: event) {
@@ -403,7 +404,9 @@ extension NSObject {
         info.customEvent = name
         info.userInfo = userInfo
         if let model = cylCallbackModel(create: false) {
-            for (identifier, callback) in model.takeCustomCallbacks(name: name) where model.containsLifecycleCallback(identifier: identifier) {
+            let blocks = model.takeCustomCallbacks(name: name)
+            CYLLifecycleLog.log("\(CYLLifecycleLog.describe(self)) posts \(name): \(blocks.count) block(s)")
+            for (identifier, callback) in blocks where model.containsLifecycleCallback(identifier: identifier) {
                 callback(self, identifier, info)
             }
             for target in model.forwardTargets(for: nil) {

@@ -61,9 +61,37 @@ object LifecycleCenter {
         return synchronized(lock) { entries.removeAll { if (identifier != null) it.identifier == identifier else it.key == key } }
     }
 
+    private class DeallocObserver(val identifier: Int, val key: String?, val callback: (String, LifecycleInfo) -> Unit)
+
+    private var deallocObservers = mutableListOf<DeallocObserver>()
+
+    /**
+     * Observes the teardown of every owner that has a registry, to know when any object goes away. The callback gets a description
+     * (class name and identity), never the owner: it is being destroyed. For logging and bookkeeping, not for cleanup.
+     */
+    fun addDeallocObserver(key: String? = null, callback: (description: String, info: LifecycleInfo) -> Unit): Int = synchronized(lock) {
+        if (key != null) deallocObservers.removeAll { it.key == key }
+        val id = nextIdentifier++
+        deallocObservers.add(DeallocObserver(id, key, callback))
+        id
+    }
+
+    fun cancelDeallocObserver(identifier: Int? = null, key: String? = null): Boolean {
+        require((identifier == null) != (key == null)) { "pass exactly one of identifier or key" }
+        return synchronized(lock) { deallocObservers.removeAll { if (identifier != null) it.identifier == identifier else it.key == key } }
+    }
+
+    /** Called by a registry when its owner's teardown blocks ran. */
+    internal fun dispatchDealloc(description: String) {
+        LifecycleLog.log { "dealloc $description" }
+        val info = LifecycleInfo(timing = LifecycleTiming.end, isDealloc = true)
+        for (o in synchronized(lock) { deallocObservers.toList() }) o.callback(description, info)
+    }
+
     /** For tests: removes every observer and forgets the scroll state. */
     fun reset() {
         synchronized(lock) {
+            deallocObservers = mutableListOf()
             entries = mutableListOf()
             scrolling.clear()
         }

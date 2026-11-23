@@ -115,6 +115,7 @@ class LifecycleRegistry(owner: Any) {
         val snapshot = synchronized(lock) {
             entries.filter { it.custom == name && !(it.invokeOnce && it.fired) }.sortedBy { it.identifier }
         }
+        LifecycleLog.log { "${LifecycleLog.describe(target)} posts $name: ${snapshot.size} block(s)" }
         for (e in snapshot) {
             val run = synchronized(lock) {
                 if (e.cancelled || (e.invokeOnce && e.fired)) false else { if (e.invokeOnce) e.fired = true; true }
@@ -208,10 +209,12 @@ class LifecycleRegistry(owner: Any) {
             entries.removeAll { it.kind() == Kind.DEALLOC }
             s
         }
+        LifecycleLog.log { "teardown ${LifecycleLog.describe(target)}: ${snapshot.size} block(s)" }
         for (e in snapshot) {
             if (e.cancelled) continue
             e.callback(target, e.identifier, LifecycleInfo(timing = LifecycleTiming.end, isDealloc = true))
         }
+        LifecycleCenter.dispatchDealloc(LifecycleLog.describe(target))
     }
 
     // dispatch
@@ -278,6 +281,7 @@ class LifecycleRegistry(owner: Any) {
             entries.filter { it.event == event && it.timing == timing && !(it.invokeOnce && it.fired) }
                 .sortedBy { it.identifier }
         }
+        LifecycleLog.log { "${LifecycleLog.describe(target)} $event/$timing: ${snapshot.size} block(s)" }
         for (e in snapshot) {
             val run = synchronized(lock) {
                 if (e.cancelled || (e.invokeOnce && e.fired)) false else { if (e.invokeOnce) e.fired = true; true }

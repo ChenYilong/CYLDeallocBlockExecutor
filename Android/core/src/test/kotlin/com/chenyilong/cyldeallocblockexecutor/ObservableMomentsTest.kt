@@ -134,3 +134,56 @@ class ObservableMomentsTest {
         assertEquals(listOf("enter", "leave"), log)
     }
 }
+
+class DebugLogTest {
+    @kotlin.test.AfterTest fun clean() {
+        LifecycleLog.enabled = false
+        LifecycleLog.sink = { println(it) }
+        LifecycleLog.describer = { o -> "${o?.javaClass?.simpleName}@${Integer.toHexString(System.identityHashCode(o))}" }
+        LifecycleCenter.reset()
+    }
+
+    @Test fun offByDefaultAndLazyOnTheOwnersNameEventTimingAndBlockCount() {
+        class Tab
+        val lines = mutableListOf<String>()
+        LifecycleLog.sink = { lines.add(it) }
+        LifecycleLog.describer = { "Tab(tab-1)" }
+        val tab = Tab()
+        val r = LifecycleRegistry.of(tab).also { it.hookInstalled = true }
+        r.addLifecycleCallback<Any>(LifecycleEvent.viewDidAppear) { _, _, _ -> }
+        r.fireAutomatic(LifecycleEvent.viewDidAppear, LifecycleTiming.afterSuper)
+        assertEquals(emptyList(), lines, "disabled: nothing is built or printed")
+        LifecycleLog.enabled = true
+        r.fireAutomatic(LifecycleEvent.viewDidAppear, LifecycleTiming.afterSuper)
+        r.addCustomCallback<Any>(AnimationEvents.didPause) { _, _, _ -> }
+        r.postLifecycleEvent(AnimationEvents.didPause)
+        r.addDeallocCallback<Any> { _, _, _ -> }
+        r.runDealloc()
+        assertEquals(listOf(
+            "[CYLLifecycle] Tab(tab-1) viewDidAppear/afterSuper: 1 block(s)",
+            "[CYLLifecycle] Tab(tab-1) posts cyl.animation.didPause: 1 block(s)",
+            "[CYLLifecycle] teardown Tab(tab-1): 1 block(s)",
+            "[CYLLifecycle] dealloc Tab(tab-1)",
+        ), lines)
+    }
+
+    @Test fun aDeallocObserverLearnsWhenAnyOwnerIsTornDownWithADescriptionAndNeverTheOwner() {
+        val seen = mutableListOf<String>()
+        LifecycleLog.describer = { "Owner(7)" }
+        val id = LifecycleCenter.addDeallocObserver(key = "debug") { description, info -> seen.add("$description ${info.isDealloc}") }
+        val r = LifecycleRegistry.of(Any())
+        r.runDealloc()
+        assertEquals(listOf("Owner(7) true"), seen)
+        assertTrue(LifecycleCenter.cancelDeallocObserver(identifier = id))
+        r.runDealloc()
+        assertEquals(1, seen.size)
+    }
+
+    @Test fun theWellKnownEventNamesAreTheDocumentedOnes() {
+        assertEquals("cyl.animation.didStart", AnimationEvents.didStart)
+        assertEquals("cyl.animation.didPause", AnimationEvents.didPause)
+        assertEquals("cyl.animation.didResume", AnimationEvents.didResume)
+        assertEquals("cyl.animation.didStop", AnimationEvents.didStop)
+        assertEquals("cyl.badge.didBecomeReady", BadgeEvents.didBecomeReady)
+    }
+}

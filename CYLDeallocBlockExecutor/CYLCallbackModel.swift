@@ -65,9 +65,11 @@ final class CYLCallbackModel {
     deinit {
         // Run in the order the callbacks were added.
         let info = CYLLifecycleInfo.dealloc
+        CYLLifecycleLog.log("teardown \(CYLLifecycleLog.describe(owner.takeUnretainedValue())): \(deallocCallbacks.count) block(s)")
         for key in deallocCallbacks.keys.sorted() {
             deallocCallbacks[key]?(owner, key, info)
         }
+        CYLLifecycleCenter.dispatchDealloc(owner: owner.takeUnretainedValue())
     }
 
     // MARK: - Dealloc

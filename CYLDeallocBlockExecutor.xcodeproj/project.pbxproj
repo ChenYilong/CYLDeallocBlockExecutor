@@ -10,9 +10,11 @@
 		0626B1ECBCDCEAF342B42704 /* CYLLifecycle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9AC0FFEE1C3064BD00000002 /* CYLLifecycle.swift */; };
 		6D26A590498BE2C9828D3F7D /* CYLCallbackModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9AC0FFEE1C3064BD00000001 /* CYLCallbackModel.swift */; };
 		7A1CE0D50F2B4C8C00000121 /* CYLLifecycleCenter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9AC0FFEE1C3064BD00000101 /* CYLLifecycleCenter.swift */; };
+		7A1CE0D50F2B4C8C00000123 /* CYLLifecycleLog.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9AC0FFEE1C3064BD00000103 /* CYLLifecycleLog.swift */; };
 		7A1CE0D50F2B4C8C00000122 /* CYLLifecycleSources.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9AC0FFEE1C3064BD00000102 /* CYLLifecycleSources.swift */; };
 		9AC0FFEE1C3064BD00000011 /* CYLCallbackModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9AC0FFEE1C3064BD00000001 /* CYLCallbackModel.swift */; };
 		9AC0FFEE1C3064BD00000111 /* CYLLifecycleCenter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9AC0FFEE1C3064BD00000101 /* CYLLifecycleCenter.swift */; };
+		9AC0FFEE1C3064BD00000113 /* CYLLifecycleLog.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9AC0FFEE1C3064BD00000103 /* CYLLifecycleLog.swift */; };
 		9AC0FFEE1C3064BD00000112 /* CYLLifecycleSources.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9AC0FFEE1C3064BD00000102 /* CYLLifecycleSources.swift */; };
 		9AC0FFEE1C3064BD00000012 /* CYLLifecycle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9AC0FFEE1C3064BD00000002 /* CYLLifecycle.swift */; };
 		9AC0FFEE1C3064BD00000013 /* UIViewController+CYLLifecycleHooks.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9AC0FFEE1C3064BD00000003 /* UIViewController+CYLLifecycleHooks.swift */; };
@@ -35,6 +37,7 @@
 		3A27A5239C304AE727E78D25 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.0.sdk/System/Library/Frameworks/Foundation.framework; sourceTree = DEVELOPER_DIR; };
 		9AC0FFEE1C3064BD00000001 /* CYLCallbackModel.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CYLCallbackModel.swift; sourceTree = "<group>"; };
 		9AC0FFEE1C3064BD00000101 /* CYLLifecycleCenter.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CYLLifecycleCenter.swift; sourceTree = "<group>"; };
+		9AC0FFEE1C3064BD00000103 /* CYLLifecycleLog.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CYLLifecycleLog.swift; sourceTree = "<group>"; };
 		9AC0FFEE1C3064BD00000102 /* CYLLifecycleSources.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CYLLifecycleSources.swift; sourceTree = "<group>"; };
 		9AC0FFEE1C3064BD00000002 /* CYLLifecycle.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CYLLifecycle.swift; sourceTree = "<group>"; };
 		9AC0FFEE1C3064BD00000003 /* UIViewController+CYLLifecycleHooks.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "UIViewController+CYLLifecycleHooks.swift"; sourceTree = "<group>"; };
@@ -111,6 +114,7 @@
 				9AC0FFEE1C3064BD00000002 /* CYLLifecycle.swift */,
 				9AC0FFEE1C3064BD00000001 /* CYLCallbackModel.swift */,
 				9AC0FFEE1C3064BD00000101 /* CYLLifecycleCenter.swift */,
+				9AC0FFEE1C3064BD00000103 /* CYLLifecycleLog.swift */,
 				9AC0FFEE1C3064BD00000102 /* CYLLifecycleSources.swift */,
 			);
 			path = CYLDeallocBlockExecutor;
@@ -246,6 +250,7 @@
 				9AC0FFEE1C3064BD00000012 /* CYLLifecycle.swift in Sources */,
 				9AC0FFEE1C3064BD00000011 /* CYLCallbackModel.swift in Sources */,
 				9AC0FFEE1C3064BD00000111 /* CYLLifecycleCenter.swift in Sources */,
+				9AC0FFEE1C3064BD00000113 /* CYLLifecycleLog.swift in Sources */,
 				9AC0FFEE1C3064BD00000112 /* CYLLifecycleSources.swift in Sources */,
 				9ACCE5581C30371B00D98916 /* AppDelegate.swift in Sources */,
 				D90D2070028EDE69F8932A74 /* SceneDelegate.swift in Sources */,
@@ -262,6 +267,7 @@
 				0626B1ECBCDCEAF342B42704 /* CYLLifecycle.swift in Sources */,
 				6D26A590498BE2C9828D3F7D /* CYLCallbackModel.swift in Sources */,
 				7A1CE0D50F2B4C8C00000121 /* CYLLifecycleCenter.swift in Sources */,
+				7A1CE0D50F2B4C8C00000123 /* CYLLifecycleLog.swift in Sources */,
 				7A1CE0D50F2B4C8C00000122 /* CYLLifecycleSources.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

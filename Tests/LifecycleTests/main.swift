@@ -620,6 +620,32 @@ func runObservableTests(window: UIWindow) {
     screenController.beginAppearanceTransition(false, animated: false)
     screenController.endAppearanceTransition()
     check(log == ["appear", "enter", "disappear", "leave"], "view controller screen events follow the appearance events", "\(log)")
+
+    // Debug log: off by default, then names the owner, event, timing and the number of blocks; dealloc observers.
+    CYLLifecycleLog.isEnabled = false
+    var lines: [String] = []
+    CYLLifecycleLog.sink = { lines.append($0) }
+    let logged = NSObject()
+    logged.cylAddLifecycleCallback(forCustomEvent: CYLAnimationEvent.didPause) { _, _, _ in }
+    logged.cylPostLifecycleEvent(CYLAnimationEvent.didPause)
+    check(lines.isEmpty, "debug log: disabled prints nothing")
+    CYLLifecycleLog.isEnabled = true
+    logged.cylPostLifecycleEvent(CYLAnimationEvent.didPause)
+    let describe = CYLLifecycleLog.describe(logged)
+    check(lines == ["[CYLLifecycle] \(describe) posts cyl.animation.didPause: 1 block(s)"], "debug log: names the owner, the event and the block count", "\(lines)")
+    var destroyed: [String] = []
+    let observerId = CYLLifecycleCenter.addDeallocObserver { description, info in destroyed.append("\(description) \(info.isDealloc)") }
+    var dyingDescription = ""
+    do {
+        let dying = NSObject()
+        dying.cylWillDealloc { _, _, _ in }
+        dyingDescription = CYLLifecycleLog.describe(dying)
+    }
+    check(destroyed == ["\(dyingDescription) true"], "dealloc observer: learns that any object with blocks was destroyed", "\(destroyed)")
+    check(CYLLifecycleCenter.cancelDeallocObserver(identifier: observerId), "dealloc observer: cancel")
+    CYLLifecycleLog.isEnabled = false
+    CYLLifecycleLog.sink = { print($0) }
+    check(CYLAnimationEvent.didStart == "cyl.animation.didStart" && CYLBadgeEvent.didBecomeReady == "cyl.badge.didBecomeReady", "well-known event names")
     CYLLifecycleCenter.reset()
 }
 
