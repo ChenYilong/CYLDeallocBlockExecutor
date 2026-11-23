@@ -32,3 +32,13 @@ tasks.test {
         showStandardStreams = false
     }
 }
+
+// Consumers (CYLTabBarController's Android core) build with Kotlin 2.0.x and lock kotlin-stdlib 2.0.21: compile for the 2.0 language
+// and API level and depend on the 2.0.21 standard library, so the published POM and the class metadata stay readable for them.
+kotlin {
+    coreLibrariesVersion = "2.0.21"
+    compilerOptions {
+        languageVersion.set(org.jetbrains.kotlin.gradle.dsl.KotlinVersion.KOTLIN_2_0)
+        apiVersion.set(org.jetbrains.kotlin.gradle.dsl.KotlinVersion.KOTLIN_2_0)
+    }
+}
