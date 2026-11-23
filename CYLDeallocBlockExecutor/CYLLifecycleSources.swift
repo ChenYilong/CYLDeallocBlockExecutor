@@ -328,8 +328,9 @@ final class CYLScrollObserver: NSObject {
     func dragEnded() {
         guard dragging else { return }
         dragging = false
-        // `isDecelerating` turns true right after the gesture ends: read it on the next run loop pass.
-        DispatchQueue.main.async { [weak self] in
+        // `isDecelerating` turns true right after the gesture ends: read it on the next run loop pass (a zero-delay timer, which also
+        // fires inside a nested run loop, unlike a main queue block).
+        let timer = Timer(timeInterval: 0, repeats: false) { [weak self] _ in
             guard let self, let scrollView = self.scrollView else { return }
             let willDecelerate = scrollView.isDecelerating
             self.decelerating = willDecelerate
@@ -340,6 +341,7 @@ final class CYLScrollObserver: NSObject {
                 self.notify(.scrollDidEndScrolling, CYLLifecycleInfo(window: nil, scrollView: scrollView))
             }
         }
+        RunLoop.main.add(timer, forMode: .common)
     }
 
     private func offsetChanged() {
