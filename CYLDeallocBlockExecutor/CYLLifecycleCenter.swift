@@ -31,6 +31,18 @@ public enum CYLLifecycleCenter {
     private static let scrollingOwners = NSHashTable<AnyObject>.weakObjects()
 
     /**
+     * Whether any observer waits for a window, screen or scroll event: the view hooks read it for every view move, so it is a
+     * stored flag updated when observers change, not a search.
+     */
+    private(set) static var observesViewEvents = false
+
+    private static func refreshFlags() {
+        let viewEvents: Set<CYLLifecycleEvent> = [.willMoveToWindow, .didMoveToWindow, .didEnterScreen, .didLeaveScreen,
+                                                  .scrollWillBeginDragging, .scrollDidEndDragging, .scrollDidEndScrolling]
+        observesViewEvents = entries.contains { entry in entry.event.map { viewEvents.contains($0) } ?? false }
+    }
+
+    /**
      * True while any observed scroll view is dragging or decelerating.
      */
     public static var isUserScrolling: Bool {
@@ -74,6 +86,7 @@ public enum CYLLifecycleCenter {
         nextIdentifier += 1
         entries.append(Entry(identifier: identifier, event: prototype.event, custom: prototype.custom, timing: prototype.timing,
                              ownerType: prototype.ownerType, key: prototype.key, callback: prototype.callback))
+        refreshFlags()
         return identifier
     }
 
@@ -87,6 +100,7 @@ public enum CYLLifecycleCenter {
         lock.lock(); defer { lock.unlock() }
         let before = entries.count
         entries.removeAll { $0.identifier == identifier }
+        refreshFlags()
         return entries.count < before
     }
 
@@ -98,6 +112,7 @@ public enum CYLLifecycleCenter {
         lock.lock(); defer { lock.unlock() }
         let before = entries.count
         entries.removeAll { $0.key == key }
+        refreshFlags()
         return entries.count < before
     }
 
@@ -141,5 +156,6 @@ public enum CYLLifecycleCenter {
         lock.lock(); defer { lock.unlock() }
         entries = []
         scrollingOwners.removeAllObjects()
+        refreshFlags()
     }
 }

@@ -115,10 +115,7 @@ enum CYLLifecycleSources {
     }
 
     private static func isInterested(_ view: UIView) -> Bool {
-        view.cylCallbackModel(create: false) != nil
-            || CYLLifecycleCenter.hasObservers(for: .didMoveToWindow) || CYLLifecycleCenter.hasObservers(for: .willMoveToWindow)
-            || CYLLifecycleCenter.hasObservers(for: .didEnterScreen) || CYLLifecycleCenter.hasObservers(for: .didLeaveScreen)
-            || CYLLifecycleCenter.hasObservers(for: .scrollWillBeginDragging)
+        view.cylCallbackModel(create: false) != nil || CYLLifecycleCenter.observesViewEvents
     }
 
     private static func hookWillMoveToWindow() {
