@@ -608,6 +608,37 @@ func runObservableTests(window: UIWindow) {
     check(log == ["begin", "pause all", "end drag true", "end scroll", "resume all"], "scroll events of a view and the global pause / resume", "\(log)")
     scrollView.removeFromSuperview()
 
+    // A flick: UIKit clears isDecelerating after the last contentOffset change, so only polling sees the end (CYLTabBarController #823).
+    CYLLifecycleCenter.reset()
+    log = []
+    final class FlickScrollView: UIScrollView {
+        var fakeDecelerating = false
+        override var isDecelerating: Bool { fakeDecelerating }
+        override var isDragging: Bool { false }
+    }
+    let flick = FlickScrollView(frame: CGRect(x: 0, y: 0, width: 100, height: 100))
+    flick.contentSize = CGSize(width: 100, height: 1000)
+    host.addSubview(flick)
+    CYLLifecycleCenter.addCallback(for: .scrollWillBeginDragging) { _, _, _ in log.append("pause") }
+    CYLLifecycleCenter.addCallback(for: .scrollDidEndScrolling) { _, _, _ in log.append("resume") }
+    let flickObserver = CYLLifecycleSources.scrollObserver(of: flick)
+    flickObserver.dragBegan()
+    flick.fakeDecelerating = true
+    flickObserver.dragEnded()
+    func spin(_ seconds: TimeInterval) {   // a run loop with no source returns at once: keep it alive with a timer
+        let keepAlive = Timer.scheduledTimer(withTimeInterval: 0.005, repeats: true) { _ in }
+        RunLoop.main.run(until: Date().addingTimeInterval(seconds))
+        keepAlive.invalidate()
+    }
+    spin(0.1)
+    flick.contentOffset = CGPoint(x: 0, y: 300)   // offset changes while still decelerating
+    flick.contentOffset = CGPoint(x: 0, y: 400)
+    check(log == ["pause"], "a flick does not resume while it is still decelerating", "\(log)")
+    flick.fakeDecelerating = false                 // no further offset change, like UIKit
+    spin(0.2)
+    check(log == ["pause", "resume"], "a flick resumes once the deceleration is over, without another offset change", "\(log)")
+    flick.removeFromSuperview()
+
     // A view controller reports didEnterScreen / didLeaveScreen right after viewDidAppear / viewDidDisappear.
     log = []
     let screenController = PlainViewController()
