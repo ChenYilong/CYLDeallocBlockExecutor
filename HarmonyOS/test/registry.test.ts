@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { beforeEach, test } from 'node:test';
-import { LifecycleRegistry } from '../src/index.ts';
-import type { LifecycleTiming } from '../src/index.ts';
+import { LifecycleRegistry } from '../cyldeallocblockexecutor/src/main/ets/index';
+import type { LifecycleTiming } from '../cyldeallocblockexecutor/src/main/ets/index';
 
 const e = 'viewDidLayoutSubviews' as const;
 let owner: object;

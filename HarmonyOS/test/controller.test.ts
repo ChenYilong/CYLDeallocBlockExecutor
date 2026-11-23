@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { beforeEach, test } from 'node:test';
-import { LifecycleController, LifecycleRegistry } from '../src/index.ts';
-import type { LifecycleEvent, LifecycleTiming } from '../src/index.ts';
+import { LifecycleController, LifecycleRegistry } from '../cyldeallocblockexecutor/src/main/ets/index';
+import type { LifecycleEvent, LifecycleTiming } from '../cyldeallocblockexecutor/src/main/ets/index';
 
 let owner: object;
 let c: LifecycleController<object>;

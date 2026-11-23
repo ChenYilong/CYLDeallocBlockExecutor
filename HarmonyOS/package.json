@@ -6,7 +6,7 @@
   "type": "module",
   "main": "src/index.ts",
   "scripts": {
-    "test": "node --test \"test/*.test.ts\"",
+    "test": "node --import ./test/register.mjs --test \"test/*.test.ts\"",
     "typecheck": "tsc -p ."
   },
   "devDependencies": {
