@@ -17,7 +17,7 @@ import ObjectiveC
  *   previous implementation captured and called, like the view controller hooks. The fast path of a view without blocks is one
  *   associated-object read.
  * - `UIScrollView.delegate` is never touched (apps, React Native and Flutter own it): the drag comes from the pan gesture
- *   recognizer's target, the end of the deceleration from KVO on `contentOffset`.
+ *   recognizer's target, the end of the deceleration from a timer that polls `isDecelerating`.
  * - Main thread only.
  */
 enum CYLLifecycleSources {
@@ -280,8 +280,8 @@ final class CYLVisibilityState: NSObject {
 // MARK: - Scroll observer
 
 /**
- * Observes one scroll view without taking over its delegate: the pan gesture recognizer's target gives the drag, KVO on
- * `contentOffset` gives the end of the deceleration (the first change with the scroll view neither dragging nor decelerating).
+ * Observes one scroll view without taking over its delegate: the pan gesture recognizer's target gives the drag, a timer
+ * gives the end of the deceleration (the first tick with the scroll view neither dragging nor decelerating).
  * Owners subscribe weakly; the observer lives with the scroll view and stops with it.
  */
 final class CYLScrollObserver: NSObject {
@@ -291,6 +291,7 @@ final class CYLScrollObserver: NSObject {
     private var offsetObservation: NSKeyValueObservation?
     private var dragging = false
     private var decelerating = false
+    private var pollTimer: Timer?
 
     init(scrollView: UIScrollView) {
         self.scrollView = scrollView
@@ -300,6 +301,7 @@ final class CYLScrollObserver: NSObject {
     }
 
     deinit {
+        pollTimer?.invalidate()
         scrollView?.panGestureRecognizer.removeTarget(self, action: nil)
     }
 
@@ -308,33 +310,69 @@ final class CYLScrollObserver: NSObject {
     }
 
     @objc private func pan(_ recognizer: UIPanGestureRecognizer) {
-        guard let scrollView else { return }
         switch recognizer.state {
-        case .began:
-            dragging = true
-            decelerating = false
-            notify(.scrollWillBeginDragging, CYLLifecycleInfo(window: nil, scrollView: scrollView))
-        case .ended, .cancelled, .failed:
-            guard dragging else { return }
-            dragging = false
-            // `isDecelerating` turns true right after the gesture ends: read it on the next run loop pass.
-            DispatchQueue.main.async { [weak self] in
-                guard let self, let scrollView = self.scrollView else { return }
-                let willDecelerate = scrollView.isDecelerating
-                self.decelerating = willDecelerate
-                self.notify(.scrollDidEndDragging, CYLLifecycleInfo(window: nil, scrollView: scrollView, willDecelerate: willDecelerate))
-                if !willDecelerate {
-                    self.notify(.scrollDidEndScrolling, CYLLifecycleInfo(window: nil, scrollView: scrollView))
-                }
-            }
-        default:
-            break
+        case .began: dragBegan()
+        case .ended, .cancelled, .failed: dragEnded()
+        default: break
         }
     }
 
+    func dragBegan() {
+        guard let scrollView else { return }
+        dragging = true
+        decelerating = false
+        stopWatchingDeceleration()
+        notify(.scrollWillBeginDragging, CYLLifecycleInfo(window: nil, scrollView: scrollView))
+    }
+
+    func dragEnded() {
+        guard dragging else { return }
+        dragging = false
+        // `isDecelerating` turns true right after the gesture ends: read it on the next run loop pass (a zero-delay timer, which also
+        // fires inside a nested run loop, unlike a main queue block).
+        let timer = Timer(timeInterval: 0, repeats: false) { [weak self] _ in
+            guard let self, let scrollView = self.scrollView else { return }
+            let willDecelerate = scrollView.isDecelerating
+            self.decelerating = willDecelerate
+            self.notify(.scrollDidEndDragging, CYLLifecycleInfo(window: nil, scrollView: scrollView, willDecelerate: willDecelerate))
+            if willDecelerate {
+                self.watchDeceleration()
+            } else {
+                self.notify(.scrollDidEndScrolling, CYLLifecycleInfo(window: nil, scrollView: scrollView))
+            }
+        }
+        RunLoop.main.add(timer, forMode: .common)
+    }
+
     private func offsetChanged() {
+        finishDecelerationIfStopped()
+    }
+
+    /**
+     * UIKit clears `isDecelerating` after the last `contentOffset` change, so KVO alone never sees the stop of a flick: a 60 Hz
+     * timer polls the flag until the deceleration is over (it also stops when a new drag begins or the scroll view is gone).
+     */
+    private func watchDeceleration() {
+        stopWatchingDeceleration()
+        let timer = Timer(timeInterval: 1.0 / 60.0, target: self, selector: #selector(decelerationTick), userInfo: nil, repeats: true)
+        RunLoop.main.add(timer, forMode: .common)
+        pollTimer = timer
+    }
+
+    private func stopWatchingDeceleration() {
+        pollTimer?.invalidate()
+        pollTimer = nil
+    }
+
+    @objc private func decelerationTick() {
+        guard decelerating, scrollView != nil else { stopWatchingDeceleration(); return }
+        finishDecelerationIfStopped()
+    }
+
+    private func finishDecelerationIfStopped() {
         guard decelerating, let scrollView, !scrollView.isDragging, !scrollView.isDecelerating else { return }
         decelerating = false
+        stopWatchingDeceleration()
         notify(.scrollDidEndScrolling, CYLLifecycleInfo(window: nil, scrollView: scrollView))
     }
 
