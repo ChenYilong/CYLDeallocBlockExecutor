@@ -131,3 +131,16 @@ jobs:
           yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses > /dev/null || true
           "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "platforms;android-34" "build-tools;34.0.0"
       - run: cd Android && ./gradlew :core:test :binding:testDebugUnitTest --console=plain
+
+  flutter:
+    name: Flutter (analyze and test)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v5
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+      - run: cd Flutter && flutter pub get
+      - run: cd Flutter && flutter analyze
+      - run: cd Flutter && flutter test
