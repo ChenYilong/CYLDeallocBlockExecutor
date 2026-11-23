@@ -6,9 +6,11 @@ export default class EntryAbility extends UIAbility {
   static win: window.Window | undefined = undefined;
   static memoryHook: ((level: number) => void) | undefined = undefined;
   static colorHook: ((mode: number) => void) | undefined = undefined;
+  static terminate: (() => void) | undefined = undefined;
 
   onCreate(want: Want, launchParam: AbilityConstant.LaunchParam): void {
     hilog.info(0x0000, 'CYL', 'onCreate');
+    EntryAbility.terminate = (): void => { this.context.terminateSelf(); };
   }
 
   onWindowStageCreate(windowStage: window.WindowStage): void {
