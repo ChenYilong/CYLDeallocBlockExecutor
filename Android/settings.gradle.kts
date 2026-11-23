@@ -18,4 +18,7 @@ include(":core")
 val localProperties = file("local.properties")
 val hasSdk = System.getenv("ANDROID_HOME") != null || System.getenv("ANDROID_SDK_ROOT") != null ||
     (localProperties.exists() && localProperties.readText().contains("sdk.dir"))
-if (hasSdk) include(":binding")
+if (hasSdk) {
+    include(":binding")
+    include(":example") // a device check app: logs every event the binding fires
+}

@@ -95,8 +95,9 @@ object AndroidBinding {
         }
     }
 
-    private fun snapshot(activity: Activity): ConfigSnapshot {
-        val c = activity.resources.configuration
+    private fun snapshot(activity: Activity): ConfigSnapshot = snapshot(activity.resources.configuration)
+
+    private fun snapshot(c: Configuration): ConfigSnapshot {
         val size = Size(c.screenWidthDp, c.screenHeightDp)
         val night = when (c.uiMode and Configuration.UI_MODE_NIGHT_MASK) {
             Configuration.UI_MODE_NIGHT_YES -> true
@@ -198,7 +199,10 @@ object AndroidBinding {
     private val componentCallbacks = object : ComponentCallbacks2 {
         override fun onConfigurationChanged(newConfig: Configuration) {
             val live = synchronized(AndroidBinding) { activities.keys.toList() }
-            for (a in live) controllerOf(a).configurationChanged(snapshot(a))
+            // The activity's own resources are not updated yet when the application callback runs (found on a device:
+            // every change was reported one step late), so read the configuration the callback delivers.
+            val snap = snapshot(newConfig)
+            for (a in live) controllerOf(a).configurationChanged(snap)
         }
 
         override fun onTrimMemory(level: Int) {
