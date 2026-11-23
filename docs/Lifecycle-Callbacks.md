@@ -311,7 +311,7 @@ Score = 100 × (rows of both tables whose last column is not `TODO`) / (all rows
 | 4a | Re-check audit: isolation row added (cancel-all / re-arm by event reach the core's keyed blocks) | 28 / 29 | 97 |
 | 4b | Design v4 (keyed blocks owned by their key holder), `Package.swift`, README rows; 38/38 checks on iOS 27.2 Debug and Release and iOS 17.5 Debug, both swizzle orders; `pod lib lint` passes; README snippets typecheck | 29 / 29 | 100 |
 | 5a | Design v5 added (observable moments: window moves, screen, scrolling, custom events, global observers, forwarding): 10 rows, all `TODO` | 29 / 39 | 74 |
-| 5b | Design v5 implemented in `CYLDeallocBlockExecutor/` (Swift) and in the other platforms (see Cross-Platform-API.md); written statically: the iOS rows have no run evidence yet (`Tests/run-lifecycle-tests.sh` on a simulator is the check) | 39 / 39 (provisional) | 100 (provisional) |
+| 5b | Design v5 implemented in `CYLDeallocBlockExecutor/` (Swift) and in the other platforms (see Cross-Platform-API.md); ran 2026-11-23 on Xcode 27.2, iOS 17 simulator: `Tests/run-lifecycle-tests.sh` Debug and Release 80 / 80 (both runs each), `pod lib lint` passed, SwiftPM and Carthage-framework builds succeeded (Cross-Platform-API.md round 12) | 39 / 39 | 100 |
 
 ## Lifecycle events
 

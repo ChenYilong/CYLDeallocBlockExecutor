@@ -112,6 +112,8 @@ Round 9 (design v5, 2026-11-23): the registry gained custom events (`addCustomCa
 
 Round 11 (2026-11-23, branch `feat/lifecycle-callbacks`): Flutter was on this machine all along; the earlier "no `flutter`" note was wrong. `flutter test` in `Flutter/` ran 42 tests (registry, mixin, observable): all passed; `flutter analyze` reported no issues. iOS stays written statically (see its note); it is the reference column and is not scored.
 
+Round 12 (2026-11-23, branch `feat/lifecycle-callbacks`, head `906ab93`, Xcode 27.2 / iOS 17 simulator `EF0F2A40`, macOS 27.3): iOS library checks ran on this machine. `bash Tests/run-lifecycle-tests.sh <UDID>`: Debug and `CYL_TEST_CONFIGURATION=release`, both runs of each (exchange-style swizzle after and before the hooks) `RESULT: PASS 80 passed, 0 failed`. `pod lib lint --allow-warnings`: passed validation. SwiftPM: `xcodebuild -scheme CYLDeallocBlockExecutor -destination 'generic/platform=iOS Simulator' build` (APFS copy of `Package.swift` + sources): BUILD SUCCEEDED. Xcode project: schemes `CYLDeallocBlockExecutor-Framework` (Carthage target) and `CYLDeallocExecutor` both BUILD SUCCEEDED; `CYLLifecycleCenter`, `CYLLifecycleSources` and `CYLLifecycleLog` are listed in `project.pbxproj`. No compile or test failure, so no code change. Not covered: the CYLTabBarController demo build and device run (another repository).
+
 ### Advisor audit: effect (2026-11-23)
 
 The 195 / 205 above counts cells that name an API and a test that ran. It does not measure whether the feature works on the platform. Scored on effect with the rubric below, the average is about **57 / 100**, under the 60 pass line on four of six platforms: the target scenario (pause every animation while the user scrolls, know when an animation starts or pauses) does not work end to end anywhere yet, because no component posts `cyl.animation.*` and nothing pauses.
@@ -126,7 +128,7 @@ The 195 / 205 above counts cells that name an API and a test that ran. It does n
 
 | Platform | API | Verified | Sources | Integration | Docs / CI | Total | Main reason |
 | :-- | --: | --: | --: | --: | --: | --: | :-- |
-| iOS | 20 | 10 | 7 | 12 | 10 | **59** | v1 to v4 ran on the simulator; design v5, the log and the CYLTabBarController changes never compiled |
+| iOS | 20 | 10 | 7 | 12 | 10 | **59** | v1 to v4 ran on the simulator; design v5 and the log now compile and pass 80 / 80 (round 12); the CYLTabBarController changes were not built here |
 | Android | 20 | 18 | 11 | 8 | 8 | **65** | 50 Gradle / Robolectric tests; scrolling covers `RecyclerView` only; the CYLTabBarController Android build was not green since the migration; no badge or animation events |
 | Flutter | 18 | 8 | 5 | 4 | 6 | **41** | v5 and the log never ran; the wrapper is unchanged and nothing reaches Dart; no Flutter CI job |
 | React Native | 18 | 14 | 8 | 4 | 9 | **53** | adapter tests with fake sources only; `native.ts` never executed; the wrapper is unchanged |
