@@ -113,7 +113,7 @@ jobs:
         with:
           node-version: 22
       - run: cd ReactNative && node --test "test/*.test.ts"
-      - run: cd HarmonyOS && node --test "test/*.test.ts"
+      - run: cd HarmonyOS && node --import ./test/register.mjs --test "test/*.test.ts"
       - run: cd MiniProgram && node --test "test/*.test.js"
 
   android:
