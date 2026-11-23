@@ -21,7 +21,8 @@ extension UIView {
             if let themeMap = newValue {
                 // Need to removeObserver at dealloc.
                 // NOTE: owner is unretained because a weak reference is already nil during dealloc.
-                cyl_willDealloc { owner, identifier in
+                // A key keeps one block however often the setter runs.
+                cylWillDealloc(key: "theme.removeObserver") { owner, identifier, _ in
                     NSLog("🔴类名与方法名：\(#function)（在第\(#line)行），描述：顺序执行：\(identifier)")
                     NotificationCenter.default.removeObserver(owner.takeUnretainedValue())
                 }

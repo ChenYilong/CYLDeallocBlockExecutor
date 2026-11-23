@@ -1,0 +1,146 @@
+# local-run-environment: macOS 27.3, Xcode 27.2 (27B52)
+# CI for CYLDeallocBlockExecutor on GitHub-hosted runners (free for public repositories).
+# Runner: `macos-26`, the same as CYLTabBarController. Set the repository variable MACOS_RUNNER to try another image
+# (for example `xcode-27`) without editing this file.
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [ master ]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  shellcheck:
+    name: shellcheck
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v5
+      - run: shellcheck Tests/*.sh
+
+  build:
+    name: SPM + Example build
+    runs-on: ${{ vars.MACOS_RUNNER || 'macos-26' }}
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v5
+      - name: Versions
+        run: sw_vers && xcodebuild -version
+      # xcodebuild picks the .xcodeproj over Package.swift in the same folder, so the package builds from a copy.
+      - name: Swift Package (warnings are errors)
+        run: |
+          PKG="$RUNNER_TEMP/package"
+          mkdir -p "$PKG"
+          cp -R Package.swift CYLDeallocBlockExecutor "$PKG/"
+          cd "$PKG"
+          xcodebuild build -scheme CYLDeallocBlockExecutor -destination 'generic/platform=iOS Simulator' \
+            -derivedDataPath "$RUNNER_TEMP/dd-spm" SWIFT_TREAT_WARNINGS_AS_ERRORS=YES
+      - name: Example app
+        run: |
+          xcodebuild build -project CYLDeallocBlockExecutor.xcodeproj -target CYLDeallocBlockExecutor \
+            -sdk iphonesimulator -configuration Debug CODE_SIGNING_ALLOWED=NO \
+            SYMROOT="$RUNNER_TEMP/build-example"
+
+  carthage:
+    name: Carthage
+    runs-on: ${{ vars.MACOS_RUNNER || 'macos-26' }}
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v5
+      - name: Build the shared framework scheme
+        run: |
+          brew list carthage >/dev/null 2>&1 || brew install carthage
+          carthage version
+          carthage build --no-skip-current --use-xcframeworks --platform iOS
+          ls Carthage/Build/CYLDeallocBlockExecutor.xcframework
+
+  lint:
+    name: pod lib lint
+    runs-on: ${{ vars.MACOS_RUNNER || 'macos-26' }}
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v5
+      - run: pod --version && pod lib lint
+
+  lifecycle-tests:
+    name: Lifecycle tests (${{ matrix.configuration }})
+    runs-on: ${{ vars.MACOS_RUNNER || 'macos-26' }}
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        configuration: [ debug, release ]
+    steps:
+      - uses: actions/checkout@v5
+      - name: Boot an iPhone simulator
+        id: sim
+        run: |
+          UDID=$(xcrun simctl list devices available -j \
+            | jq -r '[.devices | to_entries[] | select(.key | test("iOS")) | .key as $runtime | .value[] | select(.name | startswith("iPhone")) | .runtime = $runtime] | last | "\(.udid) \(.runtime)"')
+          RUNTIME="${UDID#* }"
+          UDID="${UDID%% *}"
+          echo "Runtime: $RUNTIME"
+          if [ -z "$UDID" ] || [ "$UDID" = "null" ]; then
+            xcrun simctl list devices available
+            echo "No iPhone simulator found" >&2
+            exit 1
+          fi
+          xcrun simctl list devices available | grep "$UDID"
+          xcrun simctl boot "$UDID"
+          xcrun simctl bootstatus "$UDID" -b
+          echo "udid=$UDID" >> "$GITHUB_OUTPUT"
+      - name: Run (exchange swizzle after and before the hooks)
+        env:
+          CYL_TEST_CONFIGURATION: ${{ matrix.configuration }}
+        run: bash Tests/run-lifecycle-tests.sh "${{ steps.sim.outputs.udid }}"
+
+  # Written without a CI run: first run will show what needs adjusting.
+  node-suites:
+    name: Node suites (React Native, HarmonyOS, Mini Program)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+      - run: cd ReactNative && node --test "test/*.test.ts"
+      - run: cd HarmonyOS && node --test "test/*.test.ts"
+      - run: cd MiniProgram && node --test "test/*.test.js"
+
+  android:
+    name: Android (core and binding)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: 21
+      # The runner image already has the Android SDK (ANDROID_HOME); setup-android@v3 fails there (`sdkmanager tools`).
+      - run: |
+          yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses > /dev/null || true
+          "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "platforms;android-34" "build-tools;34.0.0"
+      - run: cd Android && ./gradlew :core:test :binding:testDebugUnitTest --console=plain
+
+  flutter:
+    name: Flutter (analyze and test)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v5
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+      - run: cd Flutter && flutter pub get
+      - run: cd Flutter && flutter analyze
+      - run: cd Flutter && flutter test

@@ -1,0 +1,17 @@
+name: cyl_dealloc_block_executor
+description: Lifecycle and teardown blocks for any object, aligned with the iOS CYLDeallocBlockExecutor API.
+version: 1.4.0
+publish_to: none
+
+environment:
+  sdk: ">=3.4.0 <4.0.0"
+  flutter: ">=3.22.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^5.0.0
