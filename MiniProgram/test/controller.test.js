@@ -119,3 +119,39 @@ test('isDetached is true after onUnload', () => {
   c.onUnload();
   assert.equal(c.isDetached, true);
 });
+
+test('window moves fire at onLoad and onUnload with the window', () => {
+  const seen = []
+  c.registry.addLifecycleCallback('willMoveToWindow', (_o, _i, info) => seen.push(`will ${info.window === null ? 'null' : 'window'}`))
+  c.registry.addLifecycleCallback('didMoveToWindow', (_o, _i, info) => seen.push(`did ${info.window === null ? 'null' : 'window'}`))
+  c.onLoad()
+  c.onUnload()
+  assert.deepEqual(seen, ['will window', 'did window', 'will null', 'did null'])
+})
+
+test('screen: onShow / onReady / onHide and screenVisible report transitions only', () => {
+  on('didEnterScreen')
+  on('didLeaveScreen')
+  c.onShow()
+  c.onReady()
+  c.screenVisible(true)
+  c.screenVisible(false)
+  c.screenVisible(false)
+  assert.deepEqual(log, ['didEnterScreen/afterSuper', 'didLeaveScreen/afterSuper'])
+})
+
+test('onPageScroll: the first event begins, a quiet period ends (debounced end)', async () => {
+  c.scrollEndDelay = 10
+  for (const e of ['scrollWillBeginDragging', 'scrollDidEndDragging', 'scrollDidEndScrolling']) {
+    c.registry.addLifecycleCallback(e, (_o, _i, info) => log.push(`${e}${info.willDecelerate === undefined ? '' : ' ' + info.willDecelerate}`))
+  }
+  c.onPageScroll({ scrollTop: 1 })
+  c.onPageScroll({ scrollTop: 5 })
+  assert.deepEqual(log, ['scrollWillBeginDragging'])
+  await new Promise((resolve) => setTimeout(resolve, 40))
+  assert.deepEqual(log, ['scrollWillBeginDragging', 'scrollDidEndDragging false', 'scrollDidEndScrolling'])
+  c.onPageScroll({ scrollTop: 9 })
+  c.onUnload()
+  await new Promise((resolve) => setTimeout(resolve, 40))
+  assert.equal(log.length, 4, 'a detached page ends nothing later')
+})

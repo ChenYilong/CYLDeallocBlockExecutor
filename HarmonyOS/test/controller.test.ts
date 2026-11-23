@@ -126,3 +126,31 @@ test('manual end beside automatic afterSuper (layout block)', () => {
 test('the registry is shared with the owner', () => {
   assert.equal(LifecycleRegistry.of(owner), c.registry);
 });
+
+test('window attach and detach fire the window moves with the window', () => {
+  c.registry.addLifecycleCallback('willMoveToWindow', (_o, _i, info) => log.push(`will ${info.window === null ? 'null' : 'window'}`));
+  c.registry.addLifecycleCallback('didMoveToWindow', (_o, _i, info) => log.push(`did ${info.window === null ? 'null' : 'window'}`));
+  c.windowAttached({});
+  c.windowDetached();
+  assert.deepEqual(log, ['will window', 'did window', 'will null', 'did null']);
+});
+
+test('screen: onPageShow / onPageHide and onVisibleAreaChange report transitions only', () => {
+  on('didEnterScreen');
+  on('didLeaveScreen');
+  c.onPageShow();
+  c.visibleAreaChanged(true);
+  c.visibleAreaChanged(false);
+  c.visibleAreaChanged(false);
+  c.onPageHide();
+  assert.deepEqual(log, ['didEnterScreen/afterSuper', 'didLeaveScreen/afterSuper']);
+});
+
+test('scroll start and stop fire begin, end drag without deceleration and end scrolling', () => {
+  for (const e of ['scrollWillBeginDragging', 'scrollDidEndDragging', 'scrollDidEndScrolling'] as const) {
+    c.registry.addLifecycleCallback(e, (_o, _i, info) => log.push(`${e}${info.willDecelerate === undefined ? '' : ' ' + info.willDecelerate}`));
+  }
+  c.scrollStarted();
+  c.scrollStopped();
+  assert.deepEqual(log, ['scrollWillBeginDragging', 'scrollDidEndDragging false', 'scrollDidEndScrolling']);
+});

@@ -92,6 +92,9 @@ export class LifecycleController<T extends object> {
   private lastFontScale: number | undefined;
   private lastInsets: Insets | undefined;
   private lastSize: { width: number; height: number } | undefined;
+  private onScreen = false;
+  private dragging = false;
+  private decelerating = false;
 
   constructor(owner: T, sources: PlatformSources = {}, options: ControllerOptions = {}) {
     this.owner = owner;
@@ -130,6 +133,43 @@ export class LifecycleController<T extends object> {
     this.registry.runDealloc();
   }
 
+  // Screen and scrolling (design v5)
+
+  /**
+   * Reports whether the owner is visible on screen. Appear and disappear events report it by themselves (right after
+   * `viewDidAppear` / `viewDidDisappear`); call this for a view that scrolls in and out (a list item, from
+   * `onViewableItemsChanged`). Fires `didEnterScreen` / `didLeaveScreen` on transitions only.
+   */
+  setScreenVisible(visible: boolean): void {
+    if (this.onScreen === visible || this.detached) return;
+    this.onScreen = visible;
+    this.around(visible ? 'didEnterScreen' : 'didLeaveScreen');
+  }
+
+  /** Spread onto the owner's `ScrollView` / `FlatList`: the scroll events of design v5, without taking over any prop you set yourself. */
+  readonly scrollHandlers = {
+    onScrollBeginDrag: (event?: any): void => {
+      this.dragging = true;
+      this.around('scrollWillBeginDragging', { scrollView: event?.nativeEvent ?? event });
+    },
+    onScrollEndDrag: (event?: any): void => {
+      const v = event?.nativeEvent?.velocity;
+      const willDecelerate = v !== undefined && (Math.abs(v.x ?? 0) > 0 || Math.abs(v.y ?? 0) > 0);
+      this.dragging = false;
+      this.decelerating = willDecelerate;
+      this.around('scrollDidEndDragging', { scrollView: event?.nativeEvent ?? event, willDecelerate });
+      if (!willDecelerate) this.around('scrollDidEndScrolling', { scrollView: event?.nativeEvent ?? event });
+    },
+    onMomentumScrollBegin: (_event?: any): void => {
+      this.decelerating = true;
+    },
+    onMomentumScrollEnd: (event?: any): void => {
+      if (!this.decelerating && !this.dragging) return;
+      this.decelerating = false;
+      if (!this.dragging) this.around('scrollDidEndScrolling', { scrollView: event?.nativeEvent ?? event });
+    },
+  };
+
   /** The `onLayout` handler of the owner's view. */
   onLayout = (_event?: unknown): void => {
     this.around('viewDidLayoutSubviews');
@@ -161,6 +201,7 @@ export class LifecycleController<T extends object> {
     if (this.appear !== 'is') return;
     this.appear = 'did';
     this.around('viewDidAppear', { animated: this.mode === 'stack' });
+    this.setScreenVisible(true);
   }
 
   private willDisappear(): void {
@@ -175,6 +216,7 @@ export class LifecycleController<T extends object> {
     if (this.disappear !== 'will') return;
     this.disappear = 'did';
     this.around('viewDidDisappear', { animated: this.mode === 'stack' });
+    this.setScreenVisible(false);
   }
 
   // sources

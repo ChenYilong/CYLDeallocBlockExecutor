@@ -258,3 +258,40 @@ test('mount, unmount, mount subscribes again (React StrictMode)', () => {
   second.unmount();
   assert.equal(f.dim.length, 0);
 });
+
+test('didEnterScreen / didLeaveScreen follow viewDidAppear / viewDidDisappear and fire on transitions only', () => {
+  const owner = {};
+  const { controller, log } = (() => {
+    const c = new LifecycleController(owner, {}, { navigation: 'immediate' });
+    const l: string[] = [];
+    for (const e of ['viewDidAppear', 'didEnterScreen', 'viewDidDisappear', 'didLeaveScreen'] as const) {
+      c.registry.addLifecycleCallback(e, () => l.push(e));
+    }
+    return { controller: c, log: l };
+  })();
+  controller.attach();
+  controller.setScreenVisible(true);
+  controller.setScreenVisible(true);
+  controller.setScreenVisible(false);
+  assert.deepEqual(log, ['didEnterScreen', 'didLeaveScreen']);
+});
+
+test('scroll handlers: begin, end drag with and without deceleration, momentum end, in order', () => {
+  const c = new LifecycleController({}, {});
+  const log: string[] = [];
+  for (const e of ['scrollWillBeginDragging', 'scrollDidEndDragging', 'scrollDidEndScrolling'] as const) {
+    c.registry.addLifecycleCallback(e, (_o, _i, info) => log.push(`${e}${info.willDecelerate === undefined ? '' : ' ' + info.willDecelerate}`));
+  }
+  const h = c.scrollHandlers;
+  h.onScrollBeginDrag();
+  h.onScrollEndDrag({ nativeEvent: { velocity: { x: 0, y: 0 } } });
+  h.onScrollBeginDrag();
+  h.onScrollEndDrag({ nativeEvent: { velocity: { x: 0, y: 1.2 } } });
+  h.onMomentumScrollBegin();
+  h.onMomentumScrollEnd();
+  h.onMomentumScrollEnd();
+  assert.deepEqual(log, [
+    'scrollWillBeginDragging', 'scrollDidEndDragging false', 'scrollDidEndScrolling',
+    'scrollWillBeginDragging', 'scrollDidEndDragging true', 'scrollDidEndScrolling',
+  ]);
+});
