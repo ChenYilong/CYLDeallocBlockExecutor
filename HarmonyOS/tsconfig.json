@@ -11,5 +11,5 @@
     "types": ["node"],
     "lib": ["es2022"]
   },
-  "include": ["src", "test"]
+  "include": ["cyldeallocblockexecutor/src", "test"]
 }

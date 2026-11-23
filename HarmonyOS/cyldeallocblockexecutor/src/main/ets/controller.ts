@@ -1,5 +1,5 @@
-import { LifecycleRegistry } from './registry.ts';
-import type { Insets, LifecycleEvent, LifecycleInfo } from './types.ts';
+import { LifecycleRegistry } from './registry';
+import type { Insets, LifecycleEvent, LifecycleInfo } from './types';
 
 export interface Rect {
   width: number;

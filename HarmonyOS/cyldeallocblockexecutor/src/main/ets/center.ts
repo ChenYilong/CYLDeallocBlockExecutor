@@ -1,5 +1,5 @@
-import { LifecycleLog } from './log.ts';
-import type { LifecycleCallback, LifecycleEvent, LifecycleInfo, LifecycleTiming } from './types.ts';
+import { LifecycleLog } from './log';
+import type { LifecycleCallback, LifecycleEvent, LifecycleInfo, LifecycleTiming } from './types';
 
 interface GlobalEntry {
   identifier: number;

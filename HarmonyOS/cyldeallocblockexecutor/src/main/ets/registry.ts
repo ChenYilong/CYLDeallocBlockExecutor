@@ -1,7 +1,7 @@
-import { LifecycleCenter } from './center.ts';
-import { LifecycleLog } from './log.ts';
-import { allTimings } from './types.ts';
-import type { LifecycleCallback, LifecycleEvent, LifecycleInfo, LifecycleTiming } from './types.ts';
+import { LifecycleCenter } from './center';
+import { LifecycleLog } from './log';
+import { allTimings } from './types';
+import type { LifecycleCallback, LifecycleEvent, LifecycleInfo, LifecycleTiming } from './types';
 
 interface Entry {
   identifier: number;

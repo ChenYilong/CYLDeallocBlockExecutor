@@ -214,12 +214,27 @@ final class CYLVisibilityState: NSObject {
     private init(view: UIView) {
         self.view = view
         super.init()
+    }
+
+    /// Installed on the first `update()` that finds the view in a window and outside a system bar, not at init: a tab button may not
+    /// be inside its `UITabBar` yet when the forward asks for its screen events.
+    private func installObservationsIfNeeded(_ view: UIView) {
+        guard observations.isEmpty, view.window != nil, !Self.isSystemOwned(view) else { return }
         // Views the system owns (a tab bar's buttons) are not observed with KVO: it would swap the class of an object UIKit manages.
         // They are re-evaluated at window moves, scrolling, and by `cylRefreshScreenState()` (the tab bar controller calls it when the
         // selection changes).
-        guard !Self.isSystemOwned(view) else { return }
         observations.append(view.observe(\.isHidden, options: [.new]) { [weak self] _, _ in self?.update() })
         observations.append(view.observe(\.alpha, options: [.new]) { [weak self] _, _ in self?.update() })
+    }
+
+    func update() {
+        guard let view else { return }
+        installObservationsIfNeeded(view)
+        observeEnclosingScrollView(of: view)
+        let visible = Self.computeVisible(view)
+        guard visible != isOnScreen else { return }
+        isOnScreen = visible
+        view.cylFireDerived(visible ? .didEnterScreen : .didLeaveScreen)
     }
 
     static func isSystemOwned(_ view: UIView) -> Bool {
@@ -229,15 +244,6 @@ final class CYLVisibilityState: NSObject {
             ancestor = node.superview
         }
         return false
-    }
-
-    func update() {
-        guard let view else { return }
-        observeEnclosingScrollView(of: view)
-        let visible = Self.computeVisible(view)
-        guard visible != isOnScreen else { return }
-        isOnScreen = visible
-        view.cylFireDerived(visible ? .didEnterScreen : .didLeaveScreen)
     }
 
     private func observeEnclosingScrollView(of view: UIView) {

@@ -1,7 +1,8 @@
-// Written without a HarmonyOS toolchain: untested.
-// The sources live in ../src (plain TypeScript, imported with `.ts` extensions so Node can test them).
-// If hvigor cannot resolve these paths or the `.ts` extensions, move the files into
-// src/main/ets and drop the extensions; see docs/Cross-Platform-API.md (HarmonyOS).
-export { LifecycleController } from '../src/controller';
-export { LifecycleRegistry } from '../src/registry';
-export { LifecycleEvent, LifecycleTiming } from '../src/types';
+export { LifecycleController } from './src/main/ets/controller';
+export type { Rect } from './src/main/ets/controller';
+export { LifecycleRegistry } from './src/main/ets/registry';
+export { LifecycleCenter } from './src/main/ets/center';
+export { LifecycleLog, AnimationEvents, BadgeEvents } from './src/main/ets/log';
+export { LifecycleEvent, LifecycleTiming, allTimings } from './src/main/ets/types';
+export type { Insets, LifecycleCallback, LifecycleInfo } from './src/main/ets/types';
+export { CYLLifecycleBridge } from './src/main/ets/CYLLifecycleBridge';

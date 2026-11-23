@@ -154,3 +154,8 @@ override func viewDidLoad() {
 | 中文 | English |
 |:--|:--|
 | Objective-C 的 `__unsafe_unretained` 对应 Swift 的 `unowned(unsafe)`：不改变引用计数，对象释放后也不会置 `nil`，继续访问是未定义行为。销毁阶段 `weak` 已是 `nil`，所以本库用 `Unmanaged<AnyObject>` 拿到“正在销毁”的对象。 | Objective-C's `__unsafe_unretained` is Swift's `unowned(unsafe)`: no retain count change, no `nil` after release, undefined behavior on use. During destruction `weak` is already `nil`, so the library hands the dying object over as `Unmanaged<AnyObject>`. |
+
+### The owner of a global scroll observer / 全局滚动观察者的 owner
+
+- [EN] A `CYLLifecycleCenter` scroll observer gets the `UIScrollView` as `owner`, once per moment, whatever number of views subscribed to it. Details: [Observing-and-Debugging](Observing-and-Debugging.md).
+- [CN] `CYLLifecycleCenter` 的滚动观察者收到的 `owner` 是 `UIScrollView`，每个时机一次，与订阅它的视图数量无关。详见 [Observing-and-Debugging](Observing-and-Debugging.md)。

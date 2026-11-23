@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { beforeEach, test } from 'node:test';
-import { LifecycleCenter, LifecycleRegistry } from '../src/index.ts';
+import { LifecycleCenter, LifecycleRegistry } from '../cyldeallocblockexecutor/src/main/ets/index';
 
 let owner: object;
 let r: LifecycleRegistry;
@@ -142,7 +142,7 @@ test('forwarding: the target receives the forwarded events, a subset only those,
 });
 
 test('debug log: off by default, lazy; on, it names the owner, event, timing and the number of blocks', async () => {
-  const { LifecycleLog } = await import('../src/index.ts');
+  const { LifecycleLog } = await import('../cyldeallocblockexecutor/src/main/ets/index');
   const lines: string[] = [];
   LifecycleLog.sink = (m) => lines.push(m);
   r.addLifecycleCallback('viewDidAppear', () => {});
@@ -184,7 +184,7 @@ test('a dealloc observer learns when any owner is torn down, with a description 
 });
 
 test('the animation and badge event names are the documented ones', async () => {
-  const { AnimationEvents, BadgeEvents } = await import('../src/index.ts');
+  const { AnimationEvents, BadgeEvents } = await import('../cyldeallocblockexecutor/src/main/ets/index');
   assert.deepEqual(Object.values(AnimationEvents), ['cyl.animation.didStart', 'cyl.animation.didPause', 'cyl.animation.didResume', 'cyl.animation.didStop']);
   assert.equal(BadgeEvents.didShow, 'cyl.badge.didShow');
   assert.equal(BadgeEvents.animationDidStop, 'cyl.badge.animationDidStop');
