@@ -59,9 +59,36 @@ enum CYLLifecycleSources {
         case .willMoveToWindow, .didMoveToWindow, .didEnterScreen, .didLeaveScreen,
              .scrollWillBeginDragging, .scrollDidEndDragging, .scrollDidEndScrolling:
             installWindowHooks()
+            if event == .scrollWillBeginDragging || event == .scrollDidEndDragging || event == .scrollDidEndScrolling {
+                observeVisibleScrollViews()
+            }
         default:
             break
         }
+    }
+
+    /**
+     * A global scroll observer was added while pages are already on screen (an app switches "pause while scrolling" on later):
+     * the content scroll view of every view controller in a window reports to it too, as it would after the next `viewDidAppear`.
+     * `UIApplication` is reached by name so the library still compiles for app extensions (where there are no scenes: no-op).
+     */
+    static func observeVisibleScrollViews() {
+        guard let applicationClass = NSClassFromString("UIApplication") as? NSObject.Type,
+              let application = applicationClass.perform(NSSelectorFromString("sharedApplication"))?.takeUnretainedValue() as? NSObject,
+              let scenes = application.value(forKey: "connectedScenes") as? Set<UIScene> else { return }
+        for case let windowScene as UIWindowScene in scenes {
+            for window in windowScene.windows {
+                if let root = window.rootViewController { observeVisibleScrollViews(in: root) }
+            }
+        }
+    }
+
+    private static func observeVisibleScrollViews(in viewController: UIViewController) {
+        if viewController.isViewLoaded, viewController.view.window != nil {
+            observeContentScrollView(of: viewController)
+        }
+        for child in viewController.children { observeVisibleScrollViews(in: child) }
+        if let presented = viewController.presentedViewController { observeVisibleScrollViews(in: presented) }
     }
 
     // MARK: - View controllers
@@ -174,6 +201,11 @@ enum CYLLifecycleSources {
     }
 
     // MARK: - Scrolling
+
+    /// The observer of `scrollView` if one exists (does not create it).
+    static func existingScrollObserver(of scrollView: UIScrollView) -> CYLScrollObserver? {
+        objc_getAssociatedObject(scrollView, &scrollObserverKey) as? CYLScrollObserver
+    }
 
     static func scrollObserver(of scrollView: UIScrollView) -> CYLScrollObserver {
         if let existing = objc_getAssociatedObject(scrollView, &scrollObserverKey) as? CYLScrollObserver {
