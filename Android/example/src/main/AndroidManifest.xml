@@ -11,7 +11,10 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".ListActivity" android:exported="false" />
+        <activity android:name=".ListActivity" android:exported="false"
+            android:configChanges="orientation|screenSize|screenLayout|smallestScreenSize|uiMode|keyboardHidden|density|fontScale" />
+        <activity android:name=".ScrollActivity" android:exported="false"
+            android:configChanges="orientation|screenSize|screenLayout|smallestScreenSize|uiMode|keyboardHidden|density|fontScale" />
         <activity android:name=".SecondActivity" android:exported="false" />
     </application>
 </manifest>

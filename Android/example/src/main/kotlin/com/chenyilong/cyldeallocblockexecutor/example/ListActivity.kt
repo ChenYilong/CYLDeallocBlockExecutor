@@ -60,6 +60,15 @@ class ListActivity : FragmentActivity() {
     private var resumes = 0
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        // Activity events (dark mode, rotation, memory trim) logged with the prefix ACT; blocks go in before super.onCreate.
+        var actCount = 0
+        val registry = AndroidBinding.controllerOf(this).registry
+        for (e in LifecycleEvent.values()) {
+            registry.addLifecycleCallback<Any>(e) { _, _, _ ->
+                actCount += 1
+                if (!e.name.endsWith("Subviews")) Log.i("CYL", "ACT $actCount ${e.name}")
+            }
+        }
         super.onCreate(savedInstanceState)
         LifecycleCenter.whileUserScrolls(
             pause = { pauses += 1; Log.i("CYL", "SCROLLCOUNT pauses=$pauses resumes=$resumes") },
