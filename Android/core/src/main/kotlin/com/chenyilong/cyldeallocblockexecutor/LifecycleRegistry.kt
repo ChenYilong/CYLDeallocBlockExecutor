@@ -5,7 +5,8 @@ import java.lang.ref.WeakReference
 private class Entry(
     val identifier: Int,
     val callback: LifecycleCallback<Any>,
-    val event: LifecycleEvent?, // null: a teardown block
+    val event: LifecycleEvent?, // null: a teardown block or a custom event
+    val custom: String? = null, // set: a custom event block
     val timing: LifecycleTiming,
     val invokeOnce: Boolean,
     val key: String?,
@@ -13,6 +14,10 @@ private class Entry(
     var fired = false
     var cancelled = false
 }
+
+private enum class Kind { LIFECYCLE, CUSTOM, DEALLOC }
+
+private fun Entry.kind(): Kind = if (event != null) Kind.LIFECYCLE else if (custom != null) Kind.CUSTOM else Kind.DEALLOC
 
 /**
  * One registry per owner: the lifecycle blocks and the teardown blocks.
@@ -46,6 +51,7 @@ class LifecycleRegistry(owner: Any) {
     private var nextIdentifier = 1
     private val manual = mutableSetOf<Pair<LifecycleEvent, LifecycleTiming>>()
     private val performDepth = mutableMapOf<LifecycleEvent, Int>()
+    private var forwards = mutableListOf<Pair<WeakReference<LifecycleRegistry>, Set<LifecycleEvent>?>>()
 
     /** Called after a block is added for an event (the binding registers its listeners lazily). */
     @Volatile
@@ -77,13 +83,65 @@ class LifecycleRegistry(owner: Any) {
         callback: LifecycleCallback<T>,
     ): Int {
         val id = synchronized(lock) {
-            if (key != null) drop { it.key == key && it.event != null }
+            if (key != null) drop { it.key == key && it.kind() == Kind.LIFECYCLE }
             val id = nextIdentifier++
-            entries.add(Entry(id, callback as LifecycleCallback<Any>, event, timing, invokeOnce, key))
+            entries.add(Entry(id, callback as LifecycleCallback<Any>, event, null, timing, invokeOnce, key))
             id
         }
         onRegister?.invoke(event)
         return id
+    }
+
+    // custom events
+
+    /** Adds a block for the custom event [name]; returns its identifier. */
+    @Suppress("UNCHECKED_CAST")
+    fun <T : Any> addCustomCallback(
+        name: String,
+        invokeOnce: Boolean = false,
+        key: String? = null,
+        callback: LifecycleCallback<T>,
+    ): Int = synchronized(lock) {
+        if (key != null) drop { it.key == key && it.kind() == Kind.CUSTOM }
+        val id = nextIdentifier++
+        entries.add(Entry(id, callback as LifecycleCallback<Any>, null, name, LifecycleTiming.afterSuper, invokeOnce, key))
+        id
+    }
+
+    /** Runs the blocks of the custom event [name] (the owner's, then forwards, then the global observers), in identifier order. */
+    fun postLifecycleEvent(name: String, userInfo: Map<String, Any?>? = null) {
+        val target = owner.get() ?: return
+        val info = LifecycleInfo(timing = LifecycleTiming.afterSuper, customEvent = name, userInfo = userInfo)
+        val snapshot = synchronized(lock) {
+            entries.filter { it.custom == name && !(it.invokeOnce && it.fired) }.sortedBy { it.identifier }
+        }
+        for (e in snapshot) {
+            val run = synchronized(lock) {
+                if (e.cancelled || (e.invokeOnce && e.fired)) false else { if (e.invokeOnce) e.fired = true; true }
+            }
+            if (run) e.callback(target, e.identifier, info)
+        }
+        for (t in liveForwards(null)) t.postLifecycleEvent(name, userInfo)
+        LifecycleCenter.dispatch(target, null, name, LifecycleTiming.afterSuper, info)
+    }
+
+    // forwarding
+
+    /**
+     * Forwards the events fired on this owner to [target]'s registry (all events, or the given set), as an object that is not a
+     * view gets the events of the view that shows it. The target is held weakly; forwarding to the same target again replaces the
+     * earlier forward. Posted custom events are forwarded too.
+     */
+    fun forwardLifecycleEvents(target: LifecycleRegistry, events: Set<LifecycleEvent>? = null) {
+        synchronized(lock) {
+            forwards.removeAll { val t = it.first.get(); t == null || t === target }
+            forwards.add(WeakReference(target) to events)
+        }
+    }
+
+    private fun liveForwards(event: LifecycleEvent?): List<LifecycleRegistry> = synchronized(lock) {
+        forwards.removeAll { it.first.get() == null }
+        forwards.mapNotNull { (ref, events) -> ref.get()?.takeIf { event == null || events == null || event in events } }
     }
 
     /** Cancels one block by [identifier] or by [key]; true when one was removed. */
@@ -107,7 +165,7 @@ class LifecycleRegistry(owner: Any) {
 
     /** Re-arms the one block added under [key]. */
     fun rearmLifecycleCallback(key: String) {
-        synchronized(lock) { entries.filter { it.event != null && it.key == key }.forEach { it.fired = false } }
+        synchronized(lock) { entries.filter { it.kind() != Kind.DEALLOC && it.key == key }.forEach { it.fired = false } }
     }
 
     // teardown blocks
@@ -116,9 +174,9 @@ class LifecycleRegistry(owner: Any) {
     @Suppress("UNCHECKED_CAST")
     fun <T : Any> addDeallocCallback(key: String? = null, callback: LifecycleCallback<T>): Int =
         synchronized(lock) {
-            if (key != null) drop { it.key == key && it.event == null }
+            if (key != null) drop { it.key == key && it.kind() == Kind.DEALLOC }
             val id = nextIdentifier++
-            entries.add(Entry(id, callback as LifecycleCallback<Any>, null, LifecycleTiming.end, false, key))
+            entries.add(Entry(id, callback as LifecycleCallback<Any>, null, null, LifecycleTiming.end, false, key))
             id
         }
 
@@ -127,14 +185,14 @@ class LifecycleRegistry(owner: Any) {
 
     /** Cancels the teardown blocks that have no key. */
     fun cancelAllDeallocCallbacks() {
-        synchronized(lock) { drop { it.event == null && it.key == null } }
+        synchronized(lock) { drop { it.kind() == Kind.DEALLOC && it.key == null } }
     }
 
     private fun cancelOne(identifier: Int?, key: String?, dealloc: Boolean): Boolean {
         require((identifier == null) != (key == null)) { "pass exactly one of identifier or key" }
         synchronized(lock) {
             val hit = entries.firstOrNull {
-                (it.event == null) == dealloc && (if (identifier != null) it.identifier == identifier else it.key == key)
+                (it.kind() == Kind.DEALLOC) == dealloc && (if (identifier != null) it.identifier == identifier else it.key == key)
             } ?: return false
             hit.cancelled = true
             entries.remove(hit)
@@ -146,8 +204,8 @@ class LifecycleRegistry(owner: Any) {
     fun runDealloc() {
         val target = owner.get() ?: return
         val snapshot = synchronized(lock) {
-            val s = entries.filter { it.event == null }.sortedBy { it.identifier }
-            entries.removeAll { it.event == null }
+            val s = entries.filter { it.kind() == Kind.DEALLOC }.sortedBy { it.identifier }
+            entries.removeAll { it.kind() == Kind.DEALLOC }
             s
         }
         for (e in snapshot) {
@@ -226,5 +284,7 @@ class LifecycleRegistry(owner: Any) {
             }
             if (run) e.callback(target, e.identifier, info.copy(event = event, timing = timing))
         }
+        for (t in liveForwards(event)) t.fire(event, timing, info)
+        LifecycleCenter.dispatch(target, event, null, timing, info.copy(event = event, timing = timing))
     }
 }

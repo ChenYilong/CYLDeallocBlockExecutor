@@ -47,6 +47,54 @@ object AndroidBinding {
         application.registerComponentCallbacks(componentCallbacks)
     }
 
+    // Design v5: window moves, on-screen visibility and scrolling of any view (a badge host, a tab button, a page).
+
+    /**
+     * Reports the window moves of [view] on [owner]'s controller: `willMoveToWindow` / `didMoveToWindow` when [view] is attached
+     * or detached. Replaces an earlier observation of the same [owner] and [view].
+     */
+    fun observeWindow(owner: Any, view: View) {
+        val controller = controllerOf(owner)
+        val key = Any()
+        view.addOnAttachStateChangeListener(object : View.OnAttachStateChangeListener {
+            override fun onViewAttachedToWindow(v: View) = controller.windowMoved(true, v.windowToken ?: v)
+            override fun onViewDetachedFromWindow(v: View) = controller.windowMoved(false)
+        })
+        if (view.isAttachedToWindow) controller.windowMoved(true, view.windowToken ?: view)
+        key.hashCode()
+    }
+
+    /**
+     * Reports `didEnterScreen` / `didLeaveScreen` of [view] on [owner]'s controller, on transitions only: the view is on screen
+     * when it is shown (attached, visible, ancestors visible) and part of it is inside the visible window area. Re-checked on
+     * attach, layout and scroll changes.
+     */
+    fun observeVisibility(owner: Any, view: View) {
+        val controller = controllerOf(owner)
+        val check = { controller.screenVisible(view.isShown && view.getGlobalVisibleRect(android.graphics.Rect())) }
+        val scrollListener = ViewTreeObserver.OnScrollChangedListener { check() }
+        val layoutListener = ViewTreeObserver.OnGlobalLayoutListener { check() }
+        view.addOnAttachStateChangeListener(object : View.OnAttachStateChangeListener {
+            override fun onViewAttachedToWindow(v: View) {
+                v.viewTreeObserver.addOnScrollChangedListener(scrollListener)
+                v.viewTreeObserver.addOnGlobalLayoutListener(layoutListener)
+                check()
+            }
+            override fun onViewDetachedFromWindow(v: View) {
+                if (v.viewTreeObserver.isAlive) {
+                    v.viewTreeObserver.removeOnScrollChangedListener(scrollListener)
+                    v.viewTreeObserver.removeOnGlobalLayoutListener(layoutListener)
+                }
+                controller.screenVisible(false)
+            }
+        })
+        if (view.isAttachedToWindow) {
+            view.viewTreeObserver.addOnScrollChangedListener(scrollListener)
+            view.viewTreeObserver.addOnGlobalLayoutListener(layoutListener)
+            check()
+        }
+    }
+
     private fun snapshot(activity: Activity): ConfigSnapshot {
         val c = activity.resources.configuration
         val size = Size(c.screenWidthDp, c.screenHeightDp)

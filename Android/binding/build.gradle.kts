@@ -35,6 +35,9 @@ afterEvaluate {
 dependencies {
     api(project(":core"))
     api("androidx.fragment:fragment:1.8.5")
+    // Only for `observeScrolling(owner, recyclerView)`: an app that uses it already has RecyclerView.
+    compileOnly("androidx.recyclerview:recyclerview:1.3.2")
+    testImplementation("androidx.recyclerview:recyclerview:1.3.2")
     testImplementation(kotlin("test"))
     testImplementation("junit:junit:4.13.2")
     testImplementation("org.robolectric:robolectric:4.14.1")

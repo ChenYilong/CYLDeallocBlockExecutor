@@ -178,4 +178,73 @@ class AndroidBindingTest {
         // the launch already reported the first insets; only the change to `second` fires, with the first as previous
         assertEquals(listOf("insets from Insets(top=24, left=0, bottom=0, right=0)"), log)
     }
+
+    @Test fun observeWindowReportsAttachAndDetach() {
+        ActivityScenario.launch(HostActivity::class.java).use { s ->
+            s.onActivity { a ->
+                val owner = Any()
+                val view = View(a)
+                val c = AndroidBinding.controllerOf(owner)
+                c.registry.addLifecycleCallback<Any>(LifecycleEvent.didMoveToWindow) { _, _, info -> log.add("window ${info.window != null}") }
+                AndroidBinding.observeWindow(owner, view)
+                (a.findViewById<FrameLayout>(1001)).addView(view)
+                (a.findViewById<FrameLayout>(1001)).removeView(view)
+            }
+        }
+        assertEquals(listOf("window true", "window false"), log)
+    }
+
+    @Test fun observeVisibilityReportsEnterAndLeaveOnTransitionsOnly() {
+        ActivityScenario.launch(HostActivity::class.java).use { s ->
+            s.onActivity { a ->
+                val owner = Any()
+                val view = View(a)
+                val c = AndroidBinding.controllerOf(owner)
+                c.registry.addLifecycleCallback<Any>(LifecycleEvent.didEnterScreen) { _, _, _ -> log.add("enter") }
+                c.registry.addLifecycleCallback<Any>(LifecycleEvent.didLeaveScreen) { _, _, _ -> log.add("leave") }
+                AndroidBinding.observeVisibility(owner, view)
+                val host = a.findViewById<FrameLayout>(1001)
+                host.addView(view, FrameLayout.LayoutParams(100, 100))
+                view.layout(0, 0, 100, 100)
+                view.viewTreeObserver.dispatchOnGlobalLayout()
+                view.viewTreeObserver.dispatchOnGlobalLayout()
+                view.visibility = View.GONE
+                view.viewTreeObserver.dispatchOnGlobalLayout()
+            }
+        }
+        assertEquals(listOf("enter", "leave"), log)
+    }
+
+    /** The state changes of a real scroll go through `setScrollState`, which is private: call it as the touch handling does. */
+    private fun setState(rv: androidx.recyclerview.widget.RecyclerView, state: Int) {
+        val m = androidx.recyclerview.widget.RecyclerView::class.java.getDeclaredMethod("setScrollState", Int::class.javaPrimitiveType)
+        m.isAccessible = true
+        m.invoke(rv, state)
+    }
+
+    @Test fun observeScrollingMapsRecyclerViewStates() {
+        ActivityScenario.launch(HostActivity::class.java).use { s ->
+            s.onActivity { a ->
+                val owner = Any()
+                val rv = androidx.recyclerview.widget.RecyclerView(a)
+                rv.layoutManager = androidx.recyclerview.widget.LinearLayoutManager(a)
+                val c = AndroidBinding.controllerOf(owner)
+                for (e in listOf(LifecycleEvent.scrollWillBeginDragging, LifecycleEvent.scrollDidEndDragging, LifecycleEvent.scrollDidEndScrolling)) {
+                    c.registry.addLifecycleCallback<Any>(e) { _, _, info -> log.add("${e.name}${info.willDecelerate?.let { " $it" } ?: ""}") }
+                }
+                val stop = AndroidBinding.observeScrolling(owner, rv)
+                setState(rv, androidx.recyclerview.widget.RecyclerView.SCROLL_STATE_DRAGGING)
+                setState(rv, androidx.recyclerview.widget.RecyclerView.SCROLL_STATE_IDLE)
+                setState(rv, androidx.recyclerview.widget.RecyclerView.SCROLL_STATE_DRAGGING)
+                setState(rv, androidx.recyclerview.widget.RecyclerView.SCROLL_STATE_SETTLING)
+                setState(rv, androidx.recyclerview.widget.RecyclerView.SCROLL_STATE_IDLE)
+                stop()
+                setState(rv, androidx.recyclerview.widget.RecyclerView.SCROLL_STATE_DRAGGING)
+            }
+        }
+        assertEquals(listOf(
+            "scrollWillBeginDragging", "scrollDidEndDragging false", "scrollDidEndScrolling",
+            "scrollWillBeginDragging", "scrollDidEndDragging true", "scrollDidEndScrolling",
+        ), log)
+    }
 }

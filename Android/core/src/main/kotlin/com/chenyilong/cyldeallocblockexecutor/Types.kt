@@ -17,6 +17,15 @@ enum class LifecycleEvent {
     willMoveToParent,
     didMoveToParent,
     didReceiveMemoryWarning,
+
+    // Design v5 (observable moments), appended so the existing names stay stable.
+    willMoveToWindow,
+    didMoveToWindow,
+    didEnterScreen,
+    didLeaveScreen,
+    scrollWillBeginDragging,
+    scrollDidEndDragging,
+    scrollDidEndScrolling,
 }
 
 /**
@@ -52,6 +61,16 @@ data class LifecycleInfo(
     val trimLevel: Int? = null,
     /** True for the block of a teardown. */
     val isDealloc: Boolean = false,
+    /** Scroll events: the scrolling source (a `RecyclerView`, a `ScrollView`, a view). */
+    val scrollView: Any? = null,
+    /** `scrollDidEndDragging`: the scroll view keeps moving after the finger lifts. */
+    val willDecelerate: Boolean? = null,
+    /** `willMoveToWindow` / `didMoveToWindow`: the window token (the attached view), or null when the view leaves the window. */
+    val window: Any? = null,
+    /** Custom events: the name the event was posted under. */
+    val customEvent: String? = null,
+    /** Custom events: what the poster passed along. */
+    val userInfo: Map<String, Any?>? = null,
 )
 
 /** A block: the owner, its own identifier and the info. */

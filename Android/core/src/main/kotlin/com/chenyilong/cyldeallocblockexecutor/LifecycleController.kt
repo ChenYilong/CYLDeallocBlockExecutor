@@ -25,7 +25,11 @@ package com.chenyilong.cyldeallocblockexecutor
  *   detaches in `destroy()`);
  * - `didReceiveMemoryWarning`: `trimMemory(level)` (`onTrimMemory`,
  *   `onLowMemory`);
- * - `viewLayoutMarginsDidChange`: not available (no layout margins).
+ * - `viewLayoutMarginsDidChange`: not available (no layout margins);
+ * - design v5: `windowMoved(attached, window)` (`OnAttachStateChangeListener`) fires the window moves;
+ *   `screenVisible(visible)` fires `didEnterScreen` / `didLeaveScreen` on transitions (also right after
+ *   `viewDidAppear` / `viewDidDisappear`); `scrollBegan`, `scrollEndedDragging(willDecelerate)` and `scrollEnded`
+ *   (`RecyclerView.OnScrollListener` states) fire the scroll events.
  *
  * Teardown blocks run in `destroy()`: deterministic for an `Activity` or
  * `Fragment`, not a garbage-collection event.
@@ -38,6 +42,7 @@ class LifecycleController<T : Any>(owner: T) {
     private var disappearPending = false
     private var lastInsets: Insets? = null
     private var lastConfig: ConfigSnapshot? = null
+    private var onScreen = false
 
     init {
         registry.hookInstalled = true
@@ -77,6 +82,7 @@ class LifecycleController<T : Any>(owner: T) {
         if (!appearPending) return
         appearPending = false
         around(LifecycleEvent.viewDidAppear)
+        screenVisible(true)
     }
 
     fun pause() {
@@ -88,9 +94,37 @@ class LifecycleController<T : Any>(owner: T) {
         if (!disappearPending) return
         disappearPending = false
         around(LifecycleEvent.viewDidDisappear)
+        screenVisible(false)
     }
 
     fun layout() = around(LifecycleEvent.viewDidLayoutSubviews)
+
+    /** The owner's view joined ([attached] true, with its [window] token) or left the window. */
+    fun windowMoved(attached: Boolean, window: Any? = null) {
+        val info = LifecycleInfo(window = if (attached) window ?: Any() else null)
+        around(LifecycleEvent.willMoveToWindow, info)
+        around(LifecycleEvent.didMoveToWindow, info)
+        if (!attached) screenVisible(false)
+    }
+
+    /** Fires `didEnterScreen` / `didLeaveScreen` on transitions only. */
+    fun screenVisible(visible: Boolean) {
+        if (onScreen == visible || destroyed) return
+        onScreen = visible
+        around(if (visible) LifecycleEvent.didEnterScreen else LifecycleEvent.didLeaveScreen)
+    }
+
+    /** The user started dragging [source] (`SCROLL_STATE_DRAGGING`). */
+    fun scrollBegan(source: Any? = null) = around(LifecycleEvent.scrollWillBeginDragging, LifecycleInfo(scrollView = source))
+
+    /** The finger lifted; [willDecelerate] is true when the source keeps moving (`SCROLL_STATE_SETTLING`). */
+    fun scrollEndedDragging(willDecelerate: Boolean, source: Any? = null) {
+        around(LifecycleEvent.scrollDidEndDragging, LifecycleInfo(scrollView = source, willDecelerate = willDecelerate))
+        if (!willDecelerate) scrollEnded(source)
+    }
+
+    /** The source stopped for good (`SCROLL_STATE_IDLE` after settling). */
+    fun scrollEnded(source: Any? = null) = around(LifecycleEvent.scrollDidEndScrolling, LifecycleInfo(scrollView = source))
 
     fun insetsChanged(insets: Insets) {
         val previous = lastInsets
