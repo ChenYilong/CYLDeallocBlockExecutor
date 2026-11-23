@@ -44,6 +44,10 @@ class MainActivity : FragmentActivity() {
             text = "open second activity"
             setOnClickListener { startActivity(Intent(this@MainActivity, SecondActivity::class.java)) }
         })
+        root.addView(Button(this).apply {
+            text = "open list (RecyclerView in a fragment)"
+            setOnClickListener { startActivity(Intent(this@MainActivity, ListActivity::class.java)) }
+        })
         out = TextView(this)
         root.addView(ScrollView(this).apply { addView(out) })
         setContentView(root)
