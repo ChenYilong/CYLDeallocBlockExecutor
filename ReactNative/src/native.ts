@@ -45,5 +45,15 @@ export function useLifecycle<T extends object>(
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [owner, extra?.navigation, extra?.safeAreaInsets, extra?.navigationMode]);
   const onLayout = useCallback((event?: unknown) => current.current?.onLayout(event), []);
-  return { registry, onLayout };
+  // [EN] Spread onto a ScrollView / FlatList: the controller fires the scroll moments (scrollWillBeginDragging …
+  //      scrollDidEndScrolling) that `LifecycleCenter.whileUserScrolls` listens to. [CN] 展开到 ScrollView / FlatList 上。
+  const scrollHandlers = useRef({
+    onScrollBeginDrag: (e?: unknown) => current.current?.scrollHandlers.onScrollBeginDrag(e),
+    onScrollEndDrag: (e?: unknown) => current.current?.scrollHandlers.onScrollEndDrag(e),
+    onMomentumScrollBegin: (e?: unknown) => current.current?.scrollHandlers.onMomentumScrollBegin(e),
+    onMomentumScrollEnd: (e?: unknown) => current.current?.scrollHandlers.onMomentumScrollEnd(e),
+  }).current;
+  // [EN] Tell the controller the screen is visible or not (didEnterScreen / didLeaveScreen). [CN] 通知屏幕可见性。
+  const setScreenVisible = useCallback((visible: boolean) => current.current?.setScreenVisible(visible), []);
+  return { registry, onLayout, scrollHandlers, setScreenVisible };
 }
