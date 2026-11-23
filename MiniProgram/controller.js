@@ -88,7 +88,7 @@ class LifecycleController {
     if (this.detached) return;
     this.onHide();
     this.detached = true;
-    clearTimeout(this.scrollTimer);
+    if (this.scrollTimer !== undefined) clearTimeout(this.scrollTimer);
     this.around('willMoveToWindow', { window: null });
     this.around('didMoveToWindow', { window: null });
     this.around('willMoveToParent', { parentAttached: false });
@@ -110,7 +110,7 @@ class LifecycleController {
       this.scrolling = true;
       this.around('scrollWillBeginDragging', { scrollView: event });
     }
-    clearTimeout(this.scrollTimer);
+    if (this.scrollTimer !== undefined) clearTimeout(this.scrollTimer);
     this.scrollTimer = setTimeout(() => this.endScrolling(event), this.scrollEndDelay);
   }
 
