@@ -341,11 +341,12 @@ final class CYLScrollObserver: NSObject {
         var info = info
         info.event = event
         info.timing = .afterSuper
-        if let scrollView {
-            CYLLifecycleCenter.dispatch(owner: scrollView, event: event, custom: nil, timing: .afterSuper, info: info)
-        }
+        // The owners' own blocks first, then the global observers (once), as everywhere else.
         for owner in subscribers.allObjects {
             owner.cylFireLifecycle(event, timing: .afterSuper, info: info, forwarded: true)
+        }
+        if let scrollView {
+            CYLLifecycleCenter.dispatch(owner: scrollView, event: event, custom: nil, timing: .afterSuper, info: info)
         }
     }
 }
