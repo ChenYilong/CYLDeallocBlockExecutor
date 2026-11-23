@@ -165,10 +165,14 @@ final class CYLCallbackModel {
 
     // MARK: - Forwarding
 
-    func setForward(to target: NSObject, events: Set<CYLLifecycleEvent>?) {
+    /// Returns true when the forward is new or changed, so a repeated identical call (every layout pass) costs nothing.
+    @discardableResult
+    func setForward(to target: NSObject, events: Set<CYLLifecycleEvent>?) -> Bool {
         lock.lock(); defer { lock.unlock() }
+        if let existing = forwards.first(where: { $0.target.object === target }), existing.events == events { return false }
         forwards.removeAll { $0.target.object == nil || $0.target.object === target }
         forwards.append((Weak(target), events))
+        return true
     }
 
     /**

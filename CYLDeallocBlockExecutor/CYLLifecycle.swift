@@ -435,7 +435,7 @@ extension NSObject {
      * replaces the earlier forward. Posted custom events are forwarded too.
      */
     public func cylForwardLifecycleEvents(_ events: Set<CYLLifecycleEvent>? = nil, to target: NSObject) {
-        cylCallbackModel(create: true)?.setForward(to: target, events: events)
+        guard cylCallbackModel(create: true)?.setForward(to: target, events: events) == true else { return }
         if let events {
             events.forEach { CYLLifecycleSources.eventAdded(owner: self, event: $0) }
         } else {
