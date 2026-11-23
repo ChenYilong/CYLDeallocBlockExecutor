@@ -44,7 +44,7 @@ Chinese first, English second in every pair; code is written once. Details are i
 
 | 中文 | English |
 |:--|:--|
-| 每个功能在每个平台上的对应接口和测试证据，以及评分：[docs/Cross-Platform-API.md](docs/Cross-Platform-API.md)。已解决的 GitHub issues：[docs/Issues.md](docs/Issues.md)。 | Every feature's matching API and test evidence on each platform, with the score: [docs/Cross-Platform-API.md](docs/Cross-Platform-API.md). Resolved GitHub issues: [docs/Issues.md](docs/Issues.md). |
+| 监听任意时机、自定义行为、调试日志：[docs/Observing-and-Debugging.md](docs/Observing-and-Debugging.md)。每个功能在每个平台上的对应接口和测试证据，以及评分：[docs/Cross-Platform-API.md](docs/Cross-Platform-API.md)。已解决的 GitHub issues：[docs/Issues.md](docs/Issues.md)。 | Observing any moment, inserting your own behavior, the debug log: [docs/Observing-and-Debugging.md](docs/Observing-and-Debugging.md). Every feature's matching API and test evidence on each platform, with the score: [docs/Cross-Platform-API.md](docs/Cross-Platform-API.md). Resolved GitHub issues: [docs/Issues.md](docs/Issues.md). |
 
 ## 各平台基本用法 / Basic use per platform
 
