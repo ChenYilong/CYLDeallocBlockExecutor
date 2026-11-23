@@ -45,19 +45,34 @@ enum CYLLifecycleHooks {
      */
     private static func dispatch(_ viewController: UIViewController, _ event: CYLLifecycleEvent, _ info: CYLLifecycleInfo,
                                  callOriginal: () -> Void) {
-        guard let model = viewController.cylCallbackModel(create: false) else {
+        // A view controller without blocks is still dispatched when a global observer (`CYLLifecycleCenter`) waits for the event.
+        let model = viewController.cylCallbackModel(create: false)
+        let observed = CYLLifecycleCenter.hasObservers(for: event)
+        guard model != nil || observed else {
             callOriginal()
             return
         }
-        if model.dispatchesAutomatically(event, timing: .beforeSuper) {
+        func dispatches(_ timing: CYLLifecycleTiming) -> Bool {
+            if model?.dispatchesAutomatically(event, timing: timing) ?? false { return true }
+            return observed && !(model?.isManualDispatch(event, timing: timing) ?? false)
+                && CYLLifecycleCenter.hasObservers(for: event, timing: timing)
+        }
+        if dispatches(.beforeSuper) {
             viewController.cylFireLifecycle(event, timing: .beforeSuper, info: info)
         }
         callOriginal()
-        if model.dispatchesAutomatically(event, timing: .afterSuper) {
+        if dispatches(.afterSuper) {
             viewController.cylFireLifecycle(event, timing: .afterSuper, info: info)
         }
-        if model.dispatchesAutomatically(event, timing: .end), !classOverrides(viewController, event: event) {
+        if dispatches(.end), !classOverrides(viewController, event: event) {
             viewController.cylFireLifecycle(event, timing: .end, info: info)
+        }
+        // Design v5: on a view controller the screen events follow the appearance events, and the scroll view is observed once
+        // the controller is on screen.
+        if event == .viewDidAppear {
+            CYLLifecycleSources.viewControllerDidAppear(viewController)
+        } else if event == .viewDidDisappear {
+            CYLLifecycleSources.viewControllerDidDisappear(viewController)
         }
     }
 

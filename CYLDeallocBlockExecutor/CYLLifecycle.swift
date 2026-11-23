@@ -31,8 +31,33 @@ public enum CYLLifecycleEvent: Int, CaseIterable {
     case didMoveToParent
     case didReceiveMemoryWarning
 
+    // Design v5 (observable moments), appended so the existing raw values stay stable. These events are derived, not hooked
+    // from a UIViewController selector: window moves of any view, visibility on screen, and user scrolling. They fire at the
+    // `.afterSuper` timing only (`willMoveToWindow` fires before the original `willMove(toWindow:)` and is the exception: it
+    // fires at `.afterSuper` too, as a "will" notification).
+
+    /// Any `UIView` (a control included) is about to join or leave a window; `info.window` is the new window or nil.
+    case willMoveToWindow
+    /// Any `UIView` joined or left a window.
+    case didMoveToWindow
+    /// A view or view controller became visible on screen (on a view controller: right after `viewDidAppear`).
+    case didEnterScreen
+    /// A view or view controller stopped being visible on screen (on a view controller: right after `viewDidDisappear`).
+    case didLeaveScreen
+    /// The user started dragging the scroll view of a view controller or view; `info.scrollView`.
+    case scrollWillBeginDragging
+    /// The user lifted the finger; `info.willDecelerate`.
+    case scrollDidEndDragging
+    /// The scroll view stopped for good: after deceleration, or at the end of a drag that does not decelerate.
+    case scrollDidEndScrolling
+
     /**
-     * The UIViewController selector of the event.
+     * Whether the event comes from a UIViewController method (the others are derived, see above).
+     */
+    var isViewControllerEvent: Bool { rawValue <= CYLLifecycleEvent.didReceiveMemoryWarning.rawValue }
+
+    /**
+     * The UIViewController selector of the event (a placeholder for the derived events, never used).
      */
     var selector: Selector {
         switch self {
@@ -52,6 +77,9 @@ public enum CYLLifecycleEvent: Int, CaseIterable {
         case .willMoveToParent: return #selector(UIViewController.willMove(toParent:))
         case .didMoveToParent: return #selector(UIViewController.didMove(toParent:))
         case .didReceiveMemoryWarning: return #selector(UIViewController.didReceiveMemoryWarning)
+        case .willMoveToWindow, .didMoveToWindow, .didEnterScreen, .didLeaveScreen, .scrollWillBeginDragging, .scrollDidEndDragging,
+             .scrollDidEndScrolling:
+            return NSSelectorFromString("cyl_derivedEvent")
         }
     }
 }
@@ -107,11 +135,31 @@ public struct CYLLifecycleInfo {
      * The parent of `willMoveToParent` / `didMoveToParent` (nil when removed from a parent).
      */
     public var parent: UIViewController?
+    /**
+     * `willMoveToWindow` / `didMoveToWindow`: the window, nil when the view leaves it.
+     */
+    public var window: UIWindow?
+    /**
+     * The scroll events: the scroll view that is dragged or decelerating.
+     */
+    public var scrollView: UIScrollView?
+    /**
+     * `scrollDidEndDragging`: the scroll view keeps moving after the finger lifted.
+     */
+    public var willDecelerate: Bool?
+    /**
+     * Custom events: the name the event was posted under (nil for the built-in events and for dealloc).
+     */
+    public internal(set) var customEvent: String?
+    /**
+     * Custom events: what the poster passed along.
+     */
+    public var userInfo: [String: Any]?
 
     /**
      * True for a dealloc block.
      */
-    public var isDealloc: Bool { event == nil }
+    public var isDealloc: Bool { event == nil && customEvent == nil }
 
     /**
      * The arguments of a manual dispatch; the event and the timing are filled in by the dispatcher.
@@ -125,6 +173,18 @@ public struct CYLLifecycleInfo {
         self.transitionCoordinator = transitionCoordinator
         self.previousTraitCollection = previousTraitCollection
         self.parent = parent
+    }
+
+    /**
+     * The arguments of a custom event or of a derived event (window, scroll).
+     */
+    public init(window: UIWindow?, scrollView: UIScrollView? = nil, willDecelerate: Bool? = nil, userInfo: [String: Any]? = nil) {
+        self.event = nil
+        self.timing = .afterSuper
+        self.window = window
+        self.scrollView = scrollView
+        self.willDecelerate = willDecelerate
+        self.userInfo = userInfo
     }
 
     static var dealloc: CYLLifecycleInfo {
@@ -166,10 +226,11 @@ extension CYLLifecycleCallbackOwner where Self: NSObject {
                 callback(typedOwner, identifier, info)
             }
         }, identifier: identifier, event: event, timing: timing, invokeOnce: invokeOnce, key: key)
-        if let viewController = self as? UIViewController {
+        if let viewController = self as? UIViewController, event.isViewControllerEvent {
             CYLLifecycleHooks.installIfNeeded()
             CYLLifecycleHooks.warnIfEndNeedsManualDispatch(viewController, event: event, timing: timing, model: model)
         }
+        CYLLifecycleSources.eventAdded(owner: self, event: event)
         return identifier
     }
 }
@@ -282,13 +343,87 @@ extension NSObject {
      * Runs the blocks waiting for `event` at `timing`, outside every lock, skipping blocks cancelled meanwhile.
      */
     func cylFireLifecycle(_ event: CYLLifecycleEvent, timing: CYLLifecycleTiming, info: CYLLifecycleInfo) {
-        guard let model = cylCallbackModel(create: false) else { return }
         var info = info
         info.event = event
         info.timing = timing
-        for (identifier, callback) in model.takeLifecycleCallbacks(event: event, timing: timing)
-        where model.containsLifecycleCallback(identifier: identifier) {
-            callback(self, identifier, info)
+        // The owner's own blocks, then the forwards (an object that shows through this one), then the global observers.
+        if let model = cylCallbackModel(create: false) {
+            for (identifier, callback) in model.takeLifecycleCallbacks(event: event, timing: timing)
+            where model.containsLifecycleCallback(identifier: identifier) {
+                callback(self, identifier, info)
+            }
+            for target in model.forwardTargets(for: event) {
+                target.cylFireLifecycle(event, timing: timing, info: info)
+            }
+        }
+        CYLLifecycleCenter.dispatch(owner: self, event: event, custom: nil, timing: timing, info: info)
+    }
+
+    /**
+     * Fires a derived event (window, screen, scroll) at the `.afterSuper` timing.
+     */
+    func cylFireDerived(_ event: CYLLifecycleEvent, info: CYLLifecycleInfo = CYLLifecycleInfo()) {
+        cylFireLifecycle(event, timing: .afterSuper, info: info)
+    }
+}
+
+// MARK: - Custom events and forwarding (design v5)
+
+extension CYLLifecycleCallbackOwner where Self: NSObject {
+
+    /**
+     * Adds a block for the custom event `name`: an event the app or the library posts with `cylPostLifecycleEvent`
+     * (CYLTabBarController posts the badge moments: `cyl.badge.didShow`, `cyl.badge.didClear`, `cyl.badge.didBecomeReady`,
+     * `cyl.badge.animationDidStart`, `cyl.badge.animationDidStop`, and `cyl.core.tabBarItemsReady`). Same rules as the built-in
+     * events: several blocks per object, run in the order they were added, identifiers shared with every other block, a key
+     * replaces the block added before under it, `invokeOnce` runs once until re-armed.
+     *
+     * - Returns: The identifier, for `cylCancelLifecycleCallback(identifier:)`.
+     */
+    @discardableResult
+    public func cylAddLifecycleCallback(forCustomEvent name: String, invokeOnce: Bool = false, key: String? = nil,
+                                         callback: @escaping (_ owner: Self, _ identifier: UInt, _ info: CYLLifecycleInfo) -> Void) -> UInt {
+        let (identifier, model) = cylMakeCallbackIdentifierAndModel()
+        model.addCustomCallback({ owner, identifier, info in
+            if let typedOwner = owner as? Self {
+                callback(typedOwner, identifier, info)
+            }
+        }, identifier: identifier, custom: name, invokeOnce: invokeOnce, key: key)
+        return identifier
+    }
+}
+
+extension NSObject {
+
+    /**
+     * Runs the blocks of the custom event `name`: the owner's, then the forwards', then the global observers'.
+     */
+    public func cylPostLifecycleEvent(_ name: String, userInfo: [String: Any]? = nil) {
+        var info = CYLLifecycleInfo()
+        info.customEvent = name
+        info.userInfo = userInfo
+        if let model = cylCallbackModel(create: false) {
+            for (identifier, callback) in model.takeCustomCallbacks(name: name) where model.containsLifecycleCallback(identifier: identifier) {
+                callback(self, identifier, info)
+            }
+            for target in model.forwardTargets(for: nil) {
+                target.cylPostLifecycleEvent(name, userInfo: userInfo)
+            }
+        }
+        CYLLifecycleCenter.dispatch(owner: self, event: nil, custom: name, timing: .afterSuper, info: info)
+    }
+
+    /**
+     * Forwards the lifecycle events fired on this object to `target` (all events, or `events`): a `UITabBarItem` is not a view, so
+     * it receives the events of the button that shows it. The target is held weakly; forwarding to the same target again
+     * replaces the earlier forward. Posted custom events are forwarded too.
+     */
+    public func cylForwardLifecycleEvents(_ events: Set<CYLLifecycleEvent>? = nil, to target: NSObject) {
+        cylCallbackModel(create: true)?.setForward(to: target, events: events)
+        if let events {
+            events.forEach { CYLLifecycleSources.eventAdded(owner: self, event: $0) }
+        } else {
+            CYLLifecycleEvent.allCases.forEach { CYLLifecycleSources.eventAdded(owner: self, event: $0) }
         }
     }
 }

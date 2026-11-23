@@ -29,7 +29,8 @@ typealias CYLLifecycleErasedCallback = (_ owner: AnyObject, _ identifier: UInt, 
 final class CYLCallbackModel {
 
     private struct LifecycleEntry {
-        let event: CYLLifecycleEvent
+        let event: CYLLifecycleEvent?
+        let custom: String?
         let timing: CYLLifecycleTiming
         let invokeOnce: Bool
         let key: String?
@@ -50,6 +51,12 @@ final class CYLCallbackModel {
     private var lifecycleKeys: [String: UInt] = [:]
     private var manualPoints: Set<DispatchPoint> = []
     private var performingCounts: [CYLLifecycleEvent: Int] = [:]
+    private var forwards: [(target: Weak, events: Set<CYLLifecycleEvent>?)] = []
+
+    private final class Weak {
+        weak var object: NSObject?
+        init(_ object: NSObject) { self.object = object }
+    }
 
     init(owner: AnyObject) {
         self.owner = Unmanaged.passUnretained(owner)
@@ -118,8 +125,69 @@ final class CYLCallbackModel {
             }
             lifecycleKeys[key] = identifier
         }
-        lifecycleEntries[identifier] = LifecycleEntry(event: event, timing: timing, invokeOnce: invokeOnce, key: key, fired: false,
+        lifecycleEntries[identifier] = LifecycleEntry(event: event, custom: nil, timing: timing, invokeOnce: invokeOnce, key: key, fired: false,
                                                       callback: callback)
+    }
+
+    /**
+     * Adds a custom event block; keys replace within the lifecycle blocks, as for the built-in events.
+     */
+    func addCustomCallback(_ callback: @escaping CYLLifecycleErasedCallback, identifier: UInt, custom: String, invokeOnce: Bool,
+                           key: String?) {
+        lock.lock(); defer { lock.unlock() }
+        if let key {
+            if let previous = lifecycleKeys[key] {
+                lifecycleEntries.removeValue(forKey: previous)
+            }
+            lifecycleKeys[key] = identifier
+        }
+        lifecycleEntries[identifier] = LifecycleEntry(event: nil, custom: custom, timing: .afterSuper, invokeOnce: invokeOnce, key: key,
+                                                      fired: false, callback: callback)
+    }
+
+    /**
+     * The custom event blocks to run now for `name`, in the order they were added; invoke-once blocks are marked fired here.
+     */
+    func takeCustomCallbacks(name: String) -> [(UInt, CYLLifecycleErasedCallback)] {
+        lock.lock(); defer { lock.unlock() }
+        var result: [(UInt, CYLLifecycleErasedCallback)] = []
+        for identifier in lifecycleEntries.keys.sorted() {
+            guard let entry = lifecycleEntries[identifier], entry.custom == name, !(entry.invokeOnce && entry.fired) else { continue }
+            if entry.invokeOnce {
+                lifecycleEntries[identifier]?.fired = true
+            }
+            result.append((identifier, entry.callback))
+        }
+        return result
+    }
+
+    // MARK: - Forwarding
+
+    func setForward(to target: NSObject, events: Set<CYLLifecycleEvent>?) {
+        lock.lock(); defer { lock.unlock() }
+        forwards.removeAll { $0.target.object == nil || $0.target.object === target }
+        forwards.append((Weak(target), events))
+    }
+
+    /**
+     * The live targets that receive `event` (nil: a posted custom event, which every forward receives).
+     */
+    func forwardTargets(for event: CYLLifecycleEvent?) -> [NSObject] {
+        lock.lock(); defer { lock.unlock() }
+        forwards.removeAll { $0.target.object == nil }
+        return forwards.compactMap { entry in
+            guard let target = entry.target.object else { return nil }
+            if let event, let events = entry.events, !events.contains(event) { return nil }
+            return target
+        }
+    }
+
+    /**
+     * Whether a block waits for `event` (at any timing), for the lazy sources.
+     */
+    func hasLifecycleBlocks(for event: CYLLifecycleEvent) -> Bool {
+        lock.lock(); defer { lock.unlock() }
+        return lifecycleEntries.values.contains { $0.event == event } || forwards.contains { $0.events?.contains(event) ?? true }
     }
 
     func removeLifecycleCallback(identifier: UInt) -> Bool {

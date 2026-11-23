@@ -507,10 +507,120 @@ func runTests(window: UIWindow) {
     }
     DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
         check(!sizes.isEmpty, "viewWillTransition with size (scene rotation)", "\(sizes)")
+        runObservableTests(window: window)
         print("RESULT: \(failures.isEmpty ? "PASS" : "FAIL") \(passes) passed, \(failures.count) failed \(failures)")
         fflush(stdout)
         exit(failures.isEmpty ? 0 : 1)
     }
+}
+
+/// Design v5: custom events, global observers, forwarding, window moves, screen and scrolling.
+func runObservableTests(window: UIWindow) {
+    // Custom events: order, userInfo, key replacement, invoke once, cancel.
+    log = []
+    let poster = NSObject()
+    let first = poster.cylAddLifecycleCallback(forCustomEvent: "cyl.badge.didShow") { owner, identifier, info in
+        log.append("a \(info.customEvent ?? "-") \(info.userInfo?["value"] as? String ?? "-") \(info.isDealloc)")
+    }
+    poster.cylAddLifecycleCallback(forCustomEvent: "cyl.badge.didShow", invokeOnce: true, key: "once") { _, _, _ in log.append("once") }
+    poster.cylAddLifecycleCallback(forCustomEvent: "cyl.badge.didShow", key: "k") { _, _, _ in log.append("k1") }
+    poster.cylAddLifecycleCallback(forCustomEvent: "cyl.badge.didShow", key: "k") { _, _, _ in log.append("k2") }
+    poster.cylPostLifecycleEvent("cyl.badge.didShow", userInfo: ["value": "3"])
+    poster.cylPostLifecycleEvent("cyl.badge.didShow", userInfo: ["value": "4"])
+    check(log == ["a cyl.badge.didShow 3 false", "once", "k2", "a cyl.badge.didShow 4 false", "k2"], "custom events: order, userInfo, invoke once, replace by key", "\(log)")
+    check(poster.cylCancelLifecycleCallback(identifier: first), "custom events: cancel by identifier")
+    log = []
+    poster.cylPostLifecycleEvent("another")
+    check(log.isEmpty, "custom events: another name does not fire")
+
+    // Global observers: after the owner's blocks, owner type, key, cancel, custom events, never dealloc.
+    CYLLifecycleCenter.reset()
+    log = []
+    let owned = NSObject()
+    owned.cylAddLifecycleCallback(forCustomEvent: "c") { _, _, _ in log.append("own") }
+    CYLLifecycleCenter.addCallback(forCustomEvent: "c") { owner, _, info in log.append("g1 \(owner === owned) \(info.customEvent ?? "-")") }
+    CYLLifecycleCenter.addCallback(forCustomEvent: "c", ownerType: UIView.self) { _, _, _ in log.append("only views") }
+    let removable = CYLLifecycleCenter.addCallback(forCustomEvent: "c", key: "k") { _, _, _ in log.append("removable") }
+    owned.cylPostLifecycleEvent("c")
+    check(log == ["own", "g1 true c", "removable"], "global observers: after the owner's blocks, owner type filter", "\(log)")
+    check(CYLLifecycleCenter.cancelCallback(identifier: removable), "global observers: cancel by identifier")
+    check(!CYLLifecycleCenter.cancelCallback(key: "k"), "global observers: a cancelled observer is gone")
+    log = []
+    do {
+        let dying = NSObject()
+        dying.cylWillDealloc { _, _, _ in log.append("own dealloc") }
+        CYLLifecycleCenter.addCallback(for: .viewDidLoad) { _, _, _ in log.append("global at dealloc") }
+    }
+    check(log == ["own dealloc"], "global observers: never receive dealloc", "\(log)")
+
+    // Forwarding.
+    CYLLifecycleCenter.reset()
+    log = []
+    let source = NSObject()
+    let target = NSObject()
+    target.cylAddLifecycleCallback(for: .didEnterScreen) { _, _, _ in log.append("target enter") }
+    target.cylAddLifecycleCallback(for: .didLeaveScreen) { _, _, _ in log.append("target leave") }
+    target.cylAddLifecycleCallback(forCustomEvent: "cyl.badge.didShow") { _, _, _ in log.append("target badge") }
+    source.cylForwardLifecycleEvents([.didEnterScreen], to: target)
+    source.cylFireDerived(.didEnterScreen)
+    source.cylFireDerived(.didLeaveScreen)
+    check(log == ["target enter"], "forwarding: only the chosen events reach the target", "\(log)")
+    log = []
+    source.cylForwardLifecycleEvents(to: target)
+    source.cylFireDerived(.didLeaveScreen)
+    source.cylPostLifecycleEvent("cyl.badge.didShow")
+    source.cylFireDerived(.didEnterScreen)
+    check(log == ["target leave", "target badge", "target enter"], "forwarding: a second forward replaces the first (no double delivery)", "\(log)")
+
+    // Window moves and screen events of a view.
+    log = []
+    let host = window.rootViewController?.view ?? window
+    let probe = UIView(frame: CGRect(x: 0, y: 0, width: 50, height: 50))
+    probe.cylAddLifecycleCallback(for: .willMoveToWindow) { _, _, info in log.append("will \(info.window == nil ? "nil" : "window")") }
+    probe.cylAddLifecycleCallback(for: .didMoveToWindow) { _, _, info in log.append("did \(info.window == nil ? "nil" : "window")") }
+    probe.cylAddLifecycleCallback(for: .didEnterScreen) { _, _, _ in log.append("enter") }
+    probe.cylAddLifecycleCallback(for: .didLeaveScreen) { _, _, _ in log.append("leave") }
+    host.addSubview(probe)
+    probe.isHidden = true
+    probe.isHidden = false
+    probe.removeFromSuperview()
+    check(log == ["will window", "did window", "enter", "leave", "enter", "will nil", "did nil", "leave"], "window moves and screen events of a view", "\(log)")
+
+    // Scrolling: a view reports the scrolling of its scroll view; isUserScrolling follows it; a global observer pauses and resumes.
+    CYLLifecycleCenter.reset()
+    log = []
+    let scrollView = UIScrollView(frame: CGRect(x: 0, y: 0, width: 100, height: 100))
+    let cell = UIView(frame: CGRect(x: 0, y: 0, width: 50, height: 50))
+    scrollView.addSubview(cell)
+    cell.cylAddLifecycleCallback(for: .scrollWillBeginDragging) { _, _, _ in log.append("begin") }
+    cell.cylAddLifecycleCallback(for: .scrollDidEndDragging) { _, _, info in log.append("end drag \(info.willDecelerate ?? false)") }
+    cell.cylAddLifecycleCallback(for: .scrollDidEndScrolling) { _, _, _ in log.append("end scroll") }
+    CYLLifecycleCenter.addCallback(for: .scrollWillBeginDragging) { _, _, _ in log.append("pause all") }
+    CYLLifecycleCenter.addCallback(for: .scrollDidEndScrolling) { _, _, _ in log.append("resume all") }
+    host.addSubview(scrollView)
+    check(!CYLLifecycleCenter.isUserScrolling, "isUserScrolling is false before a drag")
+    let observer = CYLLifecycleSources.scrollObserver(of: scrollView)
+    observer.notify(.scrollWillBeginDragging, CYLLifecycleInfo(window: nil, scrollView: scrollView))
+    check(CYLLifecycleCenter.isUserScrolling, "isUserScrolling is true while dragging")
+    observer.notify(.scrollDidEndDragging, CYLLifecycleInfo(window: nil, scrollView: scrollView, willDecelerate: true))
+    observer.notify(.scrollDidEndScrolling, CYLLifecycleInfo(window: nil, scrollView: scrollView))
+    check(!CYLLifecycleCenter.isUserScrolling, "isUserScrolling is false after scrolling ended")
+    check(log == ["begin", "pause all", "end drag true", "end scroll", "resume all"], "scroll events of a view and the global pause / resume", "\(log)")
+    scrollView.removeFromSuperview()
+
+    // A view controller reports didEnterScreen / didLeaveScreen right after viewDidAppear / viewDidDisappear.
+    log = []
+    let screenController = PlainViewController()
+    screenController.cylAddLifecycleCallback(for: .viewDidAppear) { _, _, _ in log.append("appear") }
+    screenController.cylAddLifecycleCallback(for: .didEnterScreen) { _, _, _ in log.append("enter") }
+    screenController.cylAddLifecycleCallback(for: .viewDidDisappear) { _, _, _ in log.append("disappear") }
+    screenController.cylAddLifecycleCallback(for: .didLeaveScreen) { _, _, _ in log.append("leave") }
+    screenController.beginAppearanceTransition(true, animated: false)
+    screenController.endAppearanceTransition()
+    screenController.beginAppearanceTransition(false, animated: false)
+    screenController.endAppearanceTransition()
+    check(log == ["appear", "enter", "disappear", "leave"], "view controller screen events follow the appearance events", "\(log)")
+    CYLLifecycleCenter.reset()
 }
 
 @objc(CYLTestAppDelegate)
