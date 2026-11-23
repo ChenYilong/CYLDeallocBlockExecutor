@@ -21,6 +21,16 @@ enum LifecycleEvent {
   willMoveToParent,
   didMoveToParent,
   didReceiveMemoryWarning,
+
+  // Design v5 (observable moments), appended so the existing names stay stable.
+  /// Flutter has no window per view: never fired by the mixin, kept so the names match the other platforms.
+  willMoveToWindow,
+  didMoveToWindow,
+  didEnterScreen,
+  didLeaveScreen,
+  scrollWillBeginDragging,
+  scrollDidEndDragging,
+  scrollDidEndScrolling,
 }
 
 /// When a block runs relative to the framework's own implementation.
@@ -42,6 +52,11 @@ class LifecycleInfo {
     this.previousPadding,
     this.parentAttached,
     this.isDealloc = false,
+    this.scrollView,
+    this.willDecelerate,
+    this.window,
+    this.customEvent,
+    this.userInfo,
   });
 
   final LifecycleEvent? event;
@@ -67,7 +82,23 @@ class LifecycleInfo {
   /// True for the block of a teardown.
   final bool isDealloc;
 
-  LifecycleInfo copyWith({LifecycleEvent? event, LifecycleTiming? timing}) =>
+  /// Scroll events: the scroll source (the `ScrollMetrics` of the notification).
+  final Object? scrollView;
+
+  /// `scrollDidEndDragging`: the scrollable keeps moving after the finger lifts.
+  final bool? willDecelerate;
+
+  /// `willMoveToWindow` / `didMoveToWindow`: not used on Flutter.
+  final Object? window;
+
+  /// Custom events: the name the event was posted under.
+  final String? customEvent;
+
+  /// Custom events: what the poster passed along.
+  final Map<String, Object?>? userInfo;
+
+  LifecycleInfo copyWith(
+          {LifecycleEvent? event, LifecycleTiming? timing, String? customEvent}) =>
       LifecycleInfo(
         event: event ?? this.event,
         timing: timing ?? this.timing,
@@ -78,6 +109,11 @@ class LifecycleInfo {
         previousPadding: previousPadding,
         parentAttached: parentAttached,
         isDealloc: isDealloc,
+        scrollView: scrollView,
+        willDecelerate: willDecelerate,
+        window: window,
+        customEvent: customEvent ?? this.customEvent,
+        userInfo: userInfo,
       );
 }
 

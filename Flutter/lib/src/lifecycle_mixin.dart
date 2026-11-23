@@ -50,6 +50,9 @@ mixin CYLLifecycleMixin<W extends StatefulWidget> on State<W> {
   bool _appearPending = false;
   bool _disappearPending = false;
   bool _disposed = false;
+  bool _onScreen = false;
+  bool _dragging = false;
+  bool _decelerating = false;
 
   Brightness? _lastBrightness;
   double? _lastTextScale;
@@ -191,12 +194,14 @@ mixin CYLLifecycleMixin<W extends StatefulWidget> on State<W> {
     if (!_appearPending) return;
     _appearPending = false;
     _fireEvent(LifecycleEvent.viewDidAppear);
+    setScreenVisible(true);
   }
 
   void _didDisappear() {
     if (!_disappearPending) return;
     _disappearPending = false;
     _fireEvent(LifecycleEvent.viewDidDisappear);
+    setScreenVisible(false);
   }
 
   void _flushPending() {
@@ -235,6 +240,72 @@ mixin CYLLifecycleMixin<W extends StatefulWidget> on State<W> {
     }
     _animationDetach.clear();
     _route = null;
+  }
+
+  // MARK: screen and scrolling (design v5)
+
+  /// Reports whether the state's widget is visible on screen. The appear and
+  /// disappear events report it by themselves (right after `viewDidAppear` /
+  /// `viewDidDisappear`); call this for a widget that scrolls in and out of a
+  /// list or a tab inside one route. Fires `didEnterScreen` / `didLeaveScreen`
+  /// on transitions only.
+  void setScreenVisible(bool visible) {
+    if (_onScreen == visible || _disposed) return;
+    _onScreen = visible;
+    _fireEvent(visible ? LifecycleEvent.didEnterScreen : LifecycleEvent.didLeaveScreen);
+  }
+
+  /// Wraps [child] (a scrollable) so that its scrolling fires
+  /// `scrollWillBeginDragging`, `scrollDidEndDragging` (`willDecelerate`) and
+  /// `scrollDidEndScrolling`. It listens to notifications: no controller or
+  /// delegate of the scrollable is touched, and the notification keeps bubbling.
+  Widget scrollLifecycle({required Widget child}) =>
+      NotificationListener<ScrollNotification>(
+        onNotification: (notification) {
+          _onScrollNotification(notification);
+          return false;
+        },
+        child: child,
+      );
+
+  void _onScrollNotification(ScrollNotification n) {
+    if (_disposed) return;
+    if (n is ScrollStartNotification && n.dragDetails != null && !_dragging) {
+      _dragging = true;
+      _decelerating = false;
+      _fireEvent(LifecycleEvent.scrollWillBeginDragging,
+          info: LifecycleInfo(
+              event: LifecycleEvent.scrollWillBeginDragging,
+              timing: LifecycleTiming.afterSuper,
+              scrollView: n.metrics));
+    } else if (n is ScrollUpdateNotification && _dragging && n.dragDetails == null) {
+      // The finger lifted and the scrollable keeps moving: the deceleration.
+      _dragging = false;
+      _decelerating = true;
+      _fireEvent(LifecycleEvent.scrollDidEndDragging,
+          info: LifecycleInfo(
+              event: LifecycleEvent.scrollDidEndDragging,
+              timing: LifecycleTiming.afterSuper,
+              scrollView: n.metrics,
+              willDecelerate: true));
+    } else if (n is ScrollEndNotification && (_dragging || _decelerating)) {
+      final endedDrag = _dragging;
+      _dragging = false;
+      _decelerating = false;
+      if (endedDrag) {
+        _fireEvent(LifecycleEvent.scrollDidEndDragging,
+            info: LifecycleInfo(
+                event: LifecycleEvent.scrollDidEndDragging,
+                timing: LifecycleTiming.afterSuper,
+                scrollView: n.metrics,
+                willDecelerate: false));
+      }
+      _fireEvent(LifecycleEvent.scrollDidEndScrolling,
+          info: LifecycleInfo(
+              event: LifecycleEvent.scrollDidEndScrolling,
+              timing: LifecycleTiming.afterSuper,
+              scrollView: n.metrics));
+    }
   }
 
   // MARK: layout
