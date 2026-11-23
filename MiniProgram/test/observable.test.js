@@ -140,3 +140,52 @@ test('forwarding: the target receives the forwarded events, a subset only those,
   r.fireAutomatic('didEnterScreen', 'afterSuper');
   assert.deepEqual(log, ['item enter'], 'one forward per target: no double delivery');
 });
+
+test('debug log: off by default, lazy; on, it names the owner, event, timing and the number of blocks', () => {
+  const { LifecycleLog } = require('../index.js');
+  const lines           = [];
+  LifecycleLog.sink = (m) => lines.push(m);
+  r.addLifecycleCallback('viewDidAppear', () => {});
+  r.fireAutomatic('viewDidAppear', 'afterSuper');
+  assert.deepEqual(lines, [], 'disabled: nothing is built or printed');
+  LifecycleLog.enabled = true;
+  try {
+    const named = { name: 'tab-1' };
+    const rn = LifecycleRegistry.of(named);
+    rn.hookInstalled = true;
+    rn.addLifecycleCallback('viewDidAppear', () => {});
+    rn.fireAutomatic('viewDidAppear', 'afterSuper');
+    rn.addCustomCallback('cyl.animation.didPause', () => {});
+    rn.postLifecycleEvent('cyl.animation.didPause');
+    rn.addDeallocCallback(() => {});
+    rn.runDealloc();
+    assert.deepEqual(lines, [
+      '[CYLLifecycle] Object(tab-1) viewDidAppear/afterSuper: 1 block(s)',
+      '[CYLLifecycle] Object(tab-1) posts cyl.animation.didPause: 1 block(s)',
+      '[CYLLifecycle] teardown Object(tab-1): 1 block(s)',
+      '[CYLLifecycle] dealloc Object(tab-1)',
+    ]);
+  } finally {
+    LifecycleLog.enabled = false;
+    LifecycleLog.sink = (m) => console.log(m);
+  }
+});
+
+test('a dealloc observer learns when any owner is torn down, with a description and never the owner', () => {
+  const seen           = [];
+  const id = LifecycleCenter.addDeallocObserver((description, info) => seen.push(`${description} ${info.isDealloc}`), { key: 'debug' });
+  const named = { id: 7 };
+  const rn = LifecycleRegistry.of(named);
+  rn.runDealloc();
+  assert.deepEqual(seen, ['Object(7) true']);
+  assert.equal(LifecycleCenter.cancelDeallocObserver({ identifier: id }), true);
+  rn.runDealloc();
+  assert.equal(seen.length, 1);
+});
+
+test('the animation and badge event names are the documented ones', () => {
+  const { AnimationEvents, BadgeEvents } = require('../index.js');
+  assert.deepEqual(Object.values(AnimationEvents), ['cyl.animation.didStart', 'cyl.animation.didPause', 'cyl.animation.didResume', 'cyl.animation.didStop']);
+  assert.equal(BadgeEvents.didShow, 'cyl.badge.didShow');
+  assert.equal(BadgeEvents.animationDidStop, 'cyl.badge.animationDidStop');
+});
