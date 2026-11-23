@@ -4,6 +4,21 @@ This document tracks the lifecycle block API of CYLDeallocBlockExecutor: blocks 
 
 ## Task log
 
+### TODO: observable moments for badges, animation and scrolling (2026-11-23, branch `feat/lifecycle-callbacks`, PR #12)
+
+**Context.** The lifecycle blocks cover view controller events and dealloc. CYLTabBarController's badge extensions touch `UIViewController`, `UITabBarItem`, `UIControl`, `UIView` and `UIBarButtonItem`, decide readiness with `cyl_isReady()`, and play animations. The owner wants every such moment observable from this library on every platform.
+
+**Requirements (English translation of the prompt).**
+
+- The lifecycle is still not enough: lifecycle management is missing wherever badges are involved: `UIViewController`, `UITabBarItem`, `UIControl`, `UIView`, and the way a badge decides it is ready.
+- This repository must report these moments: a `UIViewController`, `UITabBarItem`, `UIControl` or `UIView` appearing and leaving the screen; the user scrolling the scroll view of a view controller; a badge appearing; an animation starting and ending.
+- Use case: when the user scrolls, pause every animation, and resume after the scrolling ends. Users and developers customize behavior at those moments through this library.
+- The advisor designs the API, Sonnet implements it, on all platforms.
+
+**Prompt (verbatim).** 我对现在的生命周期还是不满意，缺少很多必要的生命周期管理。请advisor继续评估我的需求，参考iOS上cylbadge系列分类方法所涉及的控件，包括，uiviewcontroller uitabbaritem uicontrol uiview，包括badge用来判断ready状态的方式，这些只要badge涉及到的，都需要进行生命周期管理。我预期的场景是，本仓库代码能完整获取到以下时机，uiviewcontroller uitabbaritem uicontrol uiview，出现 移出屏幕，用户正在滚动uiviewcontroller所在scrollview屏幕，以及badgd出现，动画开始动画结束的时机，我期望能通过本仓库达到监听目的，比如我可以借助本仓库决定当用户滚动屏幕的时候，暂停所有动画的播放，并在滚动结束后恢复状态。我想让用户以及开发者可以借助本仓库自定义行为在特定时机。请advisor设计api接口，sonnet负责实现。该要求适用于所有平台。
+
+**Plan.** Design v5 below; library first (iOS, then Android, React Native, HarmonyOS, Mini Program, Flutter), then CYLTabBarController calls it. Tables and score: this document and [Cross-Platform-API.md](Cross-Platform-API.md).
+
 ### DONE: all-platform interface design aligned with iOS (2026-11-23, branch `feat/lifecycle-callbacks`, PR #12)
 
 **Result.** 145 / 145, score 100, provisional ([Cross-Platform-API.md](Cross-Platform-API.md)). Still unverified: no device, emulator, hvigor or WeChat devtools run; the real `rootWindowInsets` read on Android; Flutter not re-run on the machine that did the Android, HarmonyOS and Mini Program work.
@@ -240,6 +255,24 @@ Found by the final review: with two overriding levels, v2 fired blocks twice or 
 - Result: an app calling the broad cancel / re-arm calls on its CYLTabBarController subclass cannot remove the core's KVO teardown or layout block, and the core re-arming its layout block cannot re-run the app's run-once blocks.
 - Swift Package Manager manifest added (`Package.swift`), so the core can depend on the library through SPM as through CocoaPods.
 
+### Design v5: observable moments (advisor, 2026-11-23)
+
+**Layering.** The library knows generic UIKit concepts only: window moves, on-screen visibility, user scrolling, named custom events, global observers and forwarding. It never learns about badges: CYLTabBarController posts the badge moments as custom events.
+
+**Events (appended to `CYLLifecycleEvent`, existing raw values unchanged).** `willMoveToWindow`, `didMoveToWindow` (any view); `didEnterScreen`, `didLeaveScreen` (views and view controllers; on a view controller right after `viewDidAppear` / `viewDidDisappear`); `scrollWillBeginDragging`, `scrollDidEndDragging` (`info.willDecelerate`), `scrollDidEndScrolling`. New `CYLLifecycleInfo` fields: `window`, `scrollView`, `willDecelerate`, `customEvent`, `userInfo`.
+
+**Custom events** use the same identifier, key, invoke-once and lock rules: `cylAddLifecycleCallback(forCustomEvent:)`, `cylPostLifecycleEvent(_:userInfo:)`.
+
+**Global observers** (`CYLLifecycleCenter`): `addCallback(for:ownerType:key:)`, `addCallback(forCustomEvent:…)`, `cancelCallback(identifier:)` / `(key:)`, `isUserScrolling`. Per-owner blocks run first, then global blocks, each group in identifier order; global observers never receive dealloc.
+
+**Forwarding.** `cylForwardLifecycleEvents(_:to:)`: a `UITabBarItem` is not a view and receives the events of its button; the target is held weakly and a new forward to the same target replaces the old one.
+
+**Sources (iOS).** Never take over `UIScrollView.delegate`: drag begin and end from `panGestureRecognizer.addTarget`, end of deceleration from KVO on `contentOffset` (the first change with `!isDragging && !isDecelerating`), both removed by a keyed teardown block. View controllers observe `contentScrollView(for: .top)` when the first scroll block is added; `cylObserveScrolling(of:)` covers any other scroll view; views use the nearest enclosing scroll view, resolved on `didMoveToWindow`. Window hooks by `method_setImplementation` on `UIView`, previous IMP captured, installed lazily, minimal fast path. Visibility is derived (in a window, not hidden, alpha above zero, frame intersecting the window and the scroll view's visible rect), re-evaluated only for views with screen blocks, firing on transitions only. Main thread only.
+
+**Other platforms** keep the names and record the sources in [Cross-Platform-API.md](Cross-Platform-API.md): Android `OnAttachStateChangeListener`, `getGlobalVisibleRect`, `RecyclerView.OnScrollListener`; Flutter render-box visibility and `NotificationListener<ScrollNotification>`; React Native `onLayout` / `measureInWindow` and the scroll handlers; HarmonyOS `onAttach` / `onVisibleAreaChange` / `onScrollStart` / `onScrollStop`; Mini Program `attached` / `detached`, `wx.createIntersectionObserver`, `onPageScroll` with a debounced end.
+
+**CYLTabBarController posts** (on the object the app called): `cyl.badge.didShow`, `cyl.badge.didClear`, `cyl.badge.didBecomeReady`, `cyl.badge.animationDidStart`, `cyl.badge.animationDidStop`, and `cyl.core.tabBarItemsReady` (the ready queue of `performWhenTabBarItemsReady` then becomes invoke-once blocks on it).
+
 ### CYLTabBarController mapping, v1 (not changed in this task)
 
 | CYLTabBarController today | With this library |
@@ -277,6 +310,7 @@ Score = 100 × (rows of both tables whose last column is not `TODO`) / (all rows
 | 3b | Design v3 + new tests (nested perform, core + app subclass, UIKit subclasses, KVO `observationInfo`): 31/31 on iOS 27.2 Debug and Release (`CYL_TEST_CONFIGURATION=release`) and iOS 17.5 Debug, both swizzle orders; podspec iOS 15.0, `pod lib lint` (full build) passes | 28 / 28 | 100 |
 | 4a | Re-check audit: isolation row added (cancel-all / re-arm by event reach the core's keyed blocks) | 28 / 29 | 97 |
 | 4b | Design v4 (keyed blocks owned by their key holder), `Package.swift`, README rows; 38/38 checks on iOS 27.2 Debug and Release and iOS 17.5 Debug, both swizzle orders; `pod lib lint` passes; README snippets typecheck | 29 / 29 | 100 |
+| 5a | Design v5 added (observable moments: window moves, screen, scrolling, custom events, global observers, forwarding): 10 rows, all `TODO` | 29 / 39 | 74 |
 
 ## Lifecycle events
 
@@ -298,6 +332,13 @@ Score = 100 × (rows of both tables whose last column is not `TODO`) / (all rows
 | `didMove(toParent:)` | Runs after the controller is added to or removed from a container. | `.didMoveToParent`, `info.parent`. Verified: "willMove/didMove with parent" |
 | `didReceiveMemoryWarning()` | Runs when the app receives a memory warning. | `.didReceiveMemoryWarning`. Verified: "didReceiveMemoryWarning" |
 | `dealloc` / `deinit` | Runs while the object is deallocated. Aligned with the other events: same `(owner, identifier)` block, same identifiers, same lock. | `cylWillDealloc(callback:)` (owner, identifier, info: `isDealloc`, `.end`) and `cylWillDealloc(key:callback:)`; 1.3.0 `cylWillDealloc(selfCallback:)` unchanged. Verified: "one identifier sequence for dealloc and lifecycle", "dealloc order, info, keyed replacement" |
+| `willMoveToWindow` | Runs before a view (a control included) is added to or removed from a window; `info.window` is the new window or nil. | TODO |
+| `didMoveToWindow` | Runs after a view (a control included) was added to or removed from a window. | TODO |
+| `didEnterScreen` | Runs when a view or view controller becomes visible on screen: in a window, not hidden, alpha above zero, and inside the visible rect of its scroll view. On a view controller it fires right after `viewDidAppear`. | TODO |
+| `didLeaveScreen` | Runs when a view or view controller stops being visible on screen. On a view controller it fires right after `viewDidDisappear`. | TODO |
+| `scrollWillBeginDragging` | Runs when the user starts dragging the scroll view of a view controller or view (so animations can pause). | TODO |
+| `scrollDidEndDragging` | Runs when the user lifts the finger; `info.willDecelerate` tells whether the scroll view keeps moving. | TODO |
+| `scrollDidEndScrolling` | Runs when the scroll view stopped for good: after deceleration, or at the end of the drag when it does not decelerate (so animations can resume). | TODO |
 
 ## Capabilities
 
@@ -316,3 +357,6 @@ Score = 100 × (rows of both tables whose last column is not `TODO`) / (all rows
 | Replace by key | Adding a block under a key replaces the block added before under that key (lifecycle and dealloc), so setters and install methods called twice keep one block. | `key:` on `cylAddLifecycleCallback`, `cylWillDealloc(key:callback:)`. Verified: "replace by key (and replacement re-arms)", "dealloc order, info, keyed replacement" |
 | Core / app isolation | Keyed blocks belong to whoever holds the key: cancel-all and re-arm by event skip them, so an app cannot remove or re-run the core's blocks and the core cannot re-run the app's. | Keyed blocks skip `cylCancelAllLifecycleCallbacks(for:)`, `cylRearmLifecycleCallbacks(for:)` and `cylCancelAllDeallocCallbacks()`; owners use `cylCancelLifecycleCallback(key:)`, `cylRearmLifecycleCallback(key:)`, `cylCancelDeallocCallback(key:)`. Prefix `cyl.core.` reserved for CYLTabBarController by convention (not special-cased). Verified: "isolation: app cancel-all keeps the core's keyed blocks", "… keyed dealloc block", "isolation: core re-arms by key, app's run-once block stays fired", "isolation: re-arm by event skips keyed blocks", "cancel by key removes only that block", "cancel dealloc block by key" |
 | Pure Swift | The whole library is Swift; no Objective-C file. | Already true: `CYLDeallocBlockExecutor/*.swift` only (round 1 search: no `.h` / `.m` in the repository) |
+| Custom events | Any named event on an object, with the same identifiers, keys, invoke-once and lock rules as the built-in events. CYLTabBarController posts the badge moments (`cyl.badge.didShow`, `didClear`, `didBecomeReady`, `animationDidStart`, `animationDidStop`) and `cyl.core.tabBarItemsReady` through it. | TODO |
+| Global observers | One block that observes an event on every object (optionally of one owner type): pause every animation while the user scrolls without knowing the owners. Runs after the object's own blocks; never receives dealloc. | TODO |
+| Event forwarding | An object that is not a view (a `UITabBarItem`) receives the events of the view that shows it. | TODO |
