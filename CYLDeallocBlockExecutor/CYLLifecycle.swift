@@ -443,3 +443,17 @@ extension NSObject {
         }
     }
 }
+
+
+extension UIView {
+
+    /**
+     * Evaluates again whether this view is on screen and fires `didEnterScreen` / `didLeaveScreen` on a change. Views that live in
+     * a system bar (a tab bar's buttons) are not observed with KVO, so call this after you change what they show (the tab bar
+     * controller does it when the selection changes).
+     */
+    public func cylRefreshScreenState() {
+        guard cylCallbackModel(create: false) != nil || CYLLifecycleCenter.observesViewEvents else { return }
+        CYLVisibilityState.of(self).update()
+    }
+}

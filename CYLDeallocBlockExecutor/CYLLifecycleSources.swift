@@ -214,8 +214,21 @@ final class CYLVisibilityState: NSObject {
     private init(view: UIView) {
         self.view = view
         super.init()
+        // Views the system owns (a tab bar's buttons) are not observed with KVO: it would swap the class of an object UIKit manages.
+        // They are re-evaluated at window moves, scrolling, and by `cylRefreshScreenState()` (the tab bar controller calls it when the
+        // selection changes).
+        guard !Self.isSystemOwned(view) else { return }
         observations.append(view.observe(\.isHidden, options: [.new]) { [weak self] _, _ in self?.update() })
         observations.append(view.observe(\.alpha, options: [.new]) { [weak self] _, _ in self?.update() })
+    }
+
+    static func isSystemOwned(_ view: UIView) -> Bool {
+        var ancestor = view.superview
+        while let node = ancestor {
+            if node is UITabBar || node is UINavigationBar || node is UIToolbar { return true }
+            ancestor = node.superview
+        }
+        return false
     }
 
     func update() {
