@@ -1,3 +1,6 @@
+// ignore_for_file: deprecated_member_use
+// [EN] The tests need MaterialApp and routes; the newest Flutter deprecates the import, older ones (>= 3.22) do not.
+// [CN] 测试需要 MaterialApp 与路由；最新的 Flutter 弃用了该导入，较旧版本（>= 3.22）没有。
 import 'package:cyl_dealloc_block_executor/cyl_dealloc_block_executor.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
