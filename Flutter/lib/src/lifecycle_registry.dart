@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart' show visibleForTesting;
 
 import 'lifecycle_center.dart';
 import 'lifecycle_event.dart';
+import 'lifecycle_log.dart';
 
 class _Entry {
   _Entry({
@@ -144,6 +145,8 @@ class LifecycleRegistry {
             e.custom == name && !e.cancelled && !(e.invokeOnce && e.fired))
         .toList()
       ..sort((a, b) => a.identifier.compareTo(b.identifier));
+    LifecycleLog.log(() =>
+        '${LifecycleLog.describe(owner)} posts $name: ${snapshot.length} block(s)');
     for (final e in snapshot) {
       if (e.cancelled || (e.invokeOnce && e.fired)) continue;
       if (e.invokeOnce) e.fired = true;
@@ -271,6 +274,8 @@ class LifecycleRegistry {
     final snapshot = _entries.where((e) => e.isDealloc && !e.cancelled).toList()
       ..sort((a, b) => a.identifier.compareTo(b.identifier));
     _entries.removeWhere((e) => e.isDealloc);
+    LifecycleLog.log(() =>
+        'teardown ${LifecycleLog.describe(owner)}: ${snapshot.length} block(s)');
     for (final e in snapshot) {
       if (e.cancelled) continue;
       e.callback(
@@ -279,6 +284,7 @@ class LifecycleRegistry {
           const LifecycleInfo(
               event: null, timing: LifecycleTiming.end, isDealloc: true));
     }
+    LifecycleCenter.dispatchDealloc(LifecycleLog.describe(owner));
   }
 
   // MARK: dispatch
@@ -371,6 +377,8 @@ class LifecycleRegistry {
             !(e.invokeOnce && e.fired))
         .toList()
       ..sort((a, b) => a.identifier.compareTo(b.identifier));
+    LifecycleLog.log(() =>
+        '${LifecycleLog.describe(owner)} ${event.name}/${timing.name}: ${snapshot.length} block(s)');
     for (final e in snapshot) {
       if (e.cancelled || (e.invokeOnce && e.fired)) continue;
       if (e.invokeOnce) e.fired = true;

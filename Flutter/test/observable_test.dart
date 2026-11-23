@@ -38,6 +38,7 @@ class _ScrollHostState extends State<_ScrollHost> with CYLLifecycleMixin<_Scroll
 }
 
 void main() {
+  debugLogTests();
   late Owner owner;
   late LifecycleRegistry r;
   late List<String> log;
@@ -153,5 +154,51 @@ void main() {
     expect(log.first, 'scrollWillBeginDragging');
     expect(log.last, 'scrollDidEndScrolling');
     expect(log.where((l) => l.startsWith('scrollDidEndDragging')).length, 1);
+  });
+}
+
+void debugLogTests() {
+  group('debug log, dealloc observers and event names', () {
+    tearDown(() {
+      LifecycleLog.enabled = false;
+      LifecycleLog.sink = print;
+      LifecycleCenter.reset();
+    });
+
+    test('off by default and lazy; on, it names the owner, event, timing and the block count', () {
+      final lines = <String>[];
+      LifecycleLog.sink = lines.add;
+      LifecycleLog.describer = (o) => 'Tab(tab-1)';
+      final r = LifecycleRegistry.of(Owner())..hookInstalled = true;
+      r.addLifecycleCallback<Owner>(LifecycleEvent.viewDidAppear, (o, i, x) {});
+      r.fireAutomatic(LifecycleEvent.viewDidAppear, LifecycleTiming.afterSuper, info(LifecycleEvent.viewDidAppear));
+      expect(lines, isEmpty);
+      LifecycleLog.enabled = true;
+      r.fireAutomatic(LifecycleEvent.viewDidAppear, LifecycleTiming.afterSuper, info(LifecycleEvent.viewDidAppear));
+      r.addCustomCallback<Owner>(AnimationEvents.didPause, (o, i, x) {});
+      r.postLifecycleEvent(AnimationEvents.didPause);
+      r.addDeallocCallback<Owner>((o, i, x) {});
+      r.runDealloc();
+      expect(lines, [
+        '[CYLLifecycle] Tab(tab-1) viewDidAppear/afterSuper: 1 block(s)',
+        '[CYLLifecycle] Tab(tab-1) posts cyl.animation.didPause: 1 block(s)',
+        '[CYLLifecycle] teardown Tab(tab-1): 1 block(s)',
+        '[CYLLifecycle] dealloc Tab(tab-1)',
+      ]);
+    });
+
+    test('a dealloc observer learns when any owner is torn down, with a description and never the owner', () {
+      final seen = <String>[];
+      LifecycleLog.describer = (o) => 'Owner(7)';
+      final id = LifecycleCenter.addDeallocObserver((d, i) => seen.add('$d ${i.isDealloc}'), key: 'debug');
+      final r = LifecycleRegistry.of(Owner());
+      r.runDealloc();
+      expect(seen, ['Owner(7) true']);
+      expect(LifecycleCenter.cancelDeallocObserver(identifier: id), isTrue);
+      r.runDealloc();
+      expect(seen.length, 1);
+      expect(AnimationEvents.didResume, 'cyl.animation.didResume');
+      expect(BadgeEvents.animationDidStop, 'cyl.badge.animationDidStop');
+    });
   });
 }

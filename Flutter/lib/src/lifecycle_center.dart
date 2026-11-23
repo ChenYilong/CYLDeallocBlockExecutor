@@ -1,4 +1,5 @@
 import 'lifecycle_event.dart';
+import 'lifecycle_log.dart';
 
 class _GlobalEntry {
   _GlobalEntry({
@@ -98,8 +99,43 @@ class LifecycleCenter {
     return _entries.length < before;
   }
 
+  static final List<(int, String?, void Function(String description, LifecycleInfo info))> _deallocObservers = [];
+
+  /// Observes the teardown of every owner that has a registry, to know when any
+  /// object goes away. The callback gets a description (type and identity),
+  /// never the owner: it is being destroyed. For logging and bookkeeping, not
+  /// for cleanup.
+  static int addDeallocObserver(
+      void Function(String description, LifecycleInfo info) callback,
+      {String? key}) {
+    if (key != null) _deallocObservers.removeWhere((o) => o.$2 == key);
+    final id = _nextIdentifier++;
+    _deallocObservers.add((id, key, callback));
+    return id;
+  }
+
+  static bool cancelDeallocObserver({int? identifier, String? key}) {
+    assert((identifier == null) != (key == null),
+        'pass exactly one of identifier or key');
+    final before = _deallocObservers.length;
+    _deallocObservers
+        .removeWhere((o) => identifier != null ? o.$1 == identifier : o.$2 == key);
+    return _deallocObservers.length < before;
+  }
+
+  /// Called by a registry when its owner's teardown blocks ran.
+  static void dispatchDealloc(String description) {
+    LifecycleLog.log(() => 'dealloc $description');
+    const info = LifecycleInfo(
+        event: null, timing: LifecycleTiming.end, isDealloc: true);
+    for (final o in List.of(_deallocObservers)) {
+      o.$3(description, info);
+    }
+  }
+
   /// For tests: removes every observer and forgets the scroll state.
   static void reset() {
+    _deallocObservers.clear();
     _entries.clear();
     _scrolling.clear();
   }
