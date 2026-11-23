@@ -195,3 +195,16 @@ Effect re-score, iOS only (rubric of the audit above; evidence listed):
 | **Total** | **85** | |
 
 What still blocks iOS 100: library 1.4.0 is not tagged or on CocoaPods trunk (needs the owner), PR #823 still pins a commit and stays a draft until then, no on-device run (only simulators).
+
+Effect re-score, all platforms (2026-11-24, same rubric; evidence in the rounds named; code never run on its platform stays at half credit):
+
+| Platform | Before | Now | Evidence | Still blocks 100 |
+|:---|---:|---:|:---|:---|
+| iOS | ~66 | **85** | library 82 / 82 Debug and Release, `pod lib lint`, SPM, Carthage in CI; real-app flicks 1 / 1 to 4 / 4 (Mac session, CYLTabBarController #823) | library 1.4.0 not released (owner), #823 still a draft and pinned to a commit, no real device |
+| Android | ~92 | **95** | round 15 (config changes, lifecycle, memory, Back teardown on API 35) and round 16 (fragment events, slow drag and three flings, pauses 4 = resumes 4, Back teardown), screenshots; Robolectric 41 + 12 | dark mode, memory trim and rotation not seen inside the list screen; the timer-based `ScrollView` source never run on a device; React Native and Flutter hosts on Android |
+| HarmonyOS | ~75 | **85** | hvigor HAR and HAP build; Mate 70 Pro emulator run of the bridge: lifecycle, swipe and fling (begin, end drag, end scrolling pair up), teardown on Close, screenshot; Node 47 / 47 | safe-area, dark mode and memory level never triggered (no command line trigger found: manual steps documented); the system Back key only backgrounds the ability (no `teardown`), so a page must call `terminateSelf` or use `onBackPress`; emulator is x86_64, no arm64 run |
+| Mini Program | ~82 | **84** | Node 47 / 47 (mocked `wx`); typings checked with `tsc --strict` | WeChat DevTools never run (needs the owner or the `miniprogram-automator` route, not tried) |
+| React Native | ~72 | ~72 | `tsc`, `jest` | no host app on a device |
+| Flutter | ~72 | ~72 | `analyze`, `test` 42 / 42 | no run on a device or emulator |
+
+Average about **82 / 100** (was about 74). No platform is at 100: every row still has a named run that has not happened. The cell score stays 205 / 205.
