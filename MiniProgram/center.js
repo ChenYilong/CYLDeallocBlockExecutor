@@ -1,5 +1,7 @@
 const { LifecycleLog } = require('./log.js');
 
+/** Options of `whileUserScrolls` and `addDeallocObserver`. */
+
 /**
  * Global observers: one block that observes an event on every object, for
  * behavior that must not know its owners ("pause every animation while the user
@@ -51,7 +53,7 @@ class LifecycleCenter {
    * source starts to be dragged, `resume` when it stopped for good. Returns a function that removes both observers. The two
    * observers use the keys `<key>.pause` and `<key>.resume` (default key `cyl.scroll`), so calling it again replaces the earlier pair.
    */
-  static whileUserScrolls(pause            , resume            , options                   = {})             {
+  static whileUserScrolls(pause            , resume            , options             = {})             {
     const key = options.key ?? 'cyl.scroll';
     LifecycleCenter.addCallback('scrollWillBeginDragging',() => pause(), { key: `${key}.pause` });
     LifecycleCenter.addCallback('scrollDidEndScrolling',() => resume(), { key: `${key}.resume` });
@@ -76,7 +78,7 @@ class LifecycleCenter {
    * Observes the teardown of every owner that has a registry, to know when any object goes away. The callback gets a description
    * (class name and `name` / `id`), never the owner: it is being destroyed. For logging and bookkeeping, not for cleanup.
    */
-  static addDeallocObserver(callback                                                    , options                   = {})         {
+  static addDeallocObserver(callback                                                    , options             = {})         {
     if (options.key !== undefined) LifecycleCenter.deallocObservers = LifecycleCenter.deallocObservers.filter((o) => o.key !== options.key);
     const identifier = LifecycleCenter.nextIdentifier++;
     LifecycleCenter.deallocObservers.push({ identifier, key: options.key, callback });

@@ -5,6 +5,10 @@ const cylWeakRef = (o) => (typeof WeakRef === 'function' ? new WeakRef(o) : { de
 
 const kindOf = (e       )       => (e.event !== null ? 'lifecycle' : e.custom !== undefined ? 'custom' : 'dealloc');
 
+/** Options of `addCustomCallback`. A named interface (not an inline type), so ArkTS accepts an object literal for it. */
+
+/** Options of `addDeallocCallback`. */
+
 const registries = new WeakMap();
 
 /**
@@ -98,7 +102,7 @@ class LifecycleRegistry {
   // custom events
 
   /** Adds a block for the custom event `name` (a name the app or the core posts); returns its identifier. */
-  addCustomCallback         (name        , callback                      , options                                         = {})         {
+  addCustomCallback         (name        , callback                      , options                = {})         {
     this.removeKey(options.key, 'custom');
     const identifier = this.nextIdentifier++;
     this.entries.push({
@@ -190,7 +194,7 @@ class LifecycleRegistry {
   // teardown blocks
 
   /** Adds a teardown block: it runs once, when the owner is torn down. */
-  addDeallocCallback         (callback                      , options                   = {})         {
+  addDeallocCallback         (callback                      , options                 = {})         {
     this.removeKey(options.key, 'dealloc');
     const identifier = this.nextIdentifier++;
     this.entries.push({

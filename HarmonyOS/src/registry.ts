@@ -18,6 +18,17 @@ interface Entry {
 type Kind = 'lifecycle' | 'custom' | 'dealloc';
 const kindOf = (e: Entry): Kind => (e.event !== null ? 'lifecycle' : e.custom !== undefined ? 'custom' : 'dealloc');
 
+/** Options of `addCustomCallback`. A named interface (not an inline type), so ArkTS accepts an object literal for it. */
+export interface CustomOptions {
+  invokeOnce?: boolean;
+  key?: string;
+}
+
+/** Options of `addDeallocCallback`. */
+export interface DeallocOptions {
+  key?: string;
+}
+
 export interface AddOptions {
   timing?: LifecycleTiming;
   invokeOnce?: boolean;
@@ -116,7 +127,7 @@ export class LifecycleRegistry {
   // custom events
 
   /** Adds a block for the custom event `name` (a name the app or the core posts); returns its identifier. */
-  addCustomCallback<T = any>(name: string, callback: LifecycleCallback<T>, options: { invokeOnce?: boolean; key?: string } = {}): number {
+  addCustomCallback<T = any>(name: string, callback: LifecycleCallback<T>, options: CustomOptions = {}): number {
     this.removeKey(options.key, 'custom');
     const identifier = this.nextIdentifier++;
     this.entries.push({
@@ -208,7 +219,7 @@ export class LifecycleRegistry {
   // teardown blocks
 
   /** Adds a teardown block: it runs once, when the owner is torn down. */
-  addDeallocCallback<T = any>(callback: LifecycleCallback<T>, options: { key?: string } = {}): number {
+  addDeallocCallback<T = any>(callback: LifecycleCallback<T>, options: DeallocOptions = {}): number {
     this.removeKey(options.key, 'dealloc');
     const identifier = this.nextIdentifier++;
     this.entries.push({
