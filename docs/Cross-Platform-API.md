@@ -149,3 +149,16 @@ Rule: work that was never compiled or run on its platform earns at most half cre
 
 Average about 63 / 100: above the 60 pass line on average, still under it on iOS, HarmonyOS, React Native and Flutter. Findings of this re-score: (1) no demo wires a scroll source except iOS, whose global observers install the content scroll view of every view controller that appears; (2) the TypeScript and Dart registries are separate from the native ones, so scrolling a React Native or Flutter list cannot pause native tab icons yet; (3) HarmonyOS `.ets` must not use `unknown` (reverted in CYLTabBarController).
 
+Update after the gap work (2026-11-23, same rule: code never built or run on its platform gets at most half credit; the owner tests the static parts afterwards): the TypeScript and Dart wrappers now have a native pause path (`animationsPaused`, host views on iOS and Android), the demos of Android (`ListView`), HarmonyOS, Mini Program, React Native and Flutter report scrolling, and Android GIF, Rive and SVGA players pause. Run here: Flutter `analyze` and `test` (library 42, wrapper 7), `tsc` and `jest` for React Native, Gradle (`cylanimateditem` 102, `CYLScrollReportingTest`). Static: iOS, HarmonyOS, Rive and SVGA pause (reflection into the vendors' views), Mini Program in WeChat DevTools.
+
+| Platform | Now | Verified how | Still blocks 100 |
+|:---|---:|:---|:---|
+| Android | ~88 | run here (Robolectric, compile); Rive / SVGA pause static | device run |
+| Mini Program | ~82 | run here (Node, mocked `wx`) | WeChat DevTools |
+| React Native | ~72 | run here (`tsc`, `jest`); native emitters static | iOS and Android build with Codegen |
+| Flutter | ~72 | run here (`analyze`, `test`); native channels static | iOS and Android build |
+| iOS | ~66 | CI (library Swift suite); the rest static | Xcode build and run, demo row with screenshot |
+| HarmonyOS | ~66 | static | hvigor build |
+
+Average about 74 / 100.
+
