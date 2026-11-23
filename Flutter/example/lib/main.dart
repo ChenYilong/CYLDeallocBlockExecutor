@@ -1,3 +1,6 @@
+// ignore_for_file: deprecated_member_use
+// The newest stable Flutter (CI) deprecates package:flutter/material.dart in favor of material_ui; this device-check app keeps
+// material.dart so it also builds on the Flutter 3.47 line used for the device run.
 import 'package:cyl_dealloc_block_executor/cyl_dealloc_block_executor.dart';
 import 'package:flutter/material.dart';
 
