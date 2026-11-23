@@ -319,9 +319,20 @@ final class CYLScrollObserver: NSObject {
         notify(.scrollDidEndScrolling, CYLLifecycleInfo(window: nil, scrollView: scrollView))
     }
 
+    /**
+     * Every subscriber (the cell, its sibling views, a view controller) runs its own blocks, but the global observers hear the
+     * moment once, with the scroll view as the owner: a scroll view with many subviews must not make them pause an animation many
+     * times.
+     */
     func notify(_ event: CYLLifecycleEvent, _ info: CYLLifecycleInfo) {
+        var info = info
+        info.event = event
+        info.timing = .afterSuper
+        if let scrollView {
+            CYLLifecycleCenter.dispatch(owner: scrollView, event: event, custom: nil, timing: .afterSuper, info: info)
+        }
         for owner in subscribers.allObjects {
-            owner.cylFireDerived(event, info: info)
+            owner.cylFireLifecycle(event, timing: .afterSuper, info: info, forwarded: true)
         }
     }
 }
