@@ -85,3 +85,29 @@ that is not yours: the owner confirms in your session.
 - HarmonyOS: `Emulator -hvd "Mate 70 Pro" -path ~/.Huawei/Emulator/deployed -imageRoot ~/Library/Huawei/Sdk` (a bare `-hvd` fails with "Unable to start the emulator").
 - Android memory trim: on a fresh process send `RUNNING_LOW` first, then `MODERATE`; `am send-trim-memory` throws when the process is already past the level.
 - Flutter on Android can deliver `didHaveMemoryPressure` more than once per trim: not a library bug.
+
+## Round 18 handoff (2026-11-24, S = `fc935a7`, branch `integration/round-18`, PR #27)
+
+Test **S = `fc935a7a9a6bb27c07bc2249537c3e62da8c462d`** in one pass; do not wait for CI. Report one block per platform (section 5 format) to the library session (`chenyilong-b8`). Deductions each row clears: [Cross-Platform-API.md, round 18 review](Cross-Platform-API.md#round-18-advisor-review-2026-11-24).
+
+New in S (written statically, never built): Android `NestedScrollActivity`; React Native example on a React Navigation native stack (Home, Detail); HarmonyOS button "Debug: simulate memory level (handler only)".
+
+### Mac session (iOS)
+
+| # | Run | Pass |
+|:-:|:--|:--|
+| 1 | Library suite on S, fresh APFS clone: `bash Tests/run-lifecycle-tests.sh <UDID>`, then `CYL_TEST_CONFIGURATION=release` | 85 / 85 both |
+| 2 | CYLTabBarController with iOS pins at S (local, not pushed): a screen with animated badge items, "Pause while scrolling" ON, 4 flicks | `cyl.badge.*` lines; badge pauses and resumes once per flick |
+| 3 | Example-Rive Engine API page, **Loop ON**, pause while scrolling ON, flick | label `didPause` during the drag, `didResume` after |
+| 4 | React Native example and Flutter example on the iOS simulator (iOS host) | appear / disappear (RN push Detail and Back), flings pair up, teardown |
+| 5 | Screenshots of 2 to 4, original pixels, labeled, in `docs/assets/` | paths |
+
+### Windows sessions (Android, Flutter, React Native, HarmonyOS, Mini Program)
+
+| # | Run | Pass |
+|:-:|:--|:--|
+| 1 | Android `Android/example`: "open NestedScrollView (timer-based source)", `adb logcat -s CYL` | `ACT n` appear events; each drag or fling `SCROLLCOUNT` +1 pause, +1 resume; Back gives `ACT teardown`; arm64 image if available |
+| 2 | React Native `ReactNative/example` (`yarn install` first: new dependencies), Android, `adb logcat -s ReactNativeJS` | launch: `viewWillAppear`, `viewIsAppearing`, `viewDidAppear`, `didEnterScreen` with `screen=Home`; push Detail: Home disappear + `didLeaveScreen`, Detail appear; Back: Detail disappear, `teardown screen=Detail`, Home appear; `replace`: `teardown screen=Home`; if `viewDidAppear` is missing at launch, report it (no `transitionEnd` for the initial route) |
+| 3 | Flutter `Flutter/example` in a **profile** build (`flutter run --profile`) | three flings pair up; the round 16 events again |
+| 4 | HarmonyOS `HarmonyOS/entry`, arm64 emulator if available: tap "Debug: simulate memory level (handler only)"; then DevEco Profiler memory level | `deliverMemoryLevel level=2`, `EVENT n didReceiveMemoryWarning` (hilog `CYL`); Profiler: the same lines without the tap |
+| 5 | Mini Program (Windows A, logged in): section 2 rows 1 to 3 at S | events table of section 2; load problem gone or traced |

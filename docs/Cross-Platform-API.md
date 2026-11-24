@@ -315,3 +315,5 @@ Checked before assigning (grep on `4276a6d`): `createIntersectionObserver` alrea
 Plan. (1) Sonnet writes bucket (a) statically: the React Native navigation source, the Android `NestedScrollView` screen, and a HarmonyOS debug button that calls the memory-level handler (it proves the handler only, not the system delivery, and is labeled so). (2) One SHA S on `integration/round-18`, one PR. (3) The test handoff names S: iOS to the Mac session; Android, Flutter, React Native, HarmonyOS and Mini Program to the Windows sessions, sent without waiting for CI. (4) Re-score only on runs that happened; bucket (a) code earns half credit until its run returns.
 
 Most this round can reach: bucket (a) plus (b) = about 98.5 average; the rest is bucket (c).
+
+Round 18 code (S = `fc935a7`): the three bucket (a) items are committed, written statically and never built (no Android SDK, `node_modules` or hvigor in the agents' environment). Scores stay as above until the runs in [Test-Handoff.md, round 18](Test-Handoff.md#round-18-handoff-2026-11-24-s--fc935a7-branch-integrationround-18-pr-27) return.
