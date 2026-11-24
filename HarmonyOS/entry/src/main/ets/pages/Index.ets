@@ -1,6 +1,8 @@
 import { hilog } from '@kit.PerformanceAnalysisKit';
 import { CYLLifecycleBridge, LifecycleEvent } from 'cyldeallocblockexecutor';
 import EntryAbility from '../entryability/EntryAbility';
+import { ConfigurationConstant } from '@kit.AbilityKit';
+import { window } from '@kit.ArkUI';
 
 @Entry
 @Component
@@ -27,7 +29,7 @@ struct Index {
       this.bridge.controller.registry.addLifecycleCallback(n as LifecycleEvent, () => this.record(n));
     }
     this.bridge.controller.registry.addDeallocCallback(() => this.record('teardown'));
-    this.bridge.aboutToAppear();
+    this.bridge.aboutToAppear(EntryAbility.initialColorMode);
     EntryAbility.memoryHook = (level: number): void => this.bridge.onMemoryLevel(level);
     EntryAbility.colorHook = (mode: number): void => this.bridge.onConfigurationUpdate(mode);
     if (EntryAbility.win !== undefined) this.bridge.attachWindow(EntryAbility.win);
@@ -48,7 +50,13 @@ struct Index {
   build() {
     Column() {
       Text('CYLLifecycleBridge on device').fontSize(20).margin({ top: 60 })
-      Button('Close (terminateSelf)').onClick(() => { if (EntryAbility.terminate !== undefined) EntryAbility.terminate(); })
+      Row() {
+        Button('Close').onClick(() => { if (EntryAbility.terminate !== undefined) EntryAbility.terminate(); })
+        Button('Dark').onClick(() => { if (EntryAbility.setColor !== undefined) EntryAbility.setColor(ConfigurationConstant.ColorMode.COLOR_MODE_DARK); })
+        Button('Light').onClick(() => { if (EntryAbility.setColor !== undefined) EntryAbility.setColor(ConfigurationConstant.ColorMode.COLOR_MODE_LIGHT); })
+        Button('Land').onClick(() => { if (EntryAbility.win !== undefined) EntryAbility.win.setPreferredOrientation(window.Orientation.LANDSCAPE); })
+        Button('Port').onClick(() => { if (EntryAbility.win !== undefined) EntryAbility.win.setPreferredOrientation(window.Orientation.PORTRAIT); })
+      }
       Text(this.lines).fontSize(12).margin(8).height(150)
       List() {
         ForEach(this.rows, (i: number) => {
