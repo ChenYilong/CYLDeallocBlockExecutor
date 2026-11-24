@@ -50,6 +50,7 @@ mixin CYLLifecycleMixin<W extends StatefulWidget> on State<W> {
   bool _appearPending = false;
   bool _disappearPending = false;
   bool _disposed = false;
+  bool _removing = false;
   bool _onScreen = false;
   bool _dragging = false;
   bool _decelerating = false;
@@ -152,8 +153,16 @@ mixin CYLLifecycleMixin<W extends StatefulWidget> on State<W> {
 
   @override
   void dispose() {
-    _disposed = true;
+    _removing = true;
     _flushPending();
+    // A route removed while visible (pushReplacement, removeRoute) gets no
+    // didPop; UIKit still sends the disappear events before the view
+    // controller goes away, so send them here, before the teardown blocks.
+    if (_route != null && _onScreen) {
+      _willDisappear();
+      _didDisappear();
+    }
+    _disposed = true;
     _detachRoute();
     if (_binding != null) {
       WidgetsBinding.instance.removeObserver(_binding!);
@@ -165,8 +174,10 @@ mixin CYLLifecycleMixin<W extends StatefulWidget> on State<W> {
 
   // MARK: appear and disappear
 
+  // False while disposing: the route's transition duration looks up the theme
+  // through the context, which is deactivated by then.
   bool get _animated =>
-      (_route?.transitionDuration ?? Duration.zero) > Duration.zero;
+      !_removing && (_route?.transitionDuration ?? Duration.zero) > Duration.zero;
 
   void _willAppear() {
     _appearPending = true;
