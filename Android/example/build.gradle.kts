@@ -23,4 +23,5 @@ kotlin { compilerOptions { jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarg
 
 dependencies {
     implementation(project(":binding"))
+    implementation("androidx.recyclerview:recyclerview:1.3.2")
 }
