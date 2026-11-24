@@ -317,3 +317,31 @@ Plan. (1) Sonnet writes bucket (a) statically: the React Native navigation sourc
 Most this round can reach: bucket (a) plus (b) = about 98.5 average; the rest is bucket (c).
 
 Round 18 code (S = `f246d95`): the three bucket (a) items are committed and pass the compile gate on this Mac (Android `assembleDebug`, HarmonyOS `assembleHap`, React Native `tsc`); none has run on a device. Scores stay as above until the runs in [Test-Handoff.md, round 18](Test-Handoff.md#round-18-handoff-2026-11-24-s--f246d95-branch-integrationround-18-pr-27) return.
+
+### Round 18 test pass on this Mac (2026-11-24, S = `d0e752a`, owner: "run on Mac")
+
+No Windows session was reachable, so the Android, Flutter, React Native and HarmonyOS rows ran on this Mac: emulator `CYL_API35_test` (API 35, arm64, headless, port 5640) and the Mate 70 Pro HarmonyOS emulator (x86_64, `127.0.0.1:5555`, unsigned HAP). Load average 750 to 900 throughout.
+
+| Platform | Run | Result |
+|:---|:---|:---|
+| Android | `NestedScrollActivity` (debug APK of `f246d95`) | PASS: `ACT` appear chain, three swipes gave six pause / resume pairs (`pauses=6 resumes=6`; the timer source ends a session after 150 ms without movement, so a fling can split into two), Back gave `viewWillDisappear` .. `teardown` |
+| React Native | release build, navigation source (Home, Detail) | appear chains with `screen=Home` / `screen=Detail` on launch, push and Back; two flings 2 / 2; `replace` teardown. **Bug found:** the popped Detail went from `viewDidAppear` straight to `teardown` (no blur on removal). Fixed in the core (`detach()` sends the disappear events of a visible screen first, tests 56 / 56); after the fix on the device, Back gives `viewWillDisappear`, `viewDidDisappear`, `didLeaveScreen`, move events, `teardown screen=Detail`, and `replace` the same for Home |
+| Flutter | profile build (`--profile`, arm64) | PASS: start-up chain, three flings 3 / 3 without the JIT caveat. Same bug class as React Native fixed in the core: a route removed by `pushReplacement` now sends the disappear events before teardown (test added, 43 / 43, `flutter analyze` clean); not re-run on the device |
+| HarmonyOS | "Debug: simulate memory level (handler only)" | PASS (handler only): `deliverMemoryLevel level=2`, `EVENT 11 didReceiveMemoryWarning`; system delivery through DevEco Profiler still not seen |
+
+iOS result from the Mac session (tested `fc935a7`, iOS code unchanged since): library suite 85 / 85 in Debug and Release; CYLTabBarController with the iOS pins at S, "Pause while scrolling" switched on while visible, four real flicks 1 / 1 to 4 / 4; no `cyl.badge.*` or `cyl.animation.*` lines (no animated badge items on that screen); the Rive Loop switch could not be turned on by `axe`, so the label check is open. Follow-up (Loop launch argument, a badge screen, labeled screenshots) runs in the Mac session.
+
+Also new in S: iOS host projects for both examples (`Flutter/example/ios`, `ReactNative/example/ios`), written, not built yet; the Mac session runs them.
+
+Re-score (same rubric; never-run code at half credit):
+
+| Platform | Was | Now | Why |
+|:---|---:|---:|:---|
+| iOS | 89 | 89 | runs repeat earlier evidence; badge and Loop rows open |
+| Android | 98 | **99** | `NestedScrollView` screen run |
+| HarmonyOS | 92 | **93** | handler path run (1 of 4); system delivery open |
+| Flutter | 90 | **93** | profile fling pass (2), iOS host written (1 of 2) |
+| React Native | 88 | **95** | navigation source run and its bug fixed on the device (5), iOS host written (2 of 4) |
+| Mini Program | 84 | 84 | no DevTools run |
+
+Average about **92.2 / 100** (was 90.2).
