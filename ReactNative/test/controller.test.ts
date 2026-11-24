@@ -109,6 +109,32 @@ test('a pending did event is flushed when the owner is detached', () => {
   assert.ok(log.includes('viewDidAppear/afterSuper'));
 });
 
+test('a screen removed while visible (pop, replace) gets the disappear events before the move events and teardown', () => {
+  const c = make('ios', ['viewWillDisappear', 'viewDidDisappear', 'didLeaveScreen', 'willMoveToParent']);
+  c.registry.addDeallocCallback(() => log.push('teardown'));
+  c.attach();
+  f.emit('transitionStart', { data: { closing: false } });
+  f.emit('focus');
+  f.emit('transitionEnd', { data: { closing: false } });
+  log.length = 0;
+  c.detach();
+  assert.deepEqual(log.filter((l) => !l.endsWith('beforeSuper')), [
+    'viewWillDisappear/afterSuper', 'viewDidDisappear/afterSuper', 'didLeaveScreen/afterSuper', 'willMoveToParent/afterSuper',
+    'teardown',
+  ]);
+});
+
+test('a screen that already disappeared gets no second disappear on detach', () => {
+  const c = make('ios', ['viewWillDisappear', 'viewDidDisappear']);
+  c.attach();
+  f.emit('transitionEnd', { data: { closing: false } });
+  f.emit('transitionStart', { data: { closing: true } });
+  f.emit('transitionEnd', { data: { closing: true } });
+  log.length = 0;
+  c.detach();
+  assert.deepEqual(log, []);
+});
+
 test('viewDidLayoutSubviews from onLayout, invoke once and re-arm', () => {
   const c = make();
   c.attach();

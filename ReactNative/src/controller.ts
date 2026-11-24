@@ -130,11 +130,14 @@ export class LifecycleController<T extends object> {
     this.subscribeAll();
   }
 
-  /** The owner was removed (unmount): move events, sources removed, teardown blocks run. */
+  /** The owner was removed (unmount): disappear events if it was visible, move events, sources removed, teardown blocks run. */
   detach(): void {
     if (this.detached) return;
-    this.detached = true;
     this.flushPending();
+    // A screen removed while visible (a stack pop, a replace) gets no `blur`; UIKit still sends the disappear events
+    // before the view controller goes away, so send them here, before the move events and the teardown blocks.
+    if (this.appear === 'did') this.didDisappear();
+    this.detached = true;
     this.around('willMoveToParent', { parentAttached: false });
     this.around('didMoveToParent', { parentAttached: false });
     for (const remove of this.removers.values()) remove();
