@@ -1,0 +1,28 @@
+{
+  "name": "cyl-dealloc-block-executor-rn-example",
+  "version": "0.0.1",
+  "private": true,
+  "description": "Device check app: the library's React Native sources (../src) on a FlatList and a screen switch, logged to logcat.",
+  "scripts": {
+    "start": "react-native start",
+    "android": "react-native run-android",
+    "build:android": "react-native build-android --extra-params \"--no-daemon --console=plain -PreactNativeArchitectures=arm64-v8a\""
+  },
+  "dependencies": {
+    "react": "19.3.0",
+    "react-native": "0.88.0"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.25.2",
+    "@babel/preset-env": "^7.25.3",
+    "@babel/runtime": "^7.25.0",
+    "@react-native-community/cli": "20.2.0",
+    "@react-native-community/cli-platform-android": "20.2.0",
+    "@react-native/babel-preset": "0.88.0",
+    "@react-native/metro-config": "0.88.0",
+    "@react-native/typescript-config": "0.88.0",
+    "@types/react": "^19.2.0",
+    "typescript": "^5.9.0"
+  },
+  "engines": { "node": ">=22" }
+}
