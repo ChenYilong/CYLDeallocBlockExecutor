@@ -134,7 +134,7 @@ class LifecycleController {
   }
 
   onResize(size) {
-    this.around('viewWillTransition', { size: { width: size.windowWidth ?? size.width, height: size.windowHeight ?? size.height } });
+    this.around('viewWillTransition', { size: { width: (size.windowWidth != null ? size.windowWidth : size.width), height: (size.windowHeight != null ? size.windowHeight : size.height) } });
   }
 
   themeChanged(theme) {
@@ -175,8 +175,8 @@ function withLifecycle(options) {
   wrap('onReady', (c) => c.onReady());
   wrap('onHide', (c) => c.onHide());
   wrap('onUnload', (c) => c.onUnload());
-  wrap('onResize', (c, a) => c.onResize(a[0] ?? {}));
-  wrap('onPageScroll', (c, a) => c.onPageScroll(a[0] ?? {}));
+  wrap('onResize', (c, a) => c.onResize(a[0] != null ? a[0] : {}));
+  wrap('onPageScroll', (c, a) => c.onPageScroll(a[0] != null ? a[0] : {}));
   return out;
 }
 
