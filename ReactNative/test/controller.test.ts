@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { beforeEach, test } from 'node:test';
-import { LifecycleController, mountLifecycle } from '../src/index.ts';
+import { LifecycleController, MEMORY_WARNING_EVENT, mountLifecycle } from '../src/index.ts';
 import type { Insets, LifecycleEvent, PlatformSources } from '../src/index.ts';
 
 type Fn = (...a: any[]) => void;
@@ -11,6 +11,7 @@ class Fakes {
   dim: Fn[] = [];
   app: Fn[] = [];
   mem: Fn[] = [];
+  host: Array<{ type: string; l: Fn }> = [];
   insets: Fn[] = [];
   removed = 0;
   size = { width: 400, height: 800, fontScale: 1 };
@@ -34,6 +35,13 @@ class Fakes {
       dimensions: { get: () => this.size, addEventListener: (_t, l) => track(this.dim, l) },
       appearance: { getColorScheme: () => this.scheme, addChangeListener: (l) => track(this.app, l) },
       appState: { addEventListener: (_t, l) => track(this.mem, l) },
+      hostEvents: {
+        addListener: (type, l) => {
+          const entry = { type, l };
+          this.host.push(entry);
+          return { remove: () => { this.removed++; this.host.splice(this.host.indexOf(entry), 1); } };
+        },
+      },
       safeAreaInsets: { get: () => this.inset, subscribe: (l) => track(this.insets, l) },
     };
   }
@@ -159,6 +167,43 @@ test('memory warning fires on iOS, never subscribes on Android', () => {
   android.attach();
   android.registry.addLifecycleCallback('didReceiveMemoryWarning', () => log.push('mem2'));
   assert.equal(f.mem.length, 0);
+});
+
+test('memory warning on Android comes from the host event cylMemoryWarning, once per emit', () => {
+  assert.equal(MEMORY_WARNING_EVENT, 'cylMemoryWarning');
+  const android = make('android');
+  android.attach();
+  android.registry.addLifecycleCallback('didReceiveMemoryWarning', () => log.push('mem'));
+  assert.deepEqual(f.host.map((h) => h.type), ['cylMemoryWarning']);
+  assert.equal(f.mem.length, 0, 'AppState is not used on Android');
+  f.host.forEach((h) => h.l());
+  assert.deepEqual(log, ['mem']);
+  f.host.forEach((h) => h.l());
+  assert.deepEqual(log, ['mem', 'mem']);
+  // A second block for the same event does not add a second subscription.
+  android.registry.addLifecycleCallback('didReceiveMemoryWarning', () => log.push('mem-b'));
+  assert.equal(f.host.length, 1);
+  android.detach();
+  assert.equal(f.host.length, 0, 'removed on detach');
+});
+
+test('memory warning on iOS never subscribes to the host event (no double delivery)', () => {
+  const ios = make('ios');
+  ios.attach();
+  ios.registry.addLifecycleCallback('didReceiveMemoryWarning', () => log.push('mem'));
+  assert.equal(f.host.length, 0);
+  assert.equal(f.mem.length, 1);
+  f.mem.forEach((l) => l());
+  assert.deepEqual(log, ['mem']);
+});
+
+test('without hostEvents Android stays silent (a missing source leaves the event unfired)', () => {
+  const sources = { ...f.sources('android'), hostEvents: undefined };
+  const c = new LifecycleController(owner, sources, { navigation: 'stack' });
+  c.attach();
+  c.registry.addLifecycleCallback('didReceiveMemoryWarning', () => log.push('mem'));
+  assert.equal(f.host.length, 0);
+  assert.deepEqual(log, []);
 });
 
 test('sources are subscribed lazily and all removed on detach', () => {

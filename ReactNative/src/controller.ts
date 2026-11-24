@@ -1,6 +1,9 @@
 import { LifecycleRegistry } from './registry.ts';
 import type { Insets, LifecycleEvent, LifecycleInfo } from './types.ts';
 
+/** The device event a host (Android `onTrimMemory`, see `ReactNative/example`) emits for a memory warning. The `cyl` prefix: event names are global. */
+export const MEMORY_WARNING_EVENT = 'cylMemoryWarning';
+
 type Remove = () => void;
 type Sub = { remove(): void } | (() => void) | void;
 
@@ -13,6 +16,12 @@ export interface PlatformSources {
   platform?: 'ios' | 'android' | string;
   /** `AppState`: only `memoryWarning` is used (iOS only). */
   appState?: { addEventListener(type: 'memoryWarning', listener: () => void): Sub };
+  /**
+   * Host events (`DeviceEventEmitter`): on Android the host app forwards `onTrimMemory` as the device event
+   * `MEMORY_WARNING_EVENT` (`cylMemoryWarning`); only subscribed when `platform` is not `ios`, so a warning is never
+   * delivered twice (iOS keeps `AppState` `memoryWarning`).
+   */
+  hostEvents?: { addListener(type: string, listener: () => void): Sub };
   /** `Dimensions`: `change` with the new window size. */
   dimensions?: {
     addEventListener(
@@ -58,8 +67,8 @@ const sameInsets = (a: Insets, b: Insets) =>
  *   no source (React Native reports layout after the fact);
  * - `viewSafeAreaInsetsDidChange`: `safeAreaInsets`; `viewWillTransition`:
  *   `Dimensions` `change`; `traitCollectionDidChange`: `Appearance` and the
- *   font scale; `didReceiveMemoryWarning`: `AppState` `memoryWarning` (iOS
- *   only, Android has no such event);
+ *   font scale; `didReceiveMemoryWarning`: `AppState` `memoryWarning` on iOS;
+ *   on Android the host forwards `onTrimMemory` as the device event `cylMemoryWarning` (`hostEvents`);
  * - `viewLayoutMarginsDidChange`: not available (no layout margins).
  *
  * Sources are subscribed lazily, when the first block for one of their events
@@ -272,6 +281,9 @@ export class LifecycleController<T extends object> {
       case 'memory':
         if (s.appState && s.platform === 'ios') {
           this.removers.set(name, toRemove(s.appState.addEventListener('memoryWarning', () => this.around('didReceiveMemoryWarning'))));
+        } else if (s.hostEvents && s.platform !== 'ios') {
+          // One source per platform: iOS AppState above, the host's forwarded `onTrimMemory` here.
+          this.removers.set(name, toRemove(s.hostEvents.addListener(MEMORY_WARNING_EVENT, () => this.around('didReceiveMemoryWarning'))));
         }
         break;
     }
