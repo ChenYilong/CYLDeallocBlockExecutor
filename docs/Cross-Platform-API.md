@@ -283,3 +283,35 @@ iOS real-app result of the round 17 pass (Mac session, S = `431b3b9371249d2b4b73
 - **Open anomaly:** on the Example-Rive Engine API page the "last event" label stayed at `cyl.animation.didStart` through four pause / resume cycles (counters 1 / 1 to 4 / 4); at `c85c10c` it moved to `didPause` / `didResume`. The library's iOS source differs between `c85c10c` and S only by PR #21 (`observeVisibleScrollViews`); the custom-event path (`postLifecycleEvent`, global observers) is unchanged, and `cyl.animation.*` is posted by CYLTabBarController's bridge, not by the library. Explained by the Mac session from the consumer code (static read): the label observes the notifications `CYLAnimatedItemView` posts per item, and `pauseAllPlaying()` posts `didPause` only for items that are playing at that moment; the S run used a play-once pass that had ended (no item playing), while the `c85c10c` run had Loop on. A test-method artifact, not a library regression. To confirm in the Mac session's final pass: Rive Engine API page with Loop ON, pause while scrolling ON, flick: expect `didPause` during the drag and `didResume` after; also badge pause on a screen with animated badge items.
 
 iOS score: 87 to **89** on this evidence (the Mac session scored its own pass 90 / 100: -5 badge, -3 label, -2 older base). Average about **90.2 / 100**.
+
+### Round 18 advisor review (2026-11-24)
+
+Rubric and rule unchanged (code never built or run on its platform earns at most half credit). The cell score (205 / 205) is saturated, so the effect score is the metric. Start: about **90.2 / 100** (iOS 89, Android 98, HarmonyOS 92, Flutter 90, React Native 88, Mini Program 84).
+
+Every remaining deduction, in three buckets: **(a)** code this session writes; **(b)** a run on a machine (iOS on the Mac session, the others on the Windows sessions); **(c)** owner only. Bucket (c) caps the score: 100 everywhere is not reachable until the owner acts, and the rubric is not changed to get there.
+
+| Platform | Score | Deduction | Points | Bucket |
+|:---|---:|:---|---:|:---|
+| iOS | 89 | badge pause while scrolling on a screen with animated badge items, `cyl.badge.*` log lines | 5 | b (Mac) |
+| iOS | | Rive Engine API page with Loop ON: `didPause` during the drag, `didResume` after | 3 | b (Mac) |
+| iOS | | consumers on an older base: 1.4.0 release, #823 / #824 out of draft, re-pin | 2 | c |
+| iOS | | no real device | 1 | c |
+| Android | 98 | `NestedScrollView` screen in `Android/example` (the binding supports it, no demo uses it) | 1 | a, then b |
+| Android | | second machine (Windows emulator, arm64 image if available) | 1 | b (Windows) |
+| HarmonyOS | 92 | memory level reaches `didReceiveMemoryWarning` (DevEco Profiler, GUI only; no CLI trim) | 4 | b (Windows) |
+| HarmonyOS | | arm64 emulator (the Mac has only x86_64) | 2 | b (Windows, if arm64) |
+| HarmonyOS | | no real device | 2 | c |
+| Flutter | 90 | native `animationsPaused` channel run on a host (the channel lives in the CYLTabBarController wrapper) | 6 | b |
+| Flutter | | timings from a JIT debug build on a loaded machine: rerun the fling pass in a profile build | 2 | b (Windows) |
+| Flutter | | iOS host run of the example | 2 | b (Mac) |
+| React Native | 88 | appear / disappear never fire in the example: no navigation source | 5 | a, then b |
+| React Native | | native pause path (`animationsPaused`) run on a host | 3 | b |
+| React Native | | iOS host run of the example | 4 | b (Mac) |
+| Mini Program | 84 | WeChat DevTools run of the library example (events table in Test-Handoff.md section 2) | 12 | b (Windows A, logged in), else c (login) |
+| Mini Program | | the second load problem in CYLTabBarController (`Component is not found`) traced or gone | 4 | b (Windows A) |
+
+Checked before assigning (grep on `4276a6d`): `createIntersectionObserver` already exists in `MiniProgram/controller.js` with a test, so the Mini Program has no code gap left; `animationsPaused` is not in `Flutter/` (the channel belongs to the consumer wrapper), so Flutter has no library code gap.
+
+Plan. (1) Sonnet writes bucket (a) statically: the React Native navigation source, the Android `NestedScrollView` screen, and a HarmonyOS debug button that calls the memory-level handler (it proves the handler only, not the system delivery, and is labeled so). (2) One SHA S on `integration/round-18`, one PR. (3) The test handoff names S: iOS to the Mac session; Android, Flutter, React Native, HarmonyOS and Mini Program to the Windows sessions, sent without waiting for CI. (4) Re-score only on runs that happened; bucket (a) code earns half credit until its run returns.
+
+Most this round can reach: bucket (a) plus (b) = about 98.5 average; the rest is bucket (c).

@@ -4,6 +4,18 @@ This document tracks the lifecycle block API of CYLDeallocBlockExecutor: blocks 
 
 ## Task log
 
+### TODO: round 18, advisor review of the all-platform score and the next plan (2026-11-24, branch `integration/round-18`)
+
+**Context.** Round 17 ended at an effect score of about 90.2 / 100 (cell score 205 / 205, saturated). Review, deductions and plan: [Cross-Platform-API.md](Cross-Platform-API.md#round-18-advisor-review-2026-11-24).
+
+**Requirements (English translation of the prompt).**
+
+- The advisor (Opus) reviews the current score of the all-platform interface work and gives the next plan and advice.
+- Sonnet, the default model, implements the advice right away, to bring the score to 100.
+- Forward the fitting tasks to the other sessions, which test on their own machines: iOS on the macOS machine, every other platform on the Windows machine. Do not wait for CI before forwarding.
+
+**Prompt (verbatim).** continue TODO (missing points): advisor opus advisor点评目前全平台接口实现得分 以及下一步计划与建议。并立即让默认模型sonnet按照建议去实现。将得分优化到100转发合适任务给其他session 直接使用本机环境进行测试，iOS在macos机器，其余在windows机器。转发任务给相应session无需等待ci结果。
+
 ### TODO: observable moments for badges, animation and scrolling (2026-11-23, branch `feat/lifecycle-callbacks`, PR #12)
 
 **Context.** The lifecycle blocks cover view controller events and dealloc. CYLTabBarController's badge extensions touch `UIViewController`, `UITabBarItem`, `UIControl`, `UIView` and `UIBarButtonItem`, decide readiness with `cyl_isReady()`, and play animations. The owner wants every such moment observable from this library on every platform.
