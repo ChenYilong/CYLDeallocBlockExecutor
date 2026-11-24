@@ -14,6 +14,8 @@ This document tracks the lifecycle block API of CYLDeallocBlockExecutor: blocks 
 - Sonnet, the default model, implements the advice right away, to bring the score to 100.
 - Forward the fitting tasks to the other sessions, which test on their own machines: iOS on the macOS machine, every other platform on the Windows machine. Do not wait for CI before forwarding.
 
+**Follow-up (2026-11-24).** No Windows session is reachable; the owner said "run on Mac": the Android, Flutter, React Native and HarmonyOS rows of the round 18 handoff run on this Mac's emulators (Mini Program still needs Windows A or the WeChat login). Prompt (verbatim): run on Mac
+
 **Prompt (verbatim).** continue TODO (missing points): advisor opus advisor点评目前全平台接口实现得分 以及下一步计划与建议。并立即让默认模型sonnet按照建议去实现。将得分优化到100转发合适任务给其他session 直接使用本机环境进行测试，iOS在macos机器，其余在windows机器。转发任务给相应session无需等待ci结果。
 
 ### TODO: observable moments for badges, animation and scrolling (2026-11-23, branch `feat/lifecycle-callbacks`, PR #12)
