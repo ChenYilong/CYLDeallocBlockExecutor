@@ -26,7 +26,10 @@ const rows = Array.from({ length: 400 }, (_, i) => `row ${i}`);
  * transitionStart and transitionEnd events feed viewWillAppear ... viewDidDisappear, and didEnterScreen / didLeaveScreen
  * follow the did events. Every event logs `CYL EVENT n name screen=<screen>`.
  */
-function useScreenLifecycle(screen: string, navigation: NativeStackScreenProps<RootParams>['navigation']) {
+// The library only needs addListener, so any React Navigation navigation object fits.
+type NavigationSource = NonNullable<NonNullable<Parameters<typeof useLifecycle>[1]>['navigation']>;
+
+function useScreenLifecycle(screen: string, navigation: NavigationSource) {
   const owner = useRef({ name: screen }).current;
   const count = useRef(0);
   const lifecycle = useLifecycle(owner, { navigation, navigationMode: 'stack' });
