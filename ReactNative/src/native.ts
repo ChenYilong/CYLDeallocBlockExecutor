@@ -1,7 +1,7 @@
 // The only file that imports `react-native` and `react`. Not covered by the
 // Node tests (they do not load); the controller it feeds is.
 import { useCallback, useEffect, useRef } from 'react';
-import { Appearance, AppState, Dimensions, Platform } from 'react-native';
+import { Appearance, AppState, DeviceEventEmitter, Dimensions, Platform } from 'react-native';
 import { LifecycleController, mountLifecycle } from './controller.ts';
 import type { ControllerOptions, PlatformSources } from './controller.ts';
 import { LifecycleRegistry } from './registry.ts';
@@ -17,6 +17,7 @@ export function createNativeSources(extra: {
     appState: AppState as unknown as PlatformSources['appState'],
     dimensions: Dimensions as unknown as PlatformSources['dimensions'],
     appearance: Appearance as unknown as PlatformSources['appearance'],
+    hostEvents: DeviceEventEmitter as unknown as PlatformSources['hostEvents'],
     navigation: extra.navigation,
     safeAreaInsets: extra.safeAreaInsets,
   };

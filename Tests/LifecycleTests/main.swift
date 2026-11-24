@@ -639,6 +639,21 @@ func runObservableTests(window: UIWindow) {
     check(log == ["pause", "resume"], "a flick resumes once the deceleration is over, without another offset change", "\(log)")
     flick.removeFromSuperview()
 
+    // A global scroll observer added while the page is already on screen (the app switches the option on later) observes it at once.
+    CYLLifecycleCenter.reset()
+    log = []
+    let livePage = PlainViewController()
+    let liveScroll = UIScrollView(frame: CGRect(x: 0, y: 0, width: 100, height: 100))
+    livePage.view.addSubview(liveScroll)
+    appear(livePage, in: window)
+    log = []
+    check(CYLLifecycleSources.existingScrollObserver(of: liveScroll) == nil, "before the global observer: the scroll view has no observer")
+    CYLLifecycleCenter.addCallback(for: .scrollWillBeginDragging) { _, _, _ in log.append("pause") }
+    let liveObserver = CYLLifecycleSources.existingScrollObserver(of: liveScroll)
+    check(liveObserver != nil, "a global scroll observer added later attaches to the scroll view already on screen")
+    liveObserver?.dragBegan()
+    check(log == ["pause"], "...and hears its drag", "\(log)")
+
     // A view controller reports didEnterScreen / didLeaveScreen right after viewDidAppear / viewDidDisappear.
     log = []
     let screenController = PlainViewController()

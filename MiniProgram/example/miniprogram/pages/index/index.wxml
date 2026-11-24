@@ -1,0 +1,6 @@
+<view class="head">
+  <button id="push" bindtap="goSecond">push second page</button>
+  <text id="count">events: {{count}}  pauses: {{pauses}}  resumes: {{resumes}}</text>
+</view>
+<view class="log"><text wx:for="{{log}}" wx:key="*this">{{item}}\n</text></view>
+<view class="filler" wx:for="{{rows}}" wx:key="*this"><text>row {{item}}</text></view>

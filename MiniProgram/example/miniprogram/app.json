@@ -1,0 +1,8 @@
+{
+  "pages": ["pages/index/index", "pages/second/second"],
+  "window": { "navigationBarTitleText": "CYL lifecycle" },
+  "darkmode": true,
+  "themeLocation": "theme.json",
+  "style": "v2",
+  "sitemapLocation": "sitemap.json"
+}

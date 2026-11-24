@@ -1,0 +1,9 @@
+{
+  "description": "Device check app for the Mini Program lifecycle library (run example/sync.sh first).",
+  "miniprogramRoot": "miniprogram/",
+  "appid": "touristappid",
+  "projectname": "cyl-lifecycle-example",
+  "compileType": "miniprogram",
+  "libVersion": "latest",
+  "setting": { "es6": false, "enhance": false, "minified": false, "urlCheck": false, "postcss": false }
+}
