@@ -345,3 +345,22 @@ Re-score (same rubric; never-run code at half credit):
 | Mini Program | 84 | 84 | no DevTools run |
 
 Average about **92.2 / 100** (was 90.2).
+
+
+Round 18 iOS rows 6–7 (Mac session, 2026-11-24, S = `d0e752a`, fresh clone, iPhone 18 Pro iOS 27.2 simulator, empty derived data)
+
+| Row | Run | Result |
+|:---|:---|:---|
+| 7 Flutter iOS host | `Flutter/example/ios`, debug | PASS: start-up EVENT 1..9 (`viewDidLoad` .. `viewDidAppear`, `didEnterScreen`); three real flicks `pauses=3 resumes=3` (each `scrollWillBeginDragging`, `scrollDidEndDragging`, `scrollDidEndScrolling`); push gave `viewWillDisappear`, `viewDidDisappear`, `didLeaveScreen`; Back (edge swipe) gave `viewWillAppear`, `viewIsAppearing`, `viewDidAppear`, `didEnterScreen` |
+| 6 React Native iOS host | scheme `CylDeallocExample`, BUILD SUCCEEDED | PASS except memory warning: launch chain `screen=Home`; four flicks `pauses=4 resumes=4`; push Detail interleaves Home disappear / Detail appear as UIKit does; Back gives Detail `viewWillDisappear`, `viewDidDisappear`, `didLeaveScreen`, move events, `teardown screen=Detail` (the `detach()` fix, now confirmed on iOS too), then the Home appear chain. **Open:** Debug > Simulate Memory Warning needs Simulator.app (headless here; `notifyutil` gave nothing) |
+
+No library bugs found. Notes: RN ignored `RCT_METRO_PORT`, the session set the `RCT_jsLocation` default locally (not committed). Screenshots are originals only, unlabeled, in the Mac session's `/tmp/xpr/r18-shots/rows67/`; not in docs/assets yet. Rows 2 / 3 follow-up still running.
+
+Re-score:
+
+| Platform | Was | Now | Why |
+|:---|---:|---:|:---|
+| Flutter | 93 | **94** | iOS host run (2 of 2); `pushReplacement` fix not re-run on a device |
+| React Native | 95 | **97** | iOS host run (3 of 4), pop fix confirmed on iOS (1); memory warning on iOS open |
+
+Average about **92.7 / 100** (was 92.2): iOS 89, Android 99, HarmonyOS 93, Flutter 94, React Native 97, Mini Program 84.
