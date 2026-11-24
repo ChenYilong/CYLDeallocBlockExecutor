@@ -28,8 +28,17 @@ export default class EntryAbility extends UIAbility {
     });
   }
 
-  onMemoryLevel(level: AbilityConstant.MemoryLevel): void {
+  /**
+   * The single code path for a memory level: the system callback below and the demo page's debug button both call it,
+   * so the button exercises exactly what a real delivery would.
+   */
+  static deliverMemoryLevel(level: number): void {
+    hilog.info(0x0000, 'CYL', 'deliverMemoryLevel level=%{public}d', level);
     if (EntryAbility.memoryHook !== undefined) EntryAbility.memoryHook(level);
+  }
+
+  onMemoryLevel(level: AbilityConstant.MemoryLevel): void {
+    EntryAbility.deliverMemoryLevel(level);
   }
 
   onConfigurationUpdate(newConfig: Configuration): void {
