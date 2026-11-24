@@ -1,5 +1,5 @@
 // Device check page: one block per event on the page's registry, logged to the console (tag CYL) and on screen.
-const { withLifecycle, LifecycleRegistry, LifecycleCenter, LifecycleEvent } = require('../../cyl/index.js')
+const { withLifecycle, LifecycleRegistry, LifecycleCenter, LifecycleEvent } = require('../../cyl/index')
 
 const rows = []
 for (let i = 0; i < 60; i++) rows.push(i)

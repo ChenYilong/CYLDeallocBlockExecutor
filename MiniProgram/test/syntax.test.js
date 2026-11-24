@@ -9,6 +9,18 @@ const { test } = require('node:test');
 const root = process.env.MINI_ROOT || path.join(__dirname, '..');
 const sources = fs.readdirSync(root).filter((f) => f.endsWith('.js'));
 
+// The example's own files (MiniProgram/example/miniprogram/**/*.js). `cyl/` is the library copy that `sync.sh` creates (git-ignored).
+const exampleRoot = path.join(root, 'example', 'miniprogram');
+function exampleFiles(dir = exampleRoot) {
+  if (!fs.existsSync(dir)) return [];
+  return fs.readdirSync(dir, { withFileTypes: true }).flatMap((e) => {
+    const full = path.join(dir, e.name);
+    if (e.isDirectory()) return e.name === 'cyl' ? [] : exampleFiles(full);
+    return e.name.endsWith('.js') ? [path.relative(root, full)] : [];
+  });
+}
+const exampleSources = exampleFiles();
+
 function code(file) {
   return fs.readFileSync(path.join(root, file), 'utf8')
     .replace(/\/\*[\s\S]*?\*\//g, '')              // block comments
@@ -56,14 +68,33 @@ test('there are mini program sources to check', () => {
   assert.ok(sources.length >= 5, `found ${sources.join(', ')}`);
 });
 
+function checkSyntax(file) {
+  const text = code(file);
+  assert.deepEqual(classFields(text), [], `${file}: class field(s); assign in the constructor or after the class`);
+  for (const [pattern, name] of forbidden) {
+    const m = text.match(pattern);
+    assert.equal(m, null, `${file}: ${name} found near "${m && text.slice(Math.max(0, m.index - 30), m.index + 40).replace(/\n/g, ' ')}"`);
+  }
+}
+
 for (const file of sources) {
-  test(`${file} has no syntax that WeChat DevTools drops`, () => {
+  test(`${file} has no syntax that WeChat DevTools drops`, () => checkSyntax(file));
+}
+
+// The example is compiled by the same DevTools: its own files obey the same rules.
+test('the example has files to check (its own, not the synced library copy)', () => {
+  assert.ok(exampleSources.length >= 3, `found ${exampleSources.join(', ')}`);
+  assert.ok(exampleSources.every((f) => !f.includes(`${path.sep}cyl${path.sep}`)), 'the synced library copy must not be scanned here');
+});
+
+for (const file of exampleSources) {
+  test(`${file} has no syntax that WeChat DevTools drops`, () => checkSyntax(file));
+  test(`${file} requires with plain statically analyzable calls`, () => {
     const text = code(file);
-    assert.deepEqual(classFields(text), [], `${file}: class field(s); assign in the constructor or after the class`);
-    for (const [pattern, name] of forbidden) {
-      const m = text.match(pattern);
-      assert.equal(m, null, `${file}: ${name} found near "${m && text.slice(Math.max(0, m.index - 30), m.index + 40).replace(/\n/g, ' ')}"`);
-    }
+    assert.equal(/\.\.\.\s*require\s*\(/.test(text), false, `${file}: \`...require(\` is not followed by DevTools`);
+    const raw = fs.readFileSync(path.join(root, file), 'utf8');
+    assert.equal(/require\(\s*'\.{1,2}\/[^']*\.js'\s*\)/.test(raw), false, `${file}: use require('./name') without the .js extension`);
+    assert.equal(/require\(\s*[^'\s)]/.test(raw.replace(/\/\/.*$/gm, '')), false, `${file}: require() takes a string literal only`);
   });
 }
 
