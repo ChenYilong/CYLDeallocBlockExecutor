@@ -1,4 +1,4 @@
-const { LifecycleLog } = require('./log.js');
+const { LifecycleLog } = require('./log');
 
 /** Options of `whileUserScrolls` and `addDeallocObserver`. */
 

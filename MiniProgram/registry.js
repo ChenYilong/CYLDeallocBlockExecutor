@@ -1,6 +1,6 @@
-const { LifecycleCenter } = require('./center.js');
-const { LifecycleLog } = require('./log.js');
-const { allTimings } = require('./types.js');
+const { LifecycleCenter } = require('./center');
+const { LifecycleLog } = require('./log');
+const { allTimings } = require('./types');
 const cylWeakRef = (o) => (typeof WeakRef === 'function' ? new WeakRef(o) : { deref: () => o });
 
 const kindOf = (e       )       => (e.event !== null ? 'lifecycle' : e.custom !== undefined ? 'custom' : 'dealloc');

@@ -66,3 +66,29 @@ for (const file of sources) {
     }
   });
 }
+
+// WeChat DevTools drops every file it cannot see referenced (ignoreDevUnusedFiles is on by default) and does not follow
+// `...require('./x')` in an object spread: index.js must reach every module through plain `require('./name')` calls.
+test('index.js uses no spread-require', () => {
+  assert.equal(/\.\.\.\s*require\s*\(/.test(code('index.js')), false, 'index.js: `...require(` is not followed by DevTools');
+});
+
+test('every module is reachable from index.js by a plain require chain', () => {
+  const reachable = new Set(['index.js']);
+  const queue = ['index.js'];
+  while (queue.length) {
+    const file = queue.shift();
+    const text = fs.readFileSync(path.join(root, file), 'utf8');
+    for (const m of text.matchAll(/(?<![.\w])require\(\s*'\.\/([\w-]+)(?:\.js)?'\s*\)/g)) {
+      const next = `${m[1]}.js`;
+      if (!reachable.has(next) && sources.includes(next)) { reachable.add(next); queue.push(next); }
+    }
+  }
+  assert.deepEqual(sources.filter((f) => !reachable.has(f)).sort(), [], 'files DevTools would drop as unused');
+});
+
+test('internal requires omit the .js extension', () => {
+  for (const file of sources) {
+    assert.equal(/require\(\s*'\.\/[\w-]+\.js'\s*\)/.test(fs.readFileSync(path.join(root, file), 'utf8')), false, `${file}: use require('./name')`);
+  }
+});

@@ -1,4 +1,4 @@
-const { LifecycleRegistry } = require('./registry.js');
+const { LifecycleRegistry } = require('./registry');
 
 /**
  * Fires the lifecycle events of a Mini Program Page or Component from the
