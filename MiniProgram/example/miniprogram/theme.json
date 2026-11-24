@@ -1,0 +1,4 @@
+{
+  "light": { "bgColor": "#ffffff", "textColor": "#000000" },
+  "dark": { "bgColor": "#000000", "textColor": "#ffffff" }
+}

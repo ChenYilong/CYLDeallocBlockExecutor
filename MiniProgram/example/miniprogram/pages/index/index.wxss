@@ -1,0 +1,3 @@
+.head { padding: 16rpx; }
+.log { padding: 0 16rpx; font-size: 24rpx; height: 360rpx; overflow: hidden; }
+.filler { height: 120rpx; border-bottom: 1rpx solid #888; padding: 16rpx; }
