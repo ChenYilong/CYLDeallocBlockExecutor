@@ -156,13 +156,16 @@ class LifecycleController {
  */
 function withLifecycle(options) {
   const out = { ...options };
-  const controllerOf = (page) => (page.cylController ??= new LifecycleController(page));
+  const controllerOf = (page) => {
+    if (!page.cylController) page.cylController = new LifecycleController(page);
+    return page.cylController;
+  };
   const wrap = (name, call) => {
     const original = options[name];
     out[name] = function (...args) {
       const controller = controllerOf(this);
       if (name === 'onLoad') call(controller, args);
-      const result = original?.apply(this, args);
+      const result = original ? original.apply(this, args) : undefined;
       if (name !== 'onLoad') call(controller, args);
       return result;
     };

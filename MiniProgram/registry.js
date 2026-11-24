@@ -90,7 +90,7 @@ class LifecycleRegistry {
       fired: false,
       cancelled: false,
     });
-    this.onRegister?.(event);
+    if (this.onRegister) this.onRegister(event);
     return identifier;
   }
 
