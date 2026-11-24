@@ -257,3 +257,19 @@ Same rubric and rule as above (code never built or run on its platform earns at 
 | Mini Program | 84 | **84** | `index.js` with plain requires, no class fields, `??`, `?.` or `.js` extension in internal requires, guard test over the library and the example (64 / 64): all static | WeChat DevTools never run by this session (login); the Windows session's runs decide whether the load problem is gone |
 
 Average about **88.7 / 100** (was about 84). Cell score 205 / 205. No platform is at 100: each row names a run that has not happened, and four items need the owner (the 1.4.0 release, the WeChat login, the merge, Windows B's go-ahead).
+
+### Round 17 test pass on S = `431b3b9` (2026-11-24, one pass, run on this Mac)
+
+Test commit: `431b3b9` (`integration/round-17`). iOS library suite on the iOS 17 simulator; Android, Flutter and React Native on emulator-5640 (API 35, arm64, headless, debug APK for Android and Flutter, release build for React Native); HarmonyOS on the Mate 70 Pro emulator (x86_64, unsigned HAP). The Mac session's real-app pass and the Windows DevTools pass are still outstanding when this is written.
+
+| Platform | Result on S | Not run |
+|:---|:---|:---|
+| iOS library | 85 / 85 in Debug and Release (both launches each) | real-app flicks, badge pause, teardown (Mac session) |
+| Android | list and `ScrollView` screens: three flings each, pauses == resumes (3 / 3); dark and rotation on both screens; memory trim on both screens (the `ScrollView` screen from a fresh process) | `NestedScrollView`: the example has a plain `ScrollView` only |
+| Flutter | start-up, three flings (3 / 3), dark, rotation, push and Back, `replace` teardown, trim after Home | see the trim note below |
+| React Native | release build: four flings (4 / 4), mount, dark, rotation, `replace` teardown, **Android memory source**: Home then `RUNNING_LOW` gives exactly one `didReceiveMemoryWarning`, then `MODERATE` one more | appear / disappear (no navigation source in the example), iOS host |
+| HarmonyOS | launch chain, swipe and fling pair up, dark and light, landscape and portrait, system Back (`onBackPressed` false) gives `teardown` | memory level (DevEco Profiler, GUI only; `hidumper` and `aa` have no trim command), arm64 |
+
+Notes. (1) Flutter trim: two sends (`RUNNING_LOW`, then `MODERATE`) gave three `didReceiveMemoryWarning`. The Dart mixin fires once per `didHaveMemoryPressure` call, which the Flutter engine on Android can deliver more than once per trim. Treated as platform behaviour: no dedupe, so real repeated pressure is not hidden. (2) `am send-trim-memory` throws a Binder exception when the process is already past the requested level: send `RUNNING_LOW` first, then `MODERATE`, on a fresh process. (3) HarmonyOS emulator start: `Emulator -hvd "Mate 70 Pro" -path ~/.Huawei/Emulator/deployed -imageRoot ~/Library/Huawei/Sdk`. (4) The new crash capture in `Tests/run-lifecycle-tests.sh` was not triggered: no launch died.
+
+Score changes from this pass: Android 97 to **98** (memory trim seen on the `ScrollView` screen), React Native 82 to **88** (the Android memory source now runs on a device, release build, fling pairs). Others unchanged (iOS 87, HarmonyOS 92, Flutter 90, Mini Program 84). Average about **89.8 / 100**. Not 100: the 1.4.0 release, the WeChat login and DevTools run, the Mac real-app pass, the memory level on HarmonyOS, arm64 and real devices.
