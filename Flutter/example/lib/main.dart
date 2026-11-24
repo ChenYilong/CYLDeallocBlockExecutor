@@ -53,6 +53,11 @@ class _ListPageState extends State<ListPage> with CYLLifecycleMixin<ListPage> {
       appBar: AppBar(
         title: const Text('CYL lifecycle'),
         actions: [
+          // Replacing the page disposes this State, which runs the teardown block.
+          TextButton(
+            onPressed: () => Navigator.of(context).pushReplacement(MaterialPageRoute<void>(builder: (_) => const Scaffold(body: Center(child: Text('replaced page'))))),
+            child: const Text('replace'),
+          ),
           TextButton(
             onPressed: () => Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => const Scaffold(body: Center(child: Text('second page'))))),
             child: const Text('push'),
