@@ -86,11 +86,13 @@ that is not yours: the owner confirms in your session.
 - Android memory trim: on a fresh process send `RUNNING_LOW` first, then `MODERATE`; `am send-trim-memory` throws when the process is already past the level.
 - Flutter on Android can deliver `didHaveMemoryPressure` more than once per trim: not a library bug.
 
-## Round 18 handoff (2026-11-24, S = `fc935a7`, branch `integration/round-18`, PR #27)
+## Round 18 handoff (2026-11-24, S = `f246d95`, branch `integration/round-18`, PR #27)
 
-Test **S = `fc935a7a9a6bb27c07bc2249537c3e62da8c462d`** in one pass; do not wait for CI. Report one block per platform (section 5 format) to the library session (`chenyilong-b8`). Deductions each row clears: [Cross-Platform-API.md, round 18 review](Cross-Platform-API.md#round-18-advisor-review-2026-11-24).
+Test **S = `f246d9565692163da58f9c68dd8b6cfb51af9835`** in one pass; do not wait for CI. Report one block per platform (section 5 format) to the library session (`chenyilong-b8`). Deductions each row clears: [Cross-Platform-API.md, round 18 review](Cross-Platform-API.md#round-18-advisor-review-2026-11-24).
 
-New in S (written statically, never built): Android `NestedScrollActivity`; React Native example on a React Navigation native stack (Home, Detail); HarmonyOS button "Debug: simulate memory level (handler only)".
+G3 compile gate on S (this Mac, 2026-11-24, load average about 750): Android `:example:assembleDebug` BUILD SUCCESSFUL (Gradle 8.14.3, JDK 21 from DevEco-Studio, AGP 8.13.0); HarmonyOS `entry` `assembleHap` BUILD SUCCESSFUL (hvigor, unsigned; one ArkTS warning, `EntryAbility.ets:21` may throw); React Native `tsc --noEmit --strict` on `ReactNative/example/App.tsx` clean after `yarn install` (the first S `fc935a7` had two navigation type errors, fixed). Row 4 of the Mac table is skipped: neither example has an `ios/` host project.
+
+New in S (compiled, never run): Android `NestedScrollActivity`; React Native example on a React Navigation native stack (Home, Detail); HarmonyOS button "Debug: simulate memory level (handler only)".
 
 ### Mac session (iOS)
 

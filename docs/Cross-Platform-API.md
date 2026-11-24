@@ -303,10 +303,10 @@ Every remaining deduction, in three buckets: **(a)** code this session writes; *
 | HarmonyOS | | no real device | 2 | c |
 | Flutter | 90 | native `animationsPaused` channel run on a host (the channel lives in the CYLTabBarController wrapper) | 6 | b |
 | Flutter | | timings from a JIT debug build on a loaded machine: rerun the fling pass in a profile build | 2 | b (Windows) |
-| Flutter | | iOS host run of the example | 2 | b (Mac) |
+| Flutter | | iOS host run of the example (no `ios/` project exists yet: write it first) | 2 | a, then b (Mac) |
 | React Native | 88 | appear / disappear never fire in the example: no navigation source | 5 | a, then b |
 | React Native | | native pause path (`animationsPaused`) run on a host | 3 | b |
-| React Native | | iOS host run of the example | 4 | b (Mac) |
+| React Native | | iOS host run of the example (no `ios/` project exists yet: write it first) | 4 | a, then b (Mac) |
 | Mini Program | 84 | WeChat DevTools run of the library example (events table in Test-Handoff.md section 2) | 12 | b (Windows A, logged in), else c (login) |
 | Mini Program | | the second load problem in CYLTabBarController (`Component is not found`) traced or gone | 4 | b (Windows A) |
 
@@ -316,4 +316,4 @@ Plan. (1) Sonnet writes bucket (a) statically: the React Native navigation sourc
 
 Most this round can reach: bucket (a) plus (b) = about 98.5 average; the rest is bucket (c).
 
-Round 18 code (S = `fc935a7`): the three bucket (a) items are committed, written statically and never built (no Android SDK, `node_modules` or hvigor in the agents' environment). Scores stay as above until the runs in [Test-Handoff.md, round 18](Test-Handoff.md#round-18-handoff-2026-11-24-s--fc935a7-branch-integrationround-18-pr-27) return.
+Round 18 code (S = `f246d95`): the three bucket (a) items are committed and pass the compile gate on this Mac (Android `assembleDebug`, HarmonyOS `assembleHap`, React Native `tsc`); none has run on a device. Scores stay as above until the runs in [Test-Handoff.md, round 18](Test-Handoff.md#round-18-handoff-2026-11-24-s--f246d95-branch-integrationround-18-pr-27) return.
