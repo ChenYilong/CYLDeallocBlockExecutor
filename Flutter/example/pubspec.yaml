@@ -53,6 +53,10 @@ dev_dependencies:
 
 # The following section is specific to Flutter packages.
 flutter:
+  # No plugins with native code: keep the iOS host free of the SwiftPM
+  # package reference, which breaks `carthage build` scanning the repo.
+  config:
+    enable-swift-package-manager: false
 
   # The following line ensures that the Material Icons font is
   # included with your application, so that you can use the icons in
