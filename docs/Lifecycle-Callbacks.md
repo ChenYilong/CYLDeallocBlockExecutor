@@ -238,6 +238,16 @@ Where: `instructions.md` (62 lines, under the 200-line limit, so no `docs/instru
 
 Status: DONE (2026-11-25). Executed once: the app `ChenYilong.CYLDeallocExecutor` was terminated and the own simulator `CYLDealloc glass` (D303DAC8) was shut down and deleted; `simctl list devices | grep Booted` shows none of it.
 
+## TODO: Free-RAM scripts and document, macOS section (2026-11-26)
+
+Context: the owner asked for heavy apps and idle simulators to be closed on the Mac before simulator debugging; that run is turned into reusable scripts plus a developer document.
+
+Prompt (verbatim): "全英文处理本任务：在docs文档中新建文件，名字为全英文释放RAM文档。区分windows和macos章节，将你刚刚执行的脚本相关放进根目录的脚本文件，名字为全英文释放RAM。本次插入文档的是macos章节。要求脚本放根目录，文档是一个给开发者开的如何手动调用刚刚那个提到的脚本。如果一个脚本不够用可以在脚本文件夹创建多个脚本，文档采用相对文件路径链接的方式指出脚本位置：macos开发者会按照该文档找到脚本手动运行。"
+
+Where: [Free-RAM.md](Free-RAM.md) (macOS section written, Windows section is a placeholder) and `scripts/free-ram/` (`free-ram-macos.sh`, `macos-display.sh`).
+
+Status: DONE (2026-11-26). Both scripts pass `bash -n` and a dry run on this Mac; the dry run kept the simulator a running `xcodebuild test` named. Display commands (brightness, mirroring, iTerm2 hiding) were not executed here: they need a normal Terminal.
+
 ## Design (reviewed by the advisor, 2026-11-22)
 
 Every public interface below was designed with the advisor; any new public API goes back to the advisor first.
