@@ -40,7 +40,7 @@ enum CYLLifecycleSources {
                 installWindowHooks()
                 CYLVisibilityState.of(view).update()
             }
-        case .didBecomeActiveOnScreen:
+        case .appDidBecomeActiveOnScreen:
             if owner is UIView || owner is UIViewController {
                 activeOwners.add(owner)
                 installActiveObserver()
@@ -60,7 +60,7 @@ enum CYLLifecycleSources {
      * A global observer waits for `event`.
      */
     static func globalEventAdded(_ event: CYLLifecycleEvent) {
-        if event == .didBecomeActiveOnScreen { installActiveObserver() }
+        if event == .appDidBecomeActiveOnScreen { installActiveObserver() }
         switch event {
         case .willMoveToWindow, .didMoveToWindow, .didEnterScreen, .didLeaveScreen,
              .scrollWillBeginDragging, .scrollDidEndDragging, .scrollDidEndScrolling:
@@ -97,7 +97,7 @@ enum CYLLifecycleSources {
         if let presented = viewController.presentedViewController { observeVisibleScrollViews(in: presented) }
     }
 
-    // MARK: - App became active (didBecomeActiveOnScreen)
+    // MARK: - App became active (appDidBecomeActiveOnScreen)
 
     private static let activeOwners = NSHashTable<NSObject>.weakObjects()
     private static var activeObserver: NSObjectProtocol?
@@ -115,17 +115,17 @@ enum CYLLifecycleSources {
     }
 
     /**
-     * Fires `didBecomeActiveOnScreen` once for every owner that has a block for it (per-owner blocks) and, when a global observer
+     * Fires `appDidBecomeActiveOnScreen` once for every owner that has a block for it (per-owner blocks) and, when a global observer
      * waits, for every view controller currently in a window; only owners that are on screen now.
      */
     static func applicationDidBecomeActive() {
         var owners: [NSObject] = activeOwners.allObjects
-        if CYLLifecycleCenter.hasObservers(for: .didBecomeActiveOnScreen) {
+        if CYLLifecycleCenter.hasObservers(for: .appDidBecomeActiveOnScreen) {
             owners.append(contentsOf: visibleViewControllers() as [NSObject])
         }
         var seen = Set<ObjectIdentifier>()
         for owner in owners where seen.insert(ObjectIdentifier(owner)).inserted && isOnScreen(owner) {
-            owner.cylFireDerived(.didBecomeActiveOnScreen)
+            owner.cylFireDerived(.appDidBecomeActiveOnScreen)
         }
     }
 

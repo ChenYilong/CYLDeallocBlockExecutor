@@ -55,7 +55,7 @@ public enum CYLLifecycleEvent: Int, CaseIterable {
      * view controller is on screen (same visibility rule as `didEnterScreen`). Fires once per activation for each owner that has a
      * block for it, at `.afterSuper` on the main thread; a view that is not on screen at that moment hears nothing.
      */
-    case didBecomeActiveOnScreen
+    case appDidBecomeActiveOnScreen
 
     /**
      * Whether the event comes from a UIViewController method (the others are derived, see above).
@@ -84,7 +84,7 @@ public enum CYLLifecycleEvent: Int, CaseIterable {
         case .didMoveToParent: return #selector(UIViewController.didMove(toParent:))
         case .didReceiveMemoryWarning: return #selector(UIViewController.didReceiveMemoryWarning)
         case .willMoveToWindow, .didMoveToWindow, .didEnterScreen, .didLeaveScreen, .scrollWillBeginDragging, .scrollDidEndDragging,
-             .scrollDidEndScrolling, .didBecomeActiveOnScreen:
+             .scrollDidEndScrolling, .appDidBecomeActiveOnScreen:
             return NSSelectorFromString("cyl_derivedEvent")
         }
     }
