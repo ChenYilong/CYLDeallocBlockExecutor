@@ -4,6 +4,17 @@ This document tracks the lifecycle block API of CYLDeallocBlockExecutor: blocks 
 
 ## Task log
 
+### DONE: `didTouchOutside` (2026-11-26, branch `feat/screen-focus-events`, on top of `appDidBecomeActiveOnScreen` of PR #30)
+
+- Prompt (verbatim, from the CYLSearchViewController session): "最好是在管理cylseachbarview 这个最小控件的生命周期。这样可以应用在所有容器中。advisor帮忙设计CYLDeallocBlockExecutor的api以及本项目如何调用，sonnet实现。唤起的键盘也应是底部有搜索按钮的特定键盘类型 advisor在设计时也应考虑用户点击seachbarview以外的任何区域都应隐藏键盘。这也需要生命周期管理 包括容器内的滚动手势或者滚动事件" (earlier the same day: "为cylseachbar实现出现屏幕就立即执行键盘聚焦功能，预期是第一次进入seachbar所在页面，前后台切换，切换tababr等等场景，只要是消失后重新出现就触发自动聚焦。类似iOS里的viewdidappear事件。... 如果无法实现 修改CYLDeallocBlockExecutor 新增代码API完成。")
+- Prompt (English): "Manage the life cycle at the smallest component, the search bar view, so it works in every container. The keyboard it raises has a search key. Any touch outside the search bar hides the keyboard, which also needs life cycle management, including scroll gestures and scroll events in the container. If the library cannot do it, add an API to CYLDeallocBlockExecutor."
+- Design (advisor): generic events appended to `CYLLifecycleEvent` (raw values of the existing events unchanged); the library knows nothing about search bars.
+  - `appDidBecomeActiveOnScreen` is the Dealloc session's own work (PR #30, `32c2103`); this branch is based on it and adds only `didTouchOutside`.
+  - `didTouchOutside`: a touch began in the owner's window on a view that is not the owner or one of its subviews; `info.touchedView`. Views only. Source: `UIWindow.sendEvent(_:)` wrapped like the window hooks (previous implementation called first); nothing happens unless a view waits and a touch began. No gesture recognizer.
+  - Scrolling is covered by `didTouchOutside`: every finger scroll starts with a touch that began outside the owner. TODO (not blocking): a trackpad or pointer scroll on iPad is not a touch.
+- Result: `bash Tests/run-lifecycle-tests.sh 9F762C22-...` Debug and `CYL_TEST_CONFIGURATION=release`: 90 passed, 0 failed each (89 on PR #30 before). New check: outside touches only, with the touched view. XCTest cannot create a `UITouch`: the test drives `CYLLifecycleSources.dispatchTouchBegan(in:touchedView:)`, the function the hook calls.
+- TODO: `pod lib lint`; Android (`dispatchTouchEvent`), HarmonyOS (root `onTouch`), Flutter (`TapRegion.onTapOutside`), React Native (responder capture), mini program (root `touchstart`) ports of the two events; foreground return: Android re-fires appear on resume already.
+
 ### TODO: observable moments for badges, animation and scrolling (2026-11-23, branch `feat/lifecycle-callbacks`, PR #12)
 
 **Context.** The lifecycle blocks cover view controller events and dealloc. CYLTabBarController's badge extensions touch `UIViewController`, `UITabBarItem`, `UIControl`, `UIView` and `UIBarButtonItem`, decide readiness with `cyl_isReady()`, and play animations. The owner wants every such moment observable from this library on every platform.
@@ -176,7 +187,7 @@ Context: request from the CYLSearchViewController session (owner order 2026-11-2
 
 Prompt (cross-session request, summarized, English): add one generic derived event `CYLLifecycleEvent.appDidBecomeActiveOnScreen`, appended after `scrollDidEndScrolling`; fires when `UIApplication.didBecomeActiveNotification` arrives and the view or view controller is on screen (same derivation as `didEnterScreen`), once per activation per owner with a block, `.afterSuper` only, main thread, one lazily installed global observer; document it here and in `Cross-Platform-API.md` (Android maps to the resume that already re-fires appear); add a test; send the commit SHA.
 
-Rename (2026-11-26, owner: "use the first"): the event is `appDidBecomeActiveOnScreen` (first proposed as `didBecomeActiveOnScreen`).
+Rename (2026-11-26, owner: "use the first"): the event is `appDidBecomeActiveOnScreen` (first proposed as `appDidBecomeActiveOnScreen`).
 
 Status: DONE in code (2026-11-26, branch `feat/did-become-active-on-screen`, from master `4276a6d`). `CYLLifecycleSources` keeps a weak set of owners with a block, installs one observer of the notification by name on the first block (per-owner or global), and fires for owners that are on screen now (`CYLVisibilityState.computeVisible`); a global observer also reaches every view controller in a window. Raw values unchanged. Test "appDidBecomeActiveOnScreen" (4 checks): 89 / 89 in Debug and in Release, iOS 27.2 simulator (own, deleted afterwards), Xcode 27.2, 2026-11-26. Not released: the podspec stays 1.4.0 (owner decides the release). Other platforms are N/A in `Cross-Platform-API.md`.
 
@@ -350,6 +361,7 @@ Score = 100 × (rows of both tables whose last column is not `TODO`) / (all rows
 | `scrollWillBeginDragging` | Runs when the user starts dragging the scroll view of a view controller or view (so animations can pause). | `.scrollWillBeginDragging`, `info.scrollView`: `CYLScrollObserver` (pan gesture target, no delegate); view controllers observe `contentScrollView(for: .top)` once on screen, views the nearest enclosing scroll view, `cylObserveScrolling(of:)` any other. Tests (passed, 80 / 80 on the iOS 17 simulator): "scroll events of a view and the global pause / resume" |
 | `scrollDidEndDragging` | Runs when the user lifts the finger; `info.willDecelerate` tells whether the scroll view keeps moving. | `.scrollDidEndDragging`, `info.willDecelerate` (`isDecelerating` read on the next run loop pass). Same test |
 | `scrollDidEndScrolling` | Runs when the scroll view stopped for good: after deceleration, or at the end of the drag when it does not decelerate (so animations can resume). | `.scrollDidEndScrolling`: a 60 Hz timer polls `isDecelerating` after a drag that decelerates (KVO on `contentOffset` alone never sees the stop: UIKit clears the flag after the last offset change), or at the end of a drag without deceleration. Same test |
+| `didTouchOutside` | Runs when a touch begins in the owner's window outside the owner and its subviews; `info.touchedView`. Views only; also the start of every finger scroll elsewhere. | `.didTouchOutside`: `UIWindow.sendEvent(_:)` wrapped (`CYLLifecycleSources.installTouchHook`), `dispatchTouchBegan(in:touchedView:)`. Test: "didTouchOutside: outside touches only, with the touched view" |
 
 ## Capabilities
 

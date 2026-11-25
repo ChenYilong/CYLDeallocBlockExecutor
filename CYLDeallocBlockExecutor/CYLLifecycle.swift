@@ -56,6 +56,9 @@ public enum CYLLifecycleEvent: Int, CaseIterable {
      * block for it, at `.afterSuper` on the main thread; a view that is not on screen at that moment hears nothing.
      */
     case appDidBecomeActiveOnScreen
+    /// A touch began in the window of a view, outside the view and its subviews (a tap, or the start of a scroll or drag anywhere
+    /// else); `info.touchedView`. Views only. Finger touches; a trackpad or pointer scroll is not a touch.
+    case didTouchOutside
 
     /**
      * Whether the event comes from a UIViewController method (the others are derived, see above).
@@ -84,7 +87,7 @@ public enum CYLLifecycleEvent: Int, CaseIterable {
         case .didMoveToParent: return #selector(UIViewController.didMove(toParent:))
         case .didReceiveMemoryWarning: return #selector(UIViewController.didReceiveMemoryWarning)
         case .willMoveToWindow, .didMoveToWindow, .didEnterScreen, .didLeaveScreen, .scrollWillBeginDragging, .scrollDidEndDragging,
-             .scrollDidEndScrolling, .appDidBecomeActiveOnScreen:
+             .scrollDidEndScrolling, .appDidBecomeActiveOnScreen, .didTouchOutside:
             return NSSelectorFromString("cyl_derivedEvent")
         }
     }
@@ -149,6 +152,9 @@ public struct CYLLifecycleInfo {
      * The scroll events: the scroll view that is dragged or decelerating.
      */
     public var scrollView: UIScrollView?
+
+    /// For `didTouchOutside`: the view the touch landed on (nil when it landed on no view).
+    public var touchedView: UIView?
     /**
      * `scrollDidEndDragging`: the scroll view keeps moving after the finger lifted.
      */
@@ -184,7 +190,9 @@ public struct CYLLifecycleInfo {
     /**
      * The arguments of a custom event or of a derived event (window, scroll).
      */
-    public init(window: UIWindow?, scrollView: UIScrollView? = nil, willDecelerate: Bool? = nil, userInfo: [String: Any]? = nil) {
+    public init(window: UIWindow?, scrollView: UIScrollView? = nil, willDecelerate: Bool? = nil, userInfo: [String: Any]? = nil,
+                touchedView: UIView? = nil) {
+        self.touchedView = touchedView
         self.event = nil
         self.timing = .afterSuper
         self.window = window

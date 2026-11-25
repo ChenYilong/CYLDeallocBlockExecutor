@@ -284,3 +284,14 @@ iOS real-app result of the round 17 pass (Mac session, S = `431b3b9371249d2b4b73
 - **Open anomaly:** on the Example-Rive Engine API page the "last event" label stayed at `cyl.animation.didStart` through four pause / resume cycles (counters 1 / 1 to 4 / 4); at `c85c10c` it moved to `didPause` / `didResume`. The library's iOS source differs between `c85c10c` and S only by PR #21 (`observeVisibleScrollViews`); the custom-event path (`postLifecycleEvent`, global observers) is unchanged, and `cyl.animation.*` is posted by CYLTabBarController's bridge, not by the library. Explained by the Mac session from the consumer code (static read): the label observes the notifications `CYLAnimatedItemView` posts per item, and `pauseAllPlaying()` posts `didPause` only for items that are playing at that moment; the S run used a play-once pass that had ended (no item playing), while the `c85c10c` run had Loop on. A test-method artifact, not a library regression. To confirm in the Mac session's final pass: Rive Engine API page with Loop ON, pause while scrolling ON, flick: expect `didPause` during the drag and `didResume` after; also badge pause on a screen with animated badge items.
 
 iOS score: 87 to **89** on this evidence (the Mac session scored its own pass 90 / 100: -5 badge, -3 label, -2 older base). Average about **90.2 / 100**.
+
+## Screen-focus events (2026-11-26)
+
+Two derived events for "do something every time a view appears or the user touches elsewhere" (a search field that focuses itself and hides the keyboard):
+
+| Event | iOS | Android | HarmonyOS | Flutter | React Native | Mini Program |
+| :-- | :-- | :-- | :-- | :-- | :-- | :-- |
+| `appDidBecomeActiveOnScreen` | `UIApplication.didBecomeActiveNotification` while the owner is on screen (PR #30) | the appear events already fire again on resume | `onShow` of the page while visible | `AppLifecycleState.resumed` with the render box visible | `AppState` change to `active` with the view focused | page `onShow` |
+| `didTouchOutside` | `UIWindow.sendEvent(_:)` wrapper, touch began outside the owner | `dispatchTouchEvent` of the activity window, `ACTION_DOWN` outside the view bounds | root component `onTouch` down outside the owner's area | `TapRegion.onTapOutside` (or a `Listener` at the root) | responder capture on the root view | root `touchstart` outside the component (`bindtouchstart` on the page) |
+
+Every finger scroll starts with a touch outside the owner, so `didTouchOutside` also covers scroll gestures. A pointer or trackpad scroll is not a touch (TODO).

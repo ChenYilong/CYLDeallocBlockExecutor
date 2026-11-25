@@ -45,6 +45,11 @@ enum CYLLifecycleSources {
                 activeOwners.add(owner)
                 installActiveObserver()
             }
+        case .didTouchOutside:
+            if let view = owner as? UIView {
+                installTouchHook()
+                touchOwners.add(view)
+            }
         case .scrollWillBeginDragging, .scrollDidEndDragging, .scrollDidEndScrolling:
             if let view = owner as? UIView, view.window != nil {
                 observeEnclosingScrollView(of: view)
@@ -194,6 +199,47 @@ enum CYLLifecycleSources {
         let events: [CYLLifecycleEvent] = [.scrollWillBeginDragging, .scrollDidEndDragging, .scrollDidEndScrolling]
         let model = owner.cylCallbackModel(create: false)
         return events.contains { (model?.hasLifecycleBlocks(for: $0) ?? false) || CYLLifecycleCenter.hasObservers(for: $0) }
+    }
+
+    // MARK: - Touches outside a view
+
+    private static var touchHookInstalled = false
+    private static let touchOwners = NSHashTable<UIView>.weakObjects()
+
+    /**
+     * `UIWindow.sendEvent(_:)` is wrapped (previous implementation called first, so the touched control handles its touch before any
+     * block runs). Nothing is done unless a view waits for `didTouchOutside` and a touch began. No gesture recognizer is used: it
+     * would take part in the recognizers' arbitration of the app, React Native and Flutter.
+     */
+    private static func installTouchHook() {
+        guard !touchHookInstalled else { return }
+        touchHookInstalled = true
+        let selector = #selector(UIWindow.sendEvent(_:))
+        guard let method = class_getInstanceMethod(UIWindow.self, selector) else { return }
+        typealias Original = @convention(c) (UIWindow, Selector, UIEvent) -> Void
+        let original = unsafeBitCast(method_getImplementation(method), to: Original.self)
+        let wrapper: @convention(block) (UIWindow, UIEvent) -> Void = { window, event in
+            original(window, selector, event)
+            guard touchOwners.count > 0, event.type == .touches, let began = event.allTouches?.first(where: { $0.phase == .began }) else {
+                return
+            }
+            dispatchTouchBegan(in: window, touchedView: began.view)
+        }
+        if !class_addMethod(UIWindow.self, selector, imp_implementationWithBlock(wrapper), method_getTypeEncoding(method)) {
+            method_setImplementation(method, imp_implementationWithBlock(wrapper))
+        }
+    }
+
+    /**
+     * A touch began in `window` on `touchedView`: every view of that window with a `didTouchOutside` block, and not the touched
+     * view or one of its ancestors, hears it. The hook calls this; tests call it directly (XCTest cannot create a `UITouch`).
+     */
+    static func dispatchTouchBegan(in window: UIWindow, touchedView: UIView?) {
+        for view in touchOwners.allObjects where view.window === window {
+            guard view.cylCallbackModel(create: false)?.hasLifecycleBlocks(for: .didTouchOutside) == true else { continue }
+            if let touchedView, touchedView === view || touchedView.isDescendant(of: view) { continue }
+            view.cylFireDerived(.didTouchOutside, info: CYLLifecycleInfo(window: window, touchedView: touchedView))
+        }
     }
 
     // MARK: - Views

@@ -586,6 +586,24 @@ func runObservableTests(window: UIWindow) {
     probe.removeFromSuperview()
     check(log == ["will window", "did window", "enter", "leave", "enter", "will nil", "did nil", "leave"], "window moves and screen events of a view", "\(log)")
 
+    // didTouchOutside: a view hears a touch that began elsewhere in its window, never one on itself or its subviews.
+    CYLLifecycleCenter.reset()
+    log = []
+    let touchBar = UIView(frame: CGRect(x: 0, y: 100, width: 200, height: 40))
+    let touchInner = UIView(frame: CGRect(x: 0, y: 0, width: 20, height: 20))
+    touchBar.addSubview(touchInner)
+    let touchOther = UIView(frame: CGRect(x: 0, y: 300, width: 100, height: 100))
+    host.addSubview(touchBar)
+    host.addSubview(touchOther)
+    touchBar.cylAddLifecycleCallback(for: .didTouchOutside) { _, _, info in log.append("outside \(info.touchedView === touchOther ? "other" : "none")") }
+    CYLLifecycleSources.dispatchTouchBegan(in: window, touchedView: touchOther)
+    CYLLifecycleSources.dispatchTouchBegan(in: window, touchedView: touchBar)
+    CYLLifecycleSources.dispatchTouchBegan(in: window, touchedView: touchInner)
+    CYLLifecycleSources.dispatchTouchBegan(in: window, touchedView: nil)
+    check(log == ["outside other", "outside none"], "didTouchOutside: outside touches only, with the touched view", "\(log)")
+    touchBar.removeFromSuperview()
+    touchOther.removeFromSuperview()
+
     // Scrolling: a view reports the scrolling of its scroll view; isUserScrolling follows it; a global observer pauses and resumes.
     CYLLifecycleCenter.reset()
     log = []
