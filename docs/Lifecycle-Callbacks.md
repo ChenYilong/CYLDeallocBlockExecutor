@@ -184,6 +184,27 @@ public typealias CYLViewDidLayoutSubViewsBlock = (CYLTabBarController) -> Void
 
 </details>
 
+### TODO (2026-11-25): example demo rule, sectioned lists use the ClassifyMenu tag list
+
+**Context:** the examples of this library show lists as plain table views. The owner wants one rule for all demo examples: where a screen needs a table with sections, it uses the tag list of CollectionViewClassifyMenu instead, and the rule is written down in the repository instructions and a skill, then executed once in this task.
+
+**Requirements (English):**
+
+1. Find this project's instructions files (root agent / Claude files if any, `instructions.md`) and its skills; classify the rule as "example demo". If an agent / Claude file would pass 200 lines, put the rule in a suitable file of `docs/instructions/`. Create the files if they do not exist. Write in English only.
+2. Rule: in demo examples, a table-view style with sections is replaced by CollectionViewClassifyMenu's tag list (title and icon of each row as a tag), with section headers (every header has a title), a more / less fold button with a built-in icon when a section exceeds the maximum rows, tapping a tag does what tapping the cell did, a long press on a tag shows the subtitle in a small floating box with an arrow (through the tag list's long-press API), tag titles may wrap (the style's title-wrap API), tag width is adaptive so a row holds as many tags as fit, and this example allows at most 3 rows per section before folding.
+3. Execute the rule once in this task (iOS Example, the only table-view example; the other platforms' lists are scroll-test fixtures).
+
+**Status:** in progress. Facts found: the wrap API (`style.titleWraps`), `defaultVisibleRows` with the fold control and `tagLongPressHandler` exist on CollectionViewClassifyMenu `feat/engine-api-core` (8853b01), not on its master or on `feat/harmony`. The pod depends on CYLAnimatedItem (CYLTabBarController), which depends on this library, so the Example must use one copy of this library (`:path`), and the library's podspec and `Package.swift` never depend on the menu.
+
+<details>
+<summary>Original prompt (verbatim)</summary>
+
+找到本项目instructions 相关文件（可能包含根目录的agent Claude文件instructions 文件， 首先确认下面内容的归类。归类为找到example演示相关。如果agent Claude文件文件超出每个文件200行限制，则优先放入docs 里的instructions文件夹合适文件，）以及skills相关文件，如果没有就新增文件保证写入成功，全英文写入，并且在本次任务中就执行一次下面的指令：
+
+ deme example演示，如果遇到需要使用类似 tableview 包含section分组功能的样式，优先使用以下样式替换。为example引入并使用CollectionViewClassifyMenu  的taglist 展示提取主标题与icon，使用具有section样式。可以显示more less 折叠展开按钮，点击tag后维持与点击cell相同效果。长按cell显示副标题，小的悬浮框带有箭头。小的悬浮显示副标题。按照taglist中长按自定义API以实现该功能。设置 taglist允许换行，设置的是tag里面的title lable的文字允许换行，没有只能一行的限制， CollectionViewClassifyMen 允许换行的API。 本次执行max 在example。 。本example可以设置为3行。tag宽度采用自适应样式。预期是一行尽可能显示更多tag。section heder 必须有title内容。超出最多行数限制，展示展开按钮。展开按钮显示more或者less 并附带内置icon
+
+</details>
+
 ## Design (reviewed by the advisor, 2026-11-22)
 
 Every public interface below was designed with the advisor; any new public API goes back to the advisor first.
