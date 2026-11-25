@@ -228,6 +228,16 @@ Status: DONE (2026-11-25). `CYLDemoMenuViewController` uses a gradient backdrop,
 
 Open: per-tag system glass (`UIGlassEffect`) needs a CollectionViewClassifyMenu core API; not added here (rule: core first).
 
+## TODO: Simulator rules in the instruction files (2026-11-25)
+
+Context: simulators and apps were left running after test runs. Requirement: record a mandatory notice and rule in the root instruction file and a skill (English only), and execute the rule once in this task.
+
+Prompt (verbatim): "根目录文件加上文字必须提示，运行模拟器前必须阅读模拟器运行规则该文档或下面这段文字 运行模拟器 测试截图结束后 ，立即杀掉终止app，以及模拟器进程。使用时在重新启动。避免运行后，任务完毕也不关掉app ，也不关闭模拟器进程。"
+
+Where: `instructions.md` (62 lines, under the 200-line limit, so no `docs/instructions` split) gets a notice at the top and a "Simulator rules" section; new skill `.agents/skills/cyl-simulator-run/SKILL.md`.
+
+Status: DONE (2026-11-25). Executed once: the app `ChenYilong.CYLDeallocExecutor` was terminated and the own simulator `CYLDealloc glass` (D303DAC8) was shut down and deleted; `simctl list devices | grep Booted` shows none of it.
+
 ## Design (reviewed by the advisor, 2026-11-22)
 
 Every public interface below was designed with the advisor; any new public API goes back to the advisor first.
