@@ -213,6 +213,16 @@ Open points, both in other repositories: (1) the fold control `.iconAndTitle` sh
 
 </details>
 
+## TODO: Example tag list in Liquid Glass style (2026-11-25)
+
+Context: the Home tab of the Example (PR #28) shows the ClassifyMenu tag list. Requirement: change that tag list to a Liquid Glass style; record the style requirement in the Example's instruction files (English only) and apply it once in this task.
+
+Prompt (verbatim): "将本example中的taglist改为液态玻璃样式。并找到example相关instructions文件，全英文写入样式要求。并实行本次要求。"
+
+Plan: rule in `instructions.md` and checklist item 10 in `.agents/skills/cyl-example-demo/SKILL.md`; the Example uses the public style API (translucent tags, clear background, colorful backdrop); real `UIGlassEffect` per tag needs a ClassifyMenu core change (requested from its session).
+
+Status: in progress.
+
 ## Design (reviewed by the advisor, 2026-11-22)
 
 Every public interface below was designed with the advisor; any new public API goes back to the advisor first.

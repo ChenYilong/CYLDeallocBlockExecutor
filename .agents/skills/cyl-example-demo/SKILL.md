@@ -18,3 +18,4 @@ The same rule is in `instructions.md` ("Example demo: sectioned lists use the Cl
 7. Missing API: add it to CollectionViewClassifyMenu first (its own repository and session); never reach into tag views from the example.
 8. Dependency: Example app only; one copy of this library (`:path`); never add the menu to this library's `podspec` or `Package.swift`.
 9. Verify on one simulator of your own: tap, long-press popover, fold with More / Less, a wrapped title; labeled original-pixel screenshots.
+10. Style: Liquid Glass. Colorful backdrop behind the list; `style.backgroundColor = .clear`; translucent tag appearances with a light 1 pt border and a large corner radius; header and fold colors readable in light and dark. Public style API only; real `UIGlassEffect` per tag is a CollectionViewClassifyMenu change first. Screenshot in light and dark.
