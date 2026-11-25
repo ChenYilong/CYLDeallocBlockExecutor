@@ -40,6 +40,11 @@ enum CYLLifecycleSources {
                 installWindowHooks()
                 CYLVisibilityState.of(view).update()
             }
+        case .didBecomeActiveOnScreen:
+            if owner is UIView || owner is UIViewController {
+                activeOwners.add(owner)
+                installActiveObserver()
+            }
         case .scrollWillBeginDragging, .scrollDidEndDragging, .scrollDidEndScrolling:
             if let view = owner as? UIView, view.window != nil {
                 observeEnclosingScrollView(of: view)
@@ -55,6 +60,7 @@ enum CYLLifecycleSources {
      * A global observer waits for `event`.
      */
     static func globalEventAdded(_ event: CYLLifecycleEvent) {
+        if event == .didBecomeActiveOnScreen { installActiveObserver() }
         switch event {
         case .willMoveToWindow, .didMoveToWindow, .didEnterScreen, .didLeaveScreen,
              .scrollWillBeginDragging, .scrollDidEndDragging, .scrollDidEndScrolling:
@@ -89,6 +95,64 @@ enum CYLLifecycleSources {
         }
         for child in viewController.children { observeVisibleScrollViews(in: child) }
         if let presented = viewController.presentedViewController { observeVisibleScrollViews(in: presented) }
+    }
+
+    // MARK: - App became active (didBecomeActiveOnScreen)
+
+    private static let activeOwners = NSHashTable<NSObject>.weakObjects()
+    private static var activeObserver: NSObjectProtocol?
+
+    /**
+     * One global observer of `UIApplication.didBecomeActiveNotification`, installed when the first block for the event is added.
+     * The name is spelled out so the library still compiles for app extensions.
+     */
+    private static func installActiveObserver() {
+        guard activeObserver == nil else { return }
+        activeObserver = NotificationCenter.default.addObserver(forName: Notification.Name("UIApplicationDidBecomeActiveNotification"),
+                                                                object: nil, queue: nil) { _ in
+            applicationDidBecomeActive()
+        }
+    }
+
+    /**
+     * Fires `didBecomeActiveOnScreen` once for every owner that has a block for it (per-owner blocks) and, when a global observer
+     * waits, for every view controller currently in a window; only owners that are on screen now.
+     */
+    static func applicationDidBecomeActive() {
+        var owners: [NSObject] = activeOwners.allObjects
+        if CYLLifecycleCenter.hasObservers(for: .didBecomeActiveOnScreen) {
+            owners.append(contentsOf: visibleViewControllers() as [NSObject])
+        }
+        var seen = Set<ObjectIdentifier>()
+        for owner in owners where seen.insert(ObjectIdentifier(owner)).inserted && isOnScreen(owner) {
+            owner.cylFireDerived(.didBecomeActiveOnScreen)
+        }
+    }
+
+    private static func isOnScreen(_ owner: NSObject) -> Bool {
+        if let view = owner as? UIView { return CYLVisibilityState.computeVisible(view) }
+        if let viewController = owner as? UIViewController {
+            return viewController.isViewLoaded && CYLVisibilityState.computeVisible(viewController.view)
+        }
+        return false
+    }
+
+    private static func visibleViewControllers() -> [UIViewController] {
+        guard let applicationClass = NSClassFromString("UIApplication") as? NSObject.Type,
+              let application = applicationClass.perform(NSSelectorFromString("sharedApplication"))?.takeUnretainedValue() as? NSObject,
+              let scenes = application.value(forKey: "connectedScenes") as? Set<UIScene> else { return [] }
+        var found: [UIViewController] = []
+        func walk(_ viewController: UIViewController) {
+            found.append(viewController)
+            viewController.children.forEach(walk)
+            if let presented = viewController.presentedViewController { walk(presented) }
+        }
+        for case let windowScene as UIWindowScene in scenes {
+            for window in windowScene.windows {
+                if let root = window.rootViewController { walk(root) }
+            }
+        }
+        return found
     }
 
     // MARK: - View controllers

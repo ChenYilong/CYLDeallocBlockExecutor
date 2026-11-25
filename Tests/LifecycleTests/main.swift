@@ -667,6 +667,32 @@ func runObservableTests(window: UIWindow) {
     screenController.endAppearanceTransition()
     check(log == ["appear", "enter", "disappear", "leave"], "view controller screen events follow the appearance events", "\(log)")
 
+    // didBecomeActiveOnScreen: the app became active again; only owners on screen at that moment hear it, once per activation.
+    log = []
+    let activeOn = UIView(frame: CGRect(x: 0, y: 0, width: 50, height: 50))
+    window.addSubview(activeOn)
+    let activeHidden = UIView(frame: CGRect(x: 0, y: 0, width: 50, height: 50))
+    window.addSubview(activeHidden)
+    activeHidden.isHidden = true
+    let activeDetached = UIView(frame: CGRect(x: 0, y: 0, width: 50, height: 50))
+    for (name, view) in [("on", activeOn), ("hidden", activeHidden), ("detached", activeDetached)] {
+        view.cylAddLifecycleCallback(for: .didBecomeActiveOnScreen) { _, _, _ in log.append(name) }
+    }
+    NotificationCenter.default.post(name: UIApplication.didBecomeActiveNotification, object: nil)
+    check(log == ["on"], "didBecomeActiveOnScreen: only the view on screen hears the activation", "\(log)")
+    NotificationCenter.default.post(name: UIApplication.didBecomeActiveNotification, object: nil)
+    check(log == ["on", "on"], "...once per activation", "\(log)")
+    activeOn.removeFromSuperview()
+    NotificationCenter.default.post(name: UIApplication.didBecomeActiveNotification, object: nil)
+    check(log == ["on", "on"], "...and nothing after it left the window", "\(log)")
+    var activeHeard: [String] = []
+    CYLLifecycleCenter.addCallback(for: .didBecomeActiveOnScreen) { owner, _, _ in
+        if owner === window.rootViewController { activeHeard.append("root") }
+    }
+    NotificationCenter.default.post(name: UIApplication.didBecomeActiveNotification, object: nil)
+    check(activeHeard == ["root"], "a global didBecomeActiveOnScreen observer hears the visible view controllers", "\(activeHeard)")
+    CYLLifecycleCenter.reset()
+
     // A forward does not make a global observer hear the same moment twice; whileUserScrolls pauses and resumes.
     CYLLifecycleCenter.reset()
     var heard: [String] = []
