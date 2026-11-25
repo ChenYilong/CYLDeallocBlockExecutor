@@ -55,8 +55,26 @@ final class CYLDemoMenuViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         navigationItem.title = "Home"
+        edgesForExtendedLayout = .all
+        extendedLayoutIncludesOpaqueBars = true
+        // A transparent bar lets the glass backdrop run up under the title.
+        let barAppearance = UINavigationBarAppearance()
+        barAppearance.configureWithTransparentBackground()
+        barAppearance.titleTextAttributes = [.foregroundColor: UIColor.label]
+        navigationItem.standardAppearance = barAppearance
+        navigationItem.scrollEdgeAppearance = barAppearance
         view.backgroundColor = .systemBackground
         view.themeMap = ["BackgroundColor": "randomColor"]
+        // Liquid Glass needs something behind it to refract: a colorful backdrop under the clear tag list.
+        let backdrop = CYLDemoGlassBackdropView()
+        backdrop.translatesAutoresizingMaskIntoConstraints = false
+        view.addSubview(backdrop)
+        NSLayoutConstraint.activate([
+            backdrop.topAnchor.constraint(equalTo: view.topAnchor),
+            backdrop.bottomAnchor.constraint(equalTo: view.bottomAnchor),
+            backdrop.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            backdrop.trailingAnchor.constraint(equalTo: view.trailingAnchor)
+        ])
 
         tagList.translatesAutoresizingMaskIntoConstraints = false
         tagList.menuDataSource = self
@@ -71,6 +89,7 @@ final class CYLDemoMenuViewController: UIViewController {
         // Titles wrap to as many lines as they need; the tag width follows the title, so a row holds as many tags as fit.
         let style = CYLMenuStyle()
         style.titleWraps = true
+        CYLDemoMenuViewController.applyLiquidGlass(to: style)
         tagList.style = style
         view.addSubview(tagList)
         NSLayoutConstraint.activate([
@@ -80,6 +99,30 @@ final class CYLDemoMenuViewController: UIViewController {
             tagList.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor)
         ])
         tagList.reloadMenuData()
+    }
+
+    /// The Liquid Glass look of the "Example demo" rule, through the public style API: a clear list, translucent
+    /// tags with a light edge and a capsule-like corner radius, readable header and fold colors.
+    static func applyLiquidGlass(to style: CYLMenuStyle) {
+        style.backgroundColor = .clear
+        style.headerTextColor = .label
+        style.foldControlColor = .label
+        style.moreButtonColor = .label
+        let glassFill = UIColor { trait in
+            trait.userInterfaceStyle == .dark ? UIColor(white: 1, alpha: 0.14) : UIColor(white: 1, alpha: 0.42)
+        }
+        let glassEdge = UIColor { trait in
+            trait.userInterfaceStyle == .dark ? UIColor(white: 1, alpha: 0.30) : UIColor(white: 1, alpha: 0.75)
+        }
+        for appearance in [style.normalAppearance, style.selectedAppearance, style.disabledAppearance] {
+            appearance.backgroundColor = glassFill
+            appearance.textColor = .label
+            appearance.iconColor = .label
+            appearance.borderColor = glassEdge
+            appearance.borderWidth = 1
+            appearance.cornerRadius = 16
+        }
+        style.elevation = 2
     }
 
     /// Tapping a tag does what tapping the old log cell did: toggle the theme, then show the log (the Log tab).
@@ -201,5 +244,37 @@ final class CYLDemoSubtitleViewController: UIViewController, UIPopoverPresentati
     func adaptivePresentationStyle(for controller: UIPresentationController,
                                    traitCollection: UITraitCollection) -> UIModalPresentationStyle {
         .none
+    }
+}
+
+/// A soft multi-color gradient: the backdrop that the glass tags sit on.
+final class CYLDemoGlassBackdropView: UIView {
+
+    override class var layerClass: AnyClass { CAGradientLayer.self }
+
+    override init(frame: CGRect) {
+        super.init(frame: frame)
+        isUserInteractionEnabled = false
+        updateColors()
+        guard let gradient = layer as? CAGradientLayer else { return }
+        gradient.startPoint = CGPoint(x: 0, y: 0)
+        gradient.endPoint = CGPoint(x: 1, y: 1)
+    }
+
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+
+    override func traitCollectionDidChange(_ previousTraitCollection: UITraitCollection?) {
+        super.traitCollectionDidChange(previousTraitCollection)
+        updateColors()
+    }
+
+    private func updateColors() {
+        let dark = traitCollection.userInterfaceStyle == .dark
+        let colors: [UIColor] = dark
+            ? [UIColor(red: 0.10, green: 0.12, blue: 0.35, alpha: 1), UIColor(red: 0.35, green: 0.10, blue: 0.40, alpha: 1), UIColor(red: 0.05, green: 0.30, blue: 0.35, alpha: 1)]
+            : [UIColor(red: 0.55, green: 0.75, blue: 1.00, alpha: 1), UIColor(red: 0.95, green: 0.70, blue: 0.90, alpha: 1), UIColor(red: 1.00, green: 0.85, blue: 0.60, alpha: 1)]
+        (layer as? CAGradientLayer)?.colors = colors.map { $0.resolvedColor(with: traitCollection).cgColor }
     }
 }

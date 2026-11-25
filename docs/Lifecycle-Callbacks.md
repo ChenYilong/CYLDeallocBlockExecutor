@@ -221,7 +221,12 @@ Prompt (verbatim): "将本example中的taglist改为液态玻璃样式。并找�
 
 Plan: rule in `instructions.md` and checklist item 10 in `.agents/skills/cyl-example-demo/SKILL.md`; the Example uses the public style API (translucent tags, clear background, colorful backdrop); real `UIGlassEffect` per tag needs a ClassifyMenu core change (requested from its session).
 
-Status: in progress.
+Status: DONE (2026-11-25). `CYLDemoMenuViewController` uses a gradient backdrop, a clear list, translucent tags (light/dark dynamic fill and border, corner radius 16), a transparent navigation bar and extended layout. Original-pixel screenshots, iOS 27.2 simulator (iPhone 18 Pro), Debug build of branch `feat/example-taglist`, Xcode 27.2, 2026-11-25 17:35:
+
+![Home tab, light](assets/ios-example-taglist-glass-light.png)
+![Home tab, dark](assets/ios-example-taglist-glass-dark.png)
+
+Open: per-tag system glass (`UIGlassEffect`) needs a CollectionViewClassifyMenu core API; not added here (rule: core first).
 
 ## Design (reviewed by the advisor, 2026-11-22)
 
