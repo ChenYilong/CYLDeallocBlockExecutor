@@ -6,6 +6,7 @@
 //
 
 import UIKit
+import CYLDeallocBlockExecutor
 import ObjectiveC
 
 let kThemeDidChangeNotification = Notification.Name("ThemeDidChangeNotification")

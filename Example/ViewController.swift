@@ -6,6 +6,7 @@
 //
 
 import UIKit
+import CYLDeallocBlockExecutor
 
 class ViewController: UITableViewController {
 
@@ -17,7 +18,7 @@ class ViewController: UITableViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        title = "CYLDeallocExecutor"
+        navigationItem.title = "CYLDeallocExecutor"
         view.themeMap = ["BackgroundColor": "randomColor"]
         bySetter = true
         _number = 5

@@ -13,3 +13,6 @@ id_ecdsa*
 # macOS AppleDouble files
 ._*
 Carthage/
+Pods/
+*.xcworkspace
+!*.xcodeproj/project.xcworkspace

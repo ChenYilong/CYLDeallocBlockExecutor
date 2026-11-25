@@ -184,7 +184,7 @@ public typealias CYLViewDidLayoutSubViewsBlock = (CYLTabBarController) -> Void
 
 </details>
 
-### TODO (2026-11-25): example demo rule, sectioned lists use the ClassifyMenu tag list
+### DONE (2026-11-25): example demo rule, sectioned lists use the ClassifyMenu tag list
 
 **Context:** the examples of this library show lists as plain table views. The owner wants one rule for all demo examples: where a screen needs a table with sections, it uses the tag list of CollectionViewClassifyMenu instead, and the rule is written down in the repository instructions and a skill, then executed once in this task.
 
@@ -194,7 +194,15 @@ public typealias CYLViewDidLayoutSubViewsBlock = (CYLTabBarController) -> Void
 2. Rule: in demo examples, a table-view style with sections is replaced by CollectionViewClassifyMenu's tag list (title and icon of each row as a tag), with section headers (every header has a title), a more / less fold button with a built-in icon when a section exceeds the maximum rows, tapping a tag does what tapping the cell did, a long press on a tag shows the subtitle in a small floating box with an arrow (through the tag list's long-press API), tag titles may wrap (the style's title-wrap API), tag width is adaptive so a row holds as many tags as fit, and this example allows at most 3 rows per section before folding.
 3. Execute the rule once in this task (iOS Example, the only table-view example; the other platforms' lists are scroll-test fixtures).
 
-**Status:** in progress. Facts found: the wrap API (`style.titleWraps`), `defaultVisibleRows` with the fold control and `tagLongPressHandler` exist on CollectionViewClassifyMenu `feat/engine-api-core` (8853b01), not on its master or on `feat/harmony`. The pod depends on CYLAnimatedItem (CYLTabBarController), which depends on this library, so the Example must use one copy of this library (`:path`), and the library's podspec and `Package.swift` never depend on the menu.
+**Status: DONE (2026-11-25), iOS Example.** Rule: `instructions.md` and the skill `cyl-example-demo`. Execution: the Example root is now a CYLTabBarController (pod pin `dea0951e`, read-only): the Home tab is `CYLDemoMenuViewController`, a `CYLTagListView` with three titled sections (Lifecycle events 6 tags, Dealloc blocks 3, Theme 2), `defaultVisibleRows = 3` so the first section folds with More / Less, `style.titleWraps = true` (one tag title wraps to two lines), adaptive tag width, a tap that toggles the theme and shows the Log tab, and a long press that shows the subtitle in a popover with an arrow (`menu(_:didLongPressItemAt:)`, `adaptivePresentationStyle` `.none`). The old log list (`ViewController`) is the second tab, Log; its behaviour is unchanged (its tap path, the once-only push, no longer exists: the tab replaces it).
+
+Dependencies (Example only, `Podfile`): `CYLDeallocBlockExecutor` `:path => '.'` (the one copy: CYLTabBarController/Core asks for `~> 1.4`, so the Example target no longer compiles the library sources and imports the pod module), `CYLTabBarController` and `CYLAnimatedItem` at `dea0951e`, `CollectionViewClassifyMenu` at `59ce43cc` (branch `feat/engine-api-core`, not on its master). The app module is named `CYLDeallocExample` (the target name equals the library module and made a module cycle); the app scheme is `CYLDeallocBlockExecutor-Example` (the Pods project has a scheme with the target's own name). CI: the Example step runs `pod install` and builds the workspace.
+
+Tested once on a new simulator (iPhone 18 Pro, iOS 27.2, Xcode 27.2): build succeeded, launch shows the Home menu, long press shows the popover with an arrow and the subtitle, More shows all 6 rows of the first section, a tap on a tag shows the Log tab with the theme changed, the Log tab label is "Log". The framework scheme still builds from the project alone (Carthage). Not run: CI, the lifecycle suite (library code untouched).
+
+Open points, both in other repositories: (1) the fold control `.iconAndTitle` shows "More" with the chevron collapsed but only the chevron expanded (`CYLMenuFoldControl.showsTitle(whenExpanded:)`), so "Less" with an icon is not possible yet: the owner asked for More or Less with the built-in icon; a ClassifyMenu API change is needed, not an example workaround. (2) The Home navigation bar shows no title on iOS 27 with the Example's white title appearance; cosmetic.
+
+![iOS: sectioned tag-list demo menu](assets/ios-example-taglist-menu.png)
 
 <details>
 <summary>Original prompt (verbatim)</summary>
