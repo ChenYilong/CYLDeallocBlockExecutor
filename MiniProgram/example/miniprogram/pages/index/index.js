@@ -17,6 +17,7 @@ function register(page) {
       page.setData({ log, count: page.cylCounts.n })
     })
   })
+  registry.addDeallocCallback(() => console.log('CYL EVENT ' + (page.cylCounts.n + 1) + ' teardown'))
   LifecycleCenter.whileUserScrolls(
     () => { page.cylCounts.pauses += 1; page.setData({ pauses: page.cylCounts.pauses }) },
     () => { page.cylCounts.resumes += 1; page.setData({ resumes: page.cylCounts.resumes }) },
@@ -33,6 +34,8 @@ const options = withLifecycle({
     const info = wx.getAppBaseInfo ? wx.getAppBaseInfo() : {}
     this.cylController.themeChanged(info.theme || 'light')
   },
+  // The same call the wx.onThemeChange handler makes; run-devtools.mjs uses it (DevTools has no automator theme switch).
+  cylTheme(theme) { this.cylController.themeChanged(theme) },
   goSecond() { wx.navigateTo({ url: '/pages/second/second' }) },
 })
 
