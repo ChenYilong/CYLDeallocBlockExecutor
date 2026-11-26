@@ -91,7 +91,7 @@ Owner rule for all platforms: write the code statically, then test everything in
 
 - Code: [ReactNative/](../../../ReactNative/). Usage: [Usage-ReactNative.md](../../Usage-ReactNative.md).
 - Proven: navigation source (Home, Detail) on Android (release) and iOS simulator; flings pair up; the `detach()` fix (disappear events before teardown) confirmed on both; Android memory warning through host forwarding (`cylMemoryWarning`).
-- TODO: native `animationsPaused` path on a host (3 points); the rest of the iOS host row (2), that is the iOS memory warning (Simulator.app "Simulate Memory Warning" or a device); iOS run screenshots are not in `docs/assets/` yet.
+- TODO: native `animationsPaused` path on a host (3 points); the rest of the iOS host row (2), that is the iOS memory warning (Simulator.app "Simulate Memory Warning" or a device); iOS run screenshots are in `docs/assets/r18-ios-*.png` (added 2026-11-27).
 - Test: `cd ReactNative && node --test "test/*.test.ts"` and `npm run typecheck`. Run `yarn install` in `ReactNative/example` first. Logs: `adb logcat -s ReactNativeJS`.
 - Trap: the run ignored `RCT_METRO_PORT`; the iOS run set `RCT_jsLocation` locally (not committed). **Fixed 2026-11-27:** the iOS host reads the port at run time (see the example README).
 
@@ -117,14 +117,14 @@ Owner rule for all platforms: write the code statically, then test everything in
 - [ ] Verify draft PR #31 (analyzer excludes, lockfile); decide about draft PR #32 (old WIP).
 - [ ] Per-tag system glass in the Example: needs a CollectionViewClassifyMenu core API. **The request has not been sent.**
 - [ ] "Less" + icon fold control in the Example: needs the same core change. Not sent.
-- [ ] `docs/assets/`: add labeled screenshots for the React Native and Flutter iOS runs.
+- [x] `docs/assets/`: add labeled screenshots for the React Native and Flutter iOS runs. Done 2026-11-27 (table in Cross-Platform-API.md, round 18 rows 6 and 7).
 - [ ] Record the Windows session results in Cross-Platform-API.md when they arrive.
 - [ ] Write the Windows section of [Free-RAM.md](../../Free-RAM.md).
 - [ ] Run `macos-display.sh` once for real (never executed); run `free-ram-macos.sh --yes` once (only dry runs here).
 
 ## 5. Bugs and unverified fixes
 
-The GitHub issue list has **no open issue** on 2026-11-26 (history: [Issues.md](../../Issues.md); its table still shows some issues as open, and the task log says #5, #7 and #8 were closed).
+The GitHub issue list has **no open issue** on 2026-11-26 (history: [Issues.md](../../Issues.md); its table was brought in line with GitHub on 2026-11-27: #5, #7 and #8 closed on 2026-11-22).
 
 | Bug | Why it is not fixed | Fix plan | Approach | Docs |
 | :-- | :-- | :-- | :-- | :-- |
@@ -173,7 +173,7 @@ The GitHub issue list has **no open issue** on 2026-11-26 (history: [Issues.md](
 | Old WIP of 2026-11-23 (HarmonyOS / Mini Program wrappers) | draft [PR #32](https://github.com/ChenYilong/CYLDeallocBlockExecutor/pull/32), do not merge | Largely superseded; only `wrap.js` may be worth porting |
 | Local branch `feat/screen-focus-events-rebased` (1 commit) | local repository, another session's | Not pushed: an intermediate form of PR #29, which is on the remote |
 | Conversation context and memory notes of the last session (38 files; ignored by git, never push) | vault folder `CYLDeallocBlockExecutor/docs/todo/20261104/04/memory/` | Start at `00.md` |
-| Round 18 iOS screenshots, unlabeled | `/tmp/xpr/r18-shots/rows67/` | Label and commit to `docs/assets/` |
+| Round 18 iOS screenshots, unlabeled | `/tmp/xpr/r18-shots/rows67/` | **Done 2026-11-27:** committed as `docs/assets/r18-ios-*.png`, labeled in Cross-Platform-API.md |
 
 ## 9. Environment and traps
 

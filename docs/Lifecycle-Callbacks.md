@@ -312,7 +312,7 @@ Status: DONE (2026-11-27). Cause: `RCT_METRO_PORT` is a compile-time macro of Re
 
 Third item (owner prompt verbatim: "continue", 2026-11-27): commit the round 18 iOS host screenshots of the React Native and Flutter examples (rows 6 and 7), which exist only in `/tmp/xpr/r18-shots/rows67/` (lost on reboot), labeled, into `docs/assets/`; then bring [Issues.md](Issues.md) in line with GitHub (no open issue on 2026-11-26).
 
-Status: TODO.
+Status: DONE (2026-11-27). Seven screenshots copied unchanged (1206 × 2622) to `docs/assets/r18-ios-*.png` and labeled in a table under "Round 18 iOS rows 6–7" in [Cross-Platform-API.md](Cross-Platform-API.md) (iPhone 18 Pro simulator, iOS 27.2, Xcode 27.2, S = `d0e752a`, capture times). [Issues.md](Issues.md): #5, #7, #8 marked closed (GitHub: closed 2026-11-22; all 7 issues closed). Also found: PR #30 is now green (9 / 9), so #27 and #30 can both be merged once the owner agrees; the macOS jobs of #28, #29, #31 still wait for a runner (no run of this repository is in progress, so the limit is likely account-wide).
 
 ## Design (reviewed by the advisor, 2026-11-22)
 

@@ -356,6 +356,18 @@ Round 18 iOS rows 6–7 (Mac session, 2026-11-24, S = `d0e752a`, fresh clone, iP
 
 No library bugs found. Notes: RN ignored `RCT_METRO_PORT`, the session set the `RCT_jsLocation` default locally (not committed). (Fixed 2026-11-27 in the example iOS host: see `ReactNative/example/README.md`.) Screenshots are originals only, unlabeled, in the Mac session's `/tmp/xpr/r18-shots/rows67/`; not in docs/assets yet. Rows 2 / 3 follow-up still running.
 
+Screenshots of rows 6 and 7 (committed 2026-11-27 from `/tmp/xpr/r18-shots/rows67/`, original pixels 1206 × 2622). All: iPhone 18 Pro simulator, iOS 27.2, Xcode 27.2, macOS 27.3, Debug, S = `d0e752a`; times are NZDT.
+
+| Platform | Step | Time | Screenshot |
+| :-- | :-- | :-- | :-- |
+| Flutter (iOS host) | launch | 2026-11-24 23:38 | ![Flutter iOS launch, iOS 27.2 sim, d0e752a](assets/r18-ios-flutter-01-launch.png) |
+| Flutter (iOS host) | after push | 2026-11-24 23:40 | ![Flutter iOS pushed, iOS 27.2 sim, d0e752a](assets/r18-ios-flutter-02-pushed.png) |
+| Flutter (iOS host) | after Back (edge swipe) | 2026-11-24 23:43 | ![Flutter iOS back, iOS 27.2 sim, d0e752a](assets/r18-ios-flutter-03-back.png) |
+| React Native (iOS host) | launch, Home | 2026-11-25 00:20 | ![RN iOS launch, iOS 27.2 sim, d0e752a](assets/r18-ios-rn-01-launch.png) |
+| React Native (iOS host) | after four flicks (`pauses=4 resumes=4`) | 2026-11-25 00:22 | ![RN iOS after flicks, iOS 27.2 sim, d0e752a](assets/r18-ios-rn-02-after-flicks.png) |
+| React Native (iOS host) | Detail pushed | 2026-11-25 00:23 | ![RN iOS detail, iOS 27.2 sim, d0e752a](assets/r18-ios-rn-03-detail.png) |
+| React Native (iOS host) | Back to Home | 2026-11-25 00:23 | ![RN iOS back home, iOS 27.2 sim, d0e752a](assets/r18-ios-rn-04-back-home.png) |
+
 Re-score:
 
 | Platform | Was | Now | Why |
