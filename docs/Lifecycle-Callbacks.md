@@ -301,6 +301,15 @@ Plan: HarmonyOS example, the ArkTS warning at `EntryAbility.ets:21` (an unhandle
 
 Status: DONE (2026-11-27). `getMainWindow()` now has a `.catch` that logs to `hilog` tag `CYL`. `build-har.sh entry`: BUILD SUCCESSFUL, the ArkTS warning is gone (only the expected "skip sign" warning). HarmonyOS Node suite 47 / 47. Not run on the emulator (the change only adds an error path). CI of PRs #28 to #31: the Linux jobs pass; the macOS jobs have been queued since 2026-11-25 / 26 and never started.
 
+Second item (same prompt, "继续编写代码", 2026-11-27): the React Native example ignored `RCT_METRO_PORT` on iOS.
+
+Status: DONE (2026-11-27). Cause: `RCT_METRO_PORT` is a compile-time macro of React-Core (`RCTDefines.h`, set through the `React-Core` podspec), and this install uses `React-Core-prebuilt`, so the port stays 8081 whatever the build says. Fix in the example host only (no library change): `SceneDelegate.bundleURL()` reads the port at run time, from the launch environment first, then the new `RCTMetroPort` Info.plist key (`$(RCT_METRO_PORT)`); an explicit `RCT_jsLocation` default still wins. Usage: [ReactNative/example/README.md](../ReactNative/example/README.md). Verified on a fresh Debug build (prebuilt React-Core) on a new iPhone 18 Pro simulator, iOS 27.2, Xcode 27.2, macOS 27.3, deleted afterwards; nothing listened on 8081.
+
+| Run | Result | Screenshot (original pixels) |
+| :-- | :-- | :-- |
+| Built with `RCT_METRO_PORT=8088`, Metro on 8088, plain launch | Metro served the bundle; Home screen with rows | ![RN iOS, Info.plist port 8088, iOS 27.2 simulator, 2026-11-27](assets/rn-ios-metro-port-infoplist-8088.png) |
+| Same build, `SIMCTL_CHILD_RCT_METRO_PORT=8099` (no server there) | Red box asks for `http://localhost:8099/index.bundle…`: the launch environment overrides the Info.plist value | ![RN iOS, launch environment port 8099, iOS 27.2 simulator, 2026-11-27](assets/rn-ios-metro-port-env-8099.png) |
+
 ## Design (reviewed by the advisor, 2026-11-22)
 
 Every public interface below was designed with the advisor; any new public API goes back to the advisor first.

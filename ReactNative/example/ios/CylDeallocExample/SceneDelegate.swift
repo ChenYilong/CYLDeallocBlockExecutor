@@ -48,9 +48,41 @@ class SceneDelegate: RCTDefaultReactNativeFactoryDelegate, UIWindowSceneDelegate
 
   override func bundleURL() -> URL? {
     #if DEBUG
-    RCTBundleURLProvider.sharedSettings().jsBundleURL(forBundleRoot: "index")
+    let settings = RCTBundleURLProvider.sharedSettings()
+    // An explicit `RCT_jsLocation` default wins; otherwise honour a Metro port given to this run or build.
+    if settings.jsLocation == nil, let port = Self.metroPort() {
+      return RCTBundleURLProvider.jsBundleURL(
+        forBundleRoot: "index",
+        packagerHost: "localhost:\(port)",
+        packagerScheme: settings.packagerScheme,
+        enableDev: settings.enableDev,
+        enableMinification: settings.enableMinification,
+        inlineSourceMap: settings.inlineSourceMap,
+        modulesOnly: false,
+        runModule: true
+      )
+    }
+    return settings.jsBundleURL(forBundleRoot: "index")
     #else
     Bundle.main.url(forResource: "main", withExtension: "jsbundle")
     #endif
   }
+
+  #if DEBUG
+  /// `RCT_METRO_PORT` is a compile-time macro of React-Core, so a prebuilt React-Core keeps 8081 whatever the build says.
+  /// Read the port at run time instead: the launch environment (`SIMCTL_CHILD_RCT_METRO_PORT=8088 xcrun simctl launch …`)
+  /// first, then the `RCTMetroPort` Info.plist key, which Xcode fills from the `RCT_METRO_PORT` build setting or variable.
+  private static func metroPort() -> Int? {
+    let candidates = [
+      ProcessInfo.processInfo.environment["RCT_METRO_PORT"],
+      Bundle.main.object(forInfoDictionaryKey: "RCTMetroPort") as? String,
+    ]
+    for case let value? in candidates {
+      if let port = Int(value.trimmingCharacters(in: .whitespaces)), (1...65535).contains(port) {
+        return port
+      }
+    }
+    return nil
+  }
+  #endif
 }

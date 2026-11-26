@@ -17,7 +17,22 @@ cd ReactNative/example && yarn install        # or npm install
 cd android && ./gradlew :app:assembleRelease -PreactNativeArchitectures=arm64-v8a
 ```
 
-JDK 17, `ANDROID_HOME`, NDK 27.1.12297006 and build-tools 37.0.0. Android only: there is no `ios/` folder.
+JDK 17, `ANDROID_HOME`, NDK 27.1.12297006 and build-tools 37.0.0.
+
+## iOS host and the Metro port
+
+`ios/` is the iOS host (`cd ios && pod install`, then build the `CylDeallocExample` workspace). When port 8081 is taken (for
+example by another project's Metro), start Metro on another port and give the app the same port:
+
+```sh
+yarn start --port 8088
+SIMCTL_CHILD_RCT_METRO_PORT=8088 xcrun simctl launch <UDID> <bundle id>   # per launch
+# or at build time: RCT_METRO_PORT=8088 xcodebuild …                       # fills the RCTMetroPort Info.plist key
+```
+
+`RCT_METRO_PORT` alone is not enough: it is a compile-time macro of React-Core, so a prebuilt React-Core keeps 8081.
+`SceneDelegate.bundleURL()` reads the port at run time (launch environment first, then `RCTMetroPort`). An explicit
+`RCT_jsLocation` user default still wins.
 
 ## Memory warning on Android
 
