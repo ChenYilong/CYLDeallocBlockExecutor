@@ -310,6 +310,10 @@ Status: DONE (2026-11-27). Cause: `RCT_METRO_PORT` is a compile-time macro of Re
 | Built with `RCT_METRO_PORT=8088`, Metro on 8088, plain launch | Metro served the bundle; Home screen with rows | ![RN iOS, Info.plist port 8088, iOS 27.2 simulator, 2026-11-27](assets/rn-ios-metro-port-infoplist-8088.png) |
 | Same build, `SIMCTL_CHILD_RCT_METRO_PORT=8099` (no server there) | Red box asks for `http://localhost:8099/index.bundle…`: the launch environment overrides the Info.plist value | ![RN iOS, launch environment port 8099, iOS 27.2 simulator, 2026-11-27](assets/rn-ios-metro-port-env-8099.png) |
 
+Third item (owner prompt verbatim: "continue", 2026-11-27): commit the round 18 iOS host screenshots of the React Native and Flutter examples (rows 6 and 7), which exist only in `/tmp/xpr/r18-shots/rows67/` (lost on reboot), labeled, into `docs/assets/`; then bring [Issues.md](Issues.md) in line with GitHub (no open issue on 2026-11-26).
+
+Status: TODO.
+
 ## Design (reviewed by the advisor, 2026-11-22)
 
 Every public interface below was designed with the advisor; any new public API goes back to the advisor first.
