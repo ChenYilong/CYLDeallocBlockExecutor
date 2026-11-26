@@ -195,7 +195,7 @@ Context: the handoff in `docs/todo/20261104/` (branch `feat/example-taglist`) li
 
 </details>
 
-Status: TODO (in progress, 2026-11-27).
+Status: DONE (2026-11-27). DevTools pass 11 / 11 with the timeout worked around by `MiniProgram/example/no-happy-eyeballs-proxy.mjs`; results and re-score (Mini Program 84 to 94) in [Cross-Platform-API.md](Cross-Platform-API.md#round-18-mini-program-devtools-pass-on-windows-2026-11-27-branch-testminiprogram-devtools-windows-base-s-of-pr-27). Open: the CYLTabBarController `Component is not found` trace (another repository, needs the owner's yes).
 
 - Done: `MiniProgram/example/run-devtools.mjs` runs on Windows. It finds `cli.bat` (or `WECHAT_DEVTOOLS_CLI`), and because Node 22 refuses to spawn a `.bat` without a shell (EINVAL, CVE-2024-27980), it starts `cli auto` itself and connects to the automation port. `CYL_APPID` swaps the appid for one run and restores `project.config.json`; `CYL_AUTOMATOR_DIR` points at a scratch `miniprogram-automator`. It prints one PASS / FAIL line per expected event. The example page logs its teardown block and exposes `cylTheme(theme)` (the call the `wx.onThemeChange` handler makes). Node suite 64 / 64.
 - Run on Windows 11, DevTools logged in, `versionRelation` equal: `touristappid` is refused (`APPID_ERROR: There is no such AppID`). With the owner's appid from CYLTabBarController (not committed here), DevTools fails `Fetching AppID () permissions` with `ETIMEDOUT`; `get_user_appids` fails the same way, while the shell reaches `servicewechat.com`, `mp.weixin.qq.com` and `api.weixin.qq.com` on 443 (no system proxy; DevTools proxy `SYSTEM`). Blocked on the DevTools network state, not on the library. No event was observed yet.

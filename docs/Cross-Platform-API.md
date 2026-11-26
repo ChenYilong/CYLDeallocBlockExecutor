@@ -364,3 +364,29 @@ Re-score:
 | React Native | 95 | **97** | iOS host run (3 of 4), pop fix confirmed on iOS (1); memory warning on iOS open |
 
 Average about **92.7 / 100** (was 92.2): iOS 89, Android 99, HarmonyOS 93, Flutter 94, React Native 97, Mini Program 84.
+
+### Round 18 Mini Program DevTools pass on Windows (2026-11-27, branch `test/miniprogram-devtools-windows`, base S of PR #27)
+
+Windows 11, WeChat DevTools 2.02.2609250 (logged in, `versionRelation` equal), Node 22.23.5, `miniprogram-automator` from a scratch directory, appid of the owner's account set for the run only (`CYL_APPID`, not committed). Command: `cd MiniProgram/example && ./sync.sh && node run-devtools.mjs`. Screenshot of the load events: [miniprogram-devtools-windows-load.jpg](assets/miniprogram-devtools-windows-load.jpg).
+
+| Test-Handoff section 2 row 2 | Result |
+|:---|:---|
+| `onLoad`, `onShow`, `onReady` | PASS: `willMoveToWindow`, `didMoveToWindow`, `willMoveToParent`, `viewDidLoad`, `didMoveToParent`, `viewWillAppear`, `viewIsAppearing`, `viewDidAppear`, `didEnterScreen` |
+| scroll end 150 ms after the last scroll | PASS: `pageScrollTo(600)` gave `scrollWillBeginDragging` (pause 0 to 1); resume not yet fired 60 ms later, fired by 660 ms (`scrollDidEndDragging`, `scrollDidEndScrolling`, resume 0 to 1) |
+| `onHide` (push) | PASS: `viewWillDisappear`, `viewDidDisappear`, `didLeaveScreen` |
+| `onShow` (Back) | PASS: `viewWillAppear`, `viewIsAppearing`, `viewDidAppear`, `didEnterScreen` |
+| theme change | PASS, **forwarded call**: the page's `cylTheme` (the call its `wx.onThemeChange` handler makes) gave `traitCollectionDidChange`; automation cannot switch the simulator theme |
+| resize | PASS, **forwarded call**: the page's `onResize` with the system payload gave `viewWillTransition size=812x375`; automation cannot rotate the simulator |
+| `onUnload` (reLaunch away) | PASS: disappear events, window and parent moves, then the teardown block |
+
+Result 11 / 11. **Library bug found and fixed** (`b792f24`): `withLifecycle` passed the system `onResize` event (`{ deviceOrientation, size: { windowWidth, windowHeight } }`) to `onResize(size)`, so `viewWillTransition` carried an undefined size; the run shows `812x375` after the fix (Node 65 / 65).
+
+Environment findings: (1) Node 22 cannot spawn `cli.bat` without a shell (EINVAL), so the runner starts `cli auto` itself and polls the automation port until the first page is registered. (2) A never-trusted project needs `--trust-project`, else every automator call times out. (3) `Page.callMethod` answered "this.cylTheme is not a function" although the page had the method; the runner calls through `getCurrentPages()` instead. (4) From New Zealand, DevTools timed out on the AppID permission request (Node happy eyeballs, see `MiniProgram/example/no-happy-eyeballs-proxy.mjs`); the run used that local proxy as the DevTools manual proxy, and the setting was put back to "system" afterwards.
+
+Re-score (estimate; same rubric):
+
+| Platform | Was | Now | Why |
+|:---|---:|---:|:---|
+| Mini Program | 84 | **94** | DevTools run of the library example (12 of 12 minus 2: theme and resize were forwarded calls, not the system switch); `wx.onMemoryWarning` not exercised; CYLTabBarController `Component is not found` (4) open |
+
+Average about **94.3 / 100** (was 92.7): iOS 89, Android 99, HarmonyOS 93, Flutter 94, React Native 97, Mini Program 94.
