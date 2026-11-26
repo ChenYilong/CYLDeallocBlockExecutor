@@ -392,3 +392,16 @@ Re-score (estimate; same rubric):
 | Mini Program | 84 | **94** | DevTools run of the library example (12 of 12 minus 2: theme and resize were forwarded calls, not the system switch); `wx.onMemoryWarning` not exercised; CYLTabBarController `Component is not found` (4) open |
 
 Average about **94.3 / 100** (was 92.7): iOS 89, Android 99, HarmonyOS 93, Flutter 94, React Native 97, Mini Program 94.
+
+### Round 18 Mini Program in CYLTabBarController on Windows (2026-11-27, Test-Handoff section 2 rows 1 and 3)
+
+Scratch copy (`git archive`, nothing changed in that repository) of CYLTabBarController `2b99043f` (`feat/harmony-animated-item-engines`). Its vendored `src/cyl-dealloc-block-executor/` is pinned to `4276a6d`; its six library files equal this repository's `MiniProgram/` at S except the `onResize` fix `b792f24` (not used there: no component routes a resize through it). Default project settings (`ignoreDevUnusedFiles` not set, so on), `npm run setup -- --animation=lottie` (code package 1.96 MB of 2 MB), DevTools started with `cli auto --trust-project` and the suite connected through `CYL_AUTOMATOR_WS` (the same proxy as above).
+
+| Row | Result |
+|:---|:---|
+| 1: library modules load; UI suite at least 14 pass | Modules load: the bar component (which requires `cyl-dealloc-block-executor/index`) renders and 12 tests drive it, including the memory-warning test that reports each tab through the library. Suite: **12 pass, 3 fail, 3 skipped** (below 14). |
+| 3: `Component is not found ... cyl-tab-bar/index`, `reading 'push'` | **Gone** on this commit: no such error, and `#cyl-tab-bar` resolves on every page the suite opens. Not traced to a cause by a run; a static read fits the class-field fix of #24 (`LifecycleCenter.entries` was a static class field, which DevTools' es6 compile drops; it is now assigned after the class). |
+
+Failures and skips, none in this library: two tests stop at `no fold control for .cyl-home-row[...]` (the CollectionViewClassifyMenu tag list at the pinned `a40c4ee` has no fold control: the open request of the handoff); the launch-sequence test expects the Liquid Glass tap to turn the city badge into a `#AF52DE` dot and gets an empty badge (CYLTabBarController behaviour, item 55); the three scroll tests skip because the bar's four items have no `#cyl-item-animation` node with lottie installed (checked: no GIF choice in storage; the example configuration decides, CYLTabBarController side). Reported to the CYLTabBarController Windows session.
+
+Re-score (estimate): Mini Program 94 to **97** (the load problem is gone, 3 of 4: not traced by a run). Average about **94.8 / 100**.
