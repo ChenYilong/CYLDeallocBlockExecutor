@@ -1,4 +1,5 @@
 import { AbilityConstant, Configuration, ConfigurationConstant, UIAbility, Want } from '@kit.AbilityKit';
+import { BusinessError } from '@kit.BasicServicesKit';
 import { window } from '@kit.ArkUI';
 import { hilog } from '@kit.PerformanceAnalysisKit';
 
@@ -20,6 +21,8 @@ export default class EntryAbility extends UIAbility {
   onWindowStageCreate(windowStage: window.WindowStage): void {
     windowStage.getMainWindow().then((win: window.Window) => {
       EntryAbility.win = win;
+    }).catch((err: BusinessError) => {
+      hilog.error(0x0000, 'CYL', 'getMainWindow failed %{public}s', JSON.stringify(err));
     });
     windowStage.loadContent('pages/Index', (err) => {
       if (err.code) {

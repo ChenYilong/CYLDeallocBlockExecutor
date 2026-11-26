@@ -75,7 +75,7 @@ Owner rule for all platforms: write the code statically, then test everything in
 
 - Code: [HarmonyOS/](../../../HarmonyOS/). Usage: [Usage-HarmonyOS.md](../../Usage-HarmonyOS.md).
 - Proven: dark / light, rotation, Back teardown, scroll events on an x86_64 Mate 70 Pro emulator; the debug button proves the memory **handler** only.
-- TODO: memory level through DevEco Profiler (GUI only, 4 points), arm64 emulator (2), real device (2); ArkTS warning at `EntryAbility.ets:21` (may throw).
+- TODO: memory level through DevEco Profiler (GUI only, 4 points), arm64 emulator (2), real device (2); ArkTS warning at `EntryAbility.ets:21` **fixed 2026-11-27** (`.catch` on `getMainWindow()`, build clean).
 - Test: `cd HarmonyOS && node --import ./test/register.mjs --test "test/*.test.ts"`; build `bash HarmonyOS/scripts/build-har.sh entry`. Unsigned HAP installs on the emulator; no signing is needed.
 - Emulator: `Emulator -hvd "Mate 70 Pro" -path ~/.Huawei/Emulator/deployed -imageRoot ~/Library/Huawei/Sdk`. Logs: `hilog` tag `CYL`.
 
@@ -134,7 +134,7 @@ The GitHub issue list has **no open issue** on 2026-11-26 (history: [Issues.md](
 | Rive Engine API label stayed at `cyl.animation.didStart` | Judged a test-method artifact from a static read (play-once had ended); **not confirmed** | Rerun with Loop ON | Expect `didPause` / `didResume`; if not, trace CYLTabBarController's bridge | [Cross-Platform-API.md](../../Cross-Platform-API.md) |
 | Flutter `pushReplacement` fix not re-run on a device | Fixed after the device pass; tests only (43 / 43) | Next Android pass | `replace` button, check disappear events before teardown | [Cross-Platform-API.md](../../Cross-Platform-API.md) |
 | A view inside a system bar (navigation title view) gets `didEnterScreen` only at window moves | By design: the library does not use KVO on system-owned views. The consumer calls `cylRefreshScreenState()` | Undecided | Option: re-evaluate after navigation transitions; needs a test first | [Lifecycle-Callbacks.md](../../Lifecycle-Callbacks.md) |
-| ArkTS warning `EntryAbility.ets:21` may throw | Warning only; not triaged | Wrap in `try` / `catch` after reading the call | Rebuild with `build-har.sh entry` | [Test-Handoff.md](../../Test-Handoff.md) |
+| ArkTS warning `EntryAbility.ets:21` may throw | **Fixed 2026-11-27** (commit below): `.catch` on `getMainWindow()`; `build-har.sh entry` clean, Node 47 / 47 | Wrap in `try` / `catch` after reading the call | Rebuild with `build-har.sh entry` | [Test-Handoff.md](../../Test-Handoff.md) |
 | React Native example ignores `RCT_METRO_PORT` | Worked around locally | Triage in the example | Check how the bundle URL is built | [Cross-Platform-API.md](../../Cross-Platform-API.md) |
 | CI Example job does not match the CocoaPods Example (#28) | Pushed in `b10e0b6`, CI result not read yet | Read the job, fix if red | `pod install`, then build scheme `CYLDeallocBlockExecutor-Example` | [Lifecycle-Callbacks.md](../../Lifecycle-Callbacks.md) |
 | Free-RAM tooling overlaps; a helper from another session shut down a simulator with a running test | Several sessions wrote helpers independently (this repo's `scripts/free-ram/`, a helper by the CYLTabBarController session, a `Release-RAM.md` mentioned by a Windows session; its repository is unknown here). The other helper now reports that it leaves unnamed simulators alone by default | Pick one | This repo's script keeps simulators that a running `xcodebuild` / `xctest` names, but still shuts down other idle-looking ones: use `--keep` | [Free-RAM.md](../../Free-RAM.md) |

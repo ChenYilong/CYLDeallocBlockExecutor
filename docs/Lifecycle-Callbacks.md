@@ -299,7 +299,7 @@ English: "Pull the latest code, find the branch of the newest commit and switch 
 
 Plan: HarmonyOS example, the ArkTS warning at `EntryAbility.ets:21` (an unhandled `getMainWindow()` promise).
 
-Status: TODO.
+Status: DONE (2026-11-27). `getMainWindow()` now has a `.catch` that logs to `hilog` tag `CYL`. `build-har.sh entry`: BUILD SUCCESSFUL, the ArkTS warning is gone (only the expected "skip sign" warning). HarmonyOS Node suite 47 / 47. Not run on the emulator (the change only adds an error path). CI of PRs #28 to #31: the Linux jobs pass; the macOS jobs have been queued since 2026-11-25 / 26 and never started.
 
 ## Design (reviewed by the advisor, 2026-11-22)
 
