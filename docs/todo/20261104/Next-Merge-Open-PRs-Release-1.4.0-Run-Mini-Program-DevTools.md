@@ -7,7 +7,7 @@ This week's folder holds **one file only**: append to this file, do not add anot
 
 ## 0. Do these first (in order)
 
-1. **Save local-only work** on the old Mac before the machine is reassigned (section 8). `/tmp` does not survive a reboot.
+1. **Copy what is only on the old Mac** before the machine is reassigned (section 8: other repositories' patches, memory notes). `/tmp` does not survive a reboot.
 2. **Get CI green and merge**: #27, then #28; #30, then #29 (retarget #29 to `master` after #30). Decide the order first (section 7).
 3. **Decide the release scope** (1.4.0 with or without the two new events), then tag and `pod trunk push`. Owner permission is required.
 4. **Run the Mini Program** example in WeChat DevTools on the logged-in Windows machine, and trace `Component is not found`.
@@ -32,7 +32,7 @@ The interface-coverage cell score in [Cross-Platform-API.md](../../Cross-Platfor
 | 7 | 1.4.0 is not tagged or published. The podspec already says 1.4.0, so SwiftPM, Carthage and CocoaPods trunk users are blocked. Consumers pin commits (CYLTabBarController #823 / #824 are drafts; CYLSearchViewController pins `eab21d1`). 1.4.0 or 1.5.0 for the new events is undecided |
 | 4 | Mini Program never ran in WeChat DevTools; the CYLTabBarController `Component is not found` error is not traced |
 | 3 | HarmonyOS: system delivery of the memory level was never seen (only the handler ran); only an x86_64 emulator |
-| 3 | Handoff durability: uncommitted files in the vault checkout, work in `/tmp/xpr`, local-only branches, unreviewed leftover branches |
+| 3 | Handoff durability (score given before the unfinished work was pushed): saved but unverified work (PR #31, #32, `ci.yml`), unreviewed leftover branches |
 | 2 | iOS verification rows open (Rive Loop ON, badge pause, React Native iOS memory warning) |
 | 2 | No real device on any platform |
 | 2 | The two new events exist on iOS only |
@@ -113,7 +113,8 @@ Owner rule for all platforms: write the code statically, then test everything in
 
 - [ ] Merge chain and retargets (section 0).
 - [ ] Tag 1.4.0, `pod trunk push`, then move consumer pins to `1.4.0`; take CYLTabBarController #823 / #824 out of draft.
-- [ ] Push the `ci.yml` patch: needs `gh auth refresh -h github.com -s workflow` in a normal terminal.
+- [ ] Verify the pushed `ci.yml` change on PR #28 (commit `b10e0b6`).
+- [ ] Verify draft PR #31 (analyzer excludes, lockfile); decide about draft PR #32 (old WIP).
 - [ ] Per-tag system glass in the Example: needs a CollectionViewClassifyMenu core API. **The request has not been sent.**
 - [ ] "Less" + icon fold control in the Example: needs the same core change. Not sent.
 - [ ] `docs/assets/`: add labeled screenshots for the React Native and Flutter iOS runs.
@@ -135,7 +136,7 @@ The GitHub issue list has **no open issue** on 2026-11-26 (history: [Issues.md](
 | A view inside a system bar (navigation title view) gets `didEnterScreen` only at window moves | By design: the library does not use KVO on system-owned views. The consumer calls `cylRefreshScreenState()` | Undecided | Option: re-evaluate after navigation transitions; needs a test first | [Lifecycle-Callbacks.md](../../Lifecycle-Callbacks.md) |
 | ArkTS warning `EntryAbility.ets:21` may throw | Warning only; not triaged | Wrap in `try` / `catch` after reading the call | Rebuild with `build-har.sh entry` | [Test-Handoff.md](../../Test-Handoff.md) |
 | React Native example ignores `RCT_METRO_PORT` | Worked around locally | Triage in the example | Check how the bundle URL is built | [Cross-Platform-API.md](../../Cross-Platform-API.md) |
-| CI Example job does not match the CocoaPods Example (#28) | The workflow change cannot be pushed without the `workflow` scope | Push the patch | `pod install`, then build scheme `CYLDeallocBlockExecutor-Example` | [Lifecycle-Callbacks.md](../../Lifecycle-Callbacks.md) |
+| CI Example job does not match the CocoaPods Example (#28) | Pushed in `b10e0b6`, CI result not read yet | Read the job, fix if red | `pod install`, then build scheme `CYLDeallocBlockExecutor-Example` | [Lifecycle-Callbacks.md](../../Lifecycle-Callbacks.md) |
 | Free-RAM tooling overlaps; a helper from another session shut down a simulator with a running test | Several sessions wrote helpers independently (this repo's `scripts/free-ram/`, a helper by the CYLTabBarController session, a `Release-RAM.md` mentioned by a Windows session; its repository is unknown here). The other helper now reports that it leaves unnamed simulators alone by default | Pick one | This repo's script keeps simulators that a running `xcodebuild` / `xctest` names, but still shuts down other idle-looking ones: use `--keep` | [Free-RAM.md](../../Free-RAM.md) |
 | Flutter on Android: repeated `didReceiveMemoryWarning` for one trim | **Won't fix**: engine behaviour; deduplication would hide real repeated pressure | none | none | [Test-Handoff.md](../../Test-Handoff.md) |
 
@@ -155,7 +156,6 @@ The GitHub issue list has **no open issue** on 2026-11-26 (history: [Issues.md](
 | Port the two new events to the other five platforms? | Today marked N/A in Cross-Platform-API.md |
 | Should the library re-evaluate system-owned views after navigation transitions? | Advice: not yet; the consumer workaround works |
 | Which free-RAM helper stays, and who writes its Windows section? | Undecided |
-| Push or drop the `ci.yml` patch? | Advice: push |
 | Delete merged and superseded branches? | Only after the review in section 2 |
 | Ask CollectionViewClassifyMenu for a per-tag glass API? | Waiting for the owner's go-ahead |
 
@@ -163,13 +163,15 @@ The GitHub issue list has **no open issue** on 2026-11-26 (history: [Issues.md](
 
 | Item | Where | What to do |
 | :-- | :-- | :-- |
-| Vault checkout, branch `feat/android-device-run`: 120 staged files (+2621 / −57), Android and Flutter example files among them | vault folder `CYLDeallocBlockExecutor/` | Not committed or cleaned by this handoff. Compare with round-18 before discarding (they look like earlier copies of merged work; not verified) |
-| Unpushed `ci.yml` change | `/tmp/xpr/tag-ci-workflow.patch` | Copy off `/tmp`, apply on #28, push with the `workflow` scope |
+| Vault checkout, branch `feat/android-device-run`: 120 staged files | vault folder `CYLDeallocBlockExecutor/` | **Correction (checked 2026-11-26):** all 120 are identical to `master` `4276a6d`, so there is no unfinished work in them. Left untouched |
+| `ci.yml` change | PR #28, commit `b10e0b6` | **Pushed 2026-11-26, not yet verified by CI**; see the PR comment |
 | Other patches (`824F-harness`, `callout-tap`, `cyl-824ios-...`, `glass-mine`, `ios-yml-drop-tag`, `rive-agent-example`, `rive-new`, `step2-wip`) | `/tmp/xpr/*.patch` | Mostly belong to other repositories; contents not reviewed. Copy off `/tmp` |
-| 3 uncommitted files: two Flutter `analysis_options.yaml`, `ReactNative/example/yarn.lock` | worktree `/tmp/xpr/cdbe-b8` (`integration/round-18`) | Owned by the integration session; ask before committing |
-| 2 uncommitted files | worktree `/tmp/xpr/cdbe-int` (`integration/round-17`) | Check, probably disposable |
-| Local-only branch `feat/android-device-leftovers` (9 commits not in round-18 by patch) | local repository | Same commit family as `feat/android-device-run`; push or review before the machine is wiped |
+| Two Flutter `analysis_options.yaml` changes and `ReactNative/example/yarn.lock` | draft [PR #31](https://github.com/ChenYilong/CYLDeallocBlockExecutor/pull/31) | Saved, not verified. The original files remain in worktree `/tmp/xpr/cdbe-b8` |
+| Worktree `/tmp/xpr/cdbe-int` | one Flutter analyzer change and a `node_modules` symlink | Not committed: a symlink to a local folder; the analyzer change is the kind saved in PR #31 |
+| Branch `feat/android-device-leftovers` | local name only | **Correction:** its commits are already on the remote through other branches; nothing would be lost |
 | Local-only branch `fix/flutter-example-analyze` | local repository | All changes already in round-18 (`git cherry` shows nothing new) |
+| Old WIP of 2026-11-23 (HarmonyOS / Mini Program wrappers) | draft [PR #32](https://github.com/ChenYilong/CYLDeallocBlockExecutor/pull/32), do not merge | Largely superseded; only `wrap.js` may be worth porting |
+| Local branch `feat/screen-focus-events-rebased` (1 commit) | local repository, another session's | Not pushed: an intermediate form of PR #29, which is on the remote |
 | Conversation context and memory notes of the last session (38 files; ignored by git, never push) | vault folder `CYLDeallocBlockExecutor/docs/todo/20261104/04/memory/` | Start at `00.md` |
 | Round 18 iOS screenshots, unlabeled | `/tmp/xpr/r18-shots/rows67/` | Label and commit to `docs/assets/` |
 

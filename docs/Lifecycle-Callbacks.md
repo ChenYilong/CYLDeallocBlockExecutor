@@ -278,6 +278,12 @@ Context: the owner leaves today; the next developer starts tomorrow.
 
 Status: DONE (2026-11-26). Week folder `20261104`, day folder `04` (Thursday; Sunday is `00`). The notes are on the owner's Mac only; `docs/todo/**/memory/` is in `.gitignore` and in the repository's local exclude file (so branches without the new line ignore it too). Nothing from the folder was committed.
 
+## TODO: Push the unfinished local work (2026-11-26)
+
+Prompt (verbatim): "提交本地未完成的代码，commit push pr中写好为什么没写完就commit了，别人应该从哪里写。"
+
+Status: DONE (2026-11-26). `ci.yml` change on PR #28 (`b10e0b6`); draft PR #31 (Flutter analyzer excludes, React Native lockfile, from the `integration/round-18` worktree); draft PR #32 (2026-11-23 WIP, reference only). Each PR says why and where to continue. Nothing was verified by a build here. The vault checkout's 120 staged files equal `master` `4276a6d`, so they were not committed.
+
 ## Design (reviewed by the advisor, 2026-11-22)
 
 Every public interface below was designed with the advisor; any new public API goes back to the advisor first.
