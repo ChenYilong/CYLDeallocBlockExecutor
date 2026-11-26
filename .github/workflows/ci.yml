@@ -43,11 +43,16 @@ jobs:
           cd "$PKG"
           xcodebuild build -scheme CYLDeallocBlockExecutor -destination 'generic/platform=iOS Simulator' \
             -derivedDataPath "$RUNNER_TEMP/dd-spm" SWIFT_TREAT_WARNINGS_AS_ERRORS=YES
-      - name: Example app
+      # The Example uses CYLTabBarController and CollectionViewClassifyMenu (Podfile, pinned by commit), with this
+      # library as the one local pod. The app scheme is CYLDeallocBlockExecutor-Example: the Pods project has a
+      # scheme with the target's own name, so the workspace needs the explicit name. The workspace is generated, not
+      # committed, so the Carthage job below never sees it.
+      - name: Example app (pod install, then the workspace)
         run: |
-          xcodebuild build -project CYLDeallocBlockExecutor.xcodeproj -target CYLDeallocBlockExecutor \
+          pod install
+          xcodebuild build -workspace CYLDeallocBlockExecutor.xcworkspace -scheme CYLDeallocBlockExecutor-Example \
             -sdk iphonesimulator -configuration Debug CODE_SIGNING_ALLOWED=NO \
-            SYMROOT="$RUNNER_TEMP/build-example"
+            -derivedDataPath "$RUNNER_TEMP/dd-example"
 
   carthage:
     name: Carthage
