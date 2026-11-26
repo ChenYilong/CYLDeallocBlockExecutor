@@ -1,7 +1,7 @@
 import { hilog } from '@kit.PerformanceAnalysisKit';
 import { CYLLifecycleBridge, LifecycleEvent } from 'cyldeallocblockexecutor';
 import EntryAbility from '../entryability/EntryAbility';
-import { ConfigurationConstant } from '@kit.AbilityKit';
+import { AbilityConstant, ConfigurationConstant } from '@kit.AbilityKit';
 import { window } from '@kit.ArkUI';
 
 @Entry
@@ -57,6 +57,11 @@ struct Index {
         Button('Land').onClick(() => { if (EntryAbility.win !== undefined) EntryAbility.win.setPreferredOrientation(window.Orientation.LANDSCAPE); })
         Button('Port').onClick(() => { if (EntryAbility.win !== undefined) EntryAbility.win.setPreferredOrientation(window.Orientation.PORTRAIT); })
       }
+      // Proves the handler, not system delivery: it calls the same EntryAbility.deliverMemoryLevel path that
+      // onMemoryLevel(level) uses, with the CRITICAL level, so the bridge fires didReceiveMemoryWarning. The emulator
+      // has no CLI to send a real memory level, so whether the system calls onMemoryLevel stays unverified.
+      Button('Debug: simulate memory level (handler only)').margin(4)
+        .onClick(() => EntryAbility.deliverMemoryLevel(AbilityConstant.MemoryLevel.MEMORY_LEVEL_CRITICAL))
       Text(this.lines).fontSize(12).margin(8).height(150)
       List() {
         ForEach(this.rows, (i: number) => {

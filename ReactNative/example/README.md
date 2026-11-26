@@ -2,7 +2,13 @@
 
 `App.tsx` mounts the library's React Native sources (`../src`, not a published package) on a `FlatList` of 400 rows. A block per
 `LifecycleEvent` logs `CYL EVENT n name` and `LifecycleCenter.whileUserScrolls` logs `CYL SCROLLCOUNT pauses=… resumes=…`
-(read with `adb logcat -s ReactNativeJS`). The `replace` button unmounts the list screen, which runs the teardown block.
+(read with `adb logcat -s ReactNativeJS`). The `replace` button unmounts the whole navigator, which runs the teardown blocks.
+
+## Navigation source (appear and disappear)
+
+The app is a React Navigation native stack (`@react-navigation/native`, `@react-navigation/native-stack`, `react-native-screens`, `react-native-safe-area-context`; autolinking picks the native parts up) with two screens: Home (the list) and Detail. Each screen passes its `navigation` object to `useLifecycle(owner, { navigation, navigationMode: 'stack' })`; `focus`, `blur`, `transitionStart` and `transitionEnd` then fire `viewWillAppear`, `viewIsAppearing`, `viewDidAppear`, `viewWillDisappear`, `viewDidDisappear`, and `didEnterScreen` / `didLeaveScreen` follow the did events. Lines read `CYL EVENT n name screen=Home|Detail`.
+
+Test (written statically, not run yet): launch, then `push Detail`, then `Back`. Expect on Home: `viewWillAppear`, `viewIsAppearing`, `viewDidAppear`, `didEnterScreen` after launch; after the push Home logs `viewWillDisappear`, `viewDidDisappear`, `didLeaveScreen` and Detail logs the appear four; after Back Detail logs the disappear three then `CYL EVENT teardown screen=Detail`, and Home logs the appear four again.
 
 Android release build (the JavaScript is bundled, no Metro needed), in a copy on APFS if the checkout is on exFAT:
 

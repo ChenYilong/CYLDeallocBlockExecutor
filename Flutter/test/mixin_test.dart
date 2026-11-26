@@ -251,6 +251,22 @@ void main() {
     expect(attached, [false, false, true, true]);
   });
 
+  testWidgets('pushReplacement: the replaced visible page disappears before teardown', (tester) async {
+    onInit = (s) => s.lifecycle.addDeallocCallback<_PageState>((o, id, i) => log.add('teardown'));
+    await tester.pumpWidget(app(const Page()));
+    await tester.pumpAndSettle();
+    log.clear();
+    tester.state<NavigatorState>(find.byType(Navigator))
+        .pushReplacement(MaterialPageRoute<void>(builder: (_) => const Text('next')));
+    await tester.pumpAndSettle();
+    final seq = log.where((l) => l == 'teardown' || l.endsWith('/afterSuper')).toList();
+    expect(seq.indexOf('viewWillDisappear/afterSuper'), greaterThanOrEqualTo(0));
+    expect(seq.indexOf('viewWillDisappear/afterSuper'), lessThan(seq.indexOf('viewDidDisappear/afterSuper')));
+    expect(seq.indexOf('viewDidDisappear/afterSuper'), lessThan(seq.indexOf('didLeaveScreen/afterSuper')));
+    expect(seq.indexOf('didLeaveScreen/afterSuper'), lessThan(seq.indexOf('teardown')));
+    expect(seq.where((l) => l == 'viewDidDisappear/afterSuper').length, 1);
+  });
+
   testWidgets('pop: the popped page gets will and did disappear', (tester) async {
     await tester.pumpWidget(app(Builder(
         builder: (c) => TextButton(
