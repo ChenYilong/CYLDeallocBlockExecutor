@@ -9,9 +9,10 @@ function register(page) {
   const registry = LifecycleRegistry.of(page)
   page.cylCounts = { n: 0, pauses: 0, resumes: 0 }
   Object.keys(LifecycleEvent).forEach((name) => {
-    registry.addLifecycleCallback(name, () => {
+    registry.addLifecycleCallback(name, (_owner, _id, info) => {
       page.cylCounts.n += 1
-      const line = 'EVENT ' + page.cylCounts.n + ' ' + name
+      const size = info && info.size ? ' size=' + info.size.width + 'x' + info.size.height : ''
+      const line = 'EVENT ' + page.cylCounts.n + ' ' + name + size
       console.log('CYL ' + line)
       const log = (page.data.log || []).concat(line).slice(-12)
       page.setData({ log, count: page.cylCounts.n })

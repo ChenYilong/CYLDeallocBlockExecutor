@@ -45,14 +45,27 @@ async function launch() {
   if (!cliPath.toLowerCase().endsWith('.bat')) return automator.launch({ cliPath, projectPath })
   const port = Number(process.env.CYL_AUTO_PORT || 9420)
   const quote = (s) => '"' + s + '"'
-  const cli = spawn(quote(cliPath), ['auto', '--project', quote(projectPath), '--auto-port', String(port)], { shell: true, stdio: 'inherit' })
+  // --trust-project: without it a never-trusted project waits on a trust dialog and every automator call times out.
+  const cli = spawn(quote(cliPath), ['auto', '--project', quote(projectPath), '--auto-port', String(port), '--trust-project'], { shell: true, stdio: 'inherit' })
   // Poll while the CLI runs (as automator.launch does): it may stay alive on success. A non-zero exit fails at once.
   let exitCode = null
   cli.on('exit', (code) => { exitCode = code === null ? -1 : code })
   const deadline = Date.now() + Number(process.env.CYL_LAUNCH_TIMEOUT_MS || 60000)
   while (Date.now() < deadline) {
     if (exitCode !== null && exitCode !== 0) throw new Error('`cli auto` exited with code ' + exitCode + ' (see its output above)')
-    try { return await automator.connect({ wsEndpoint: 'ws://127.0.0.1:' + port }) } catch (e) { await sleep(1000) }
+    try {
+      const connected = await automator.connect({ wsEndpoint: 'ws://127.0.0.1:' + port })
+      console.log('stage: connected to automation port ' + port)
+      // Until the first page is registered, reLaunch throws "Cannot destructure property 'rawPath' of
+      // 't.getPageMetaByWebviewId(...)' as it is null". automator.launch sleeps 5 s; a cold project needs longer, so poll.
+      for (let wait = 0; wait < 60; wait++) {
+        const current = await connected.currentPage().catch(() => null)
+        if (current && current.path) { console.log('stage: first page ready: ' + current.path); break }
+        await sleep(1000)
+      }
+      await sleep(1000)
+      return connected
+    } catch (e) { await sleep(1000) }
   }
   throw new Error('could not connect to DevTools automation on port ' + port)
 }
@@ -61,12 +74,15 @@ async function launch() {
 const configPath = path.join(projectPath, 'project.config.json')
 const originalConfig = fs.readFileSync(configPath, 'utf8')
 const restoreConfig = () => fs.writeFileSync(configPath, originalConfig)
+// The automator can throw from its own timers (uncaught), which skips `finally`; restore on exit too.
+process.on('exit', restoreConfig)
 if (process.env.CYL_APPID) {
   fs.writeFileSync(configPath, JSON.stringify(Object.assign(JSON.parse(originalConfig), { appid: process.env.CYL_APPID }), null, 2) + '\n')
 }
 
 // Every `CYL EVENT n <name>` console line from the page, in order.
 const events = []
+const sizes = []   // the `size=WxH` of each viewWillTransition
 let mini
 try {
   mini = await launch()
@@ -76,11 +92,25 @@ try {
 }
 mini.on('console', (msg) => {
   const text = (msg.args || []).join(' ')
-  const m = /^CYL EVENT \d+ (\S+)/.exec(text)
+  const m = /^CYL EVENT \d+ (\S+)(?: size=(\S+))?/.exec(text)
   if (m) events.push(m[1])
+  if (m && m[2]) sizes.push(m[2])
 })
 const mark = () => events.length
 const since = (i) => events.slice(i)
+
+// Page.callMethod answered "this.<name> is not a function" (DevTools 2.02, Windows) although the current page has
+// the method (checked through getCurrentPages()), so call it inside the app service instead.
+async function callOnCurrentPage(name, arg) {
+  const outcome = await mini.evaluate((method, value) => {
+    const pages = getCurrentPages()
+    const p = pages[pages.length - 1]
+    if (typeof p[method] !== 'function') return 'missing ' + method + ' on ' + p.route
+    p[method](value)
+    return 'called ' + method + ' on ' + p.route
+  }, name, arg).catch((e) => 'evaluate failed: ' + e.message)
+  console.log(outcome)
+}
 
 const results = []
 const check = (name, ok, detail) => {
@@ -89,6 +119,7 @@ const check = (name, ok, detail) => {
 }
 
 try {
+  console.log('stage: reLaunch index')
   let page = await mini.reLaunch('/pages/index/index')
   await sleep(1500)
   const load = since(0)
@@ -121,16 +152,22 @@ try {
   console.log('push events:', hide.join(', '))
   check('onHide -> viewWillDisappear / viewDidDisappear', hide.includes('viewWillDisappear') && hide.includes('viewDidDisappear'))
   i = mark()
-  page = await mini.navigateBack()
+  await mini.navigateBack()
   await sleep(800)
+  // navigateBack can resolve with the page being closed; read the current page after the stack settles.
+  page = await mini.currentPage()
+  console.log('current page after Back:', page.path)
   const back = since(i)
   console.log('back events:', back.join(', '))
   check('onShow after Back -> viewWillAppear / viewDidAppear', back.includes('viewWillAppear') && back.includes('viewDidAppear'))
 
   // Theme: DevTools has no automator switch for the simulator theme; the page forwards wx.onThemeChange by hand,
   // so drive the controller with the same call the system callback makes.
+  // themeChanged ignores an unchanged theme, so send the opposite of the one the page recorded at onLoad.
+  const info = await mini.callWxMethod('getAppBaseInfo').catch(() => ({}))
+  const nextTheme = info && info.theme === 'dark' ? 'light' : 'dark'
   i = mark()
-  await page.callMethod('cylTheme', 'dark').catch((e) => console.log('theme call failed:', e.message))
+  await callOnCurrentPage('cylTheme', nextTheme)
   await sleep(300)
   const theme = since(i)
   console.log('theme events:', theme.join(', '))
@@ -139,12 +176,12 @@ try {
   // Resize: automation has no simulator rotate or resize, so call the page's onResize with the payload the system
   // passes on rotation ("pageOrientation": "auto" in index.json lets a manual rotation in DevTools fire it too).
   i = mark()
-  await page.callMethod('onResize', { deviceOrientation: 'landscape', size: { windowWidth: 812, windowHeight: 375 } })
-    .catch((e) => console.log('onResize call failed:', e.message))
+  await callOnCurrentPage('onResize', { deviceOrientation: 'landscape', size: { windowWidth: 812, windowHeight: 375 } })
   await sleep(500)
   const resize = since(i)
   console.log('resize events:', resize.join(', '))
   check('onResize -> viewWillTransition', resize.includes('viewWillTransition'), '(forwarded call, not a real rotation)')
+  check('viewWillTransition carries the nested system size', sizes[sizes.length - 1] === '812x375', 'size=' + sizes[sizes.length - 1])
 
   // Unload: reLaunch closes every page, so the index page gets onUnload.
   i = mark()
