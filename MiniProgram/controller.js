@@ -134,6 +134,8 @@ class LifecycleController {
   }
 
   onResize(size) {
+    // The system's onResize / pageLifetimes.resize event nests the size: { deviceOrientation, size: { windowWidth, ... } }.
+    if (size && size.size && typeof size.size === 'object') size = size.size;
     this.around('viewWillTransition', { size: { width: (size.windowWidth != null ? size.windowWidth : size.width), height: (size.windowHeight != null ? size.windowHeight : size.height) } });
   }
 
