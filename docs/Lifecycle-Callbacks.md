@@ -316,7 +316,17 @@ Status: DONE (2026-11-27). Seven screenshots copied unchanged (1206 × 2622) to 
 
 Fourth item (owner prompt verbatim: "merge #27 and #30", 2026-11-27): merge PR #27 (`integration/round-18`) and PR #30 (`feat/did-become-active-on-screen`) into `master` with merge commits (consumers pin commits of both), in that order; keep the branches.
 
-Status: TODO.
+Status: DONE (2026-11-27). #27 merged as `601de23` (9 / 9 checks), #30 merged as `0e2ca33` (9 / 9 checks; its CI ran on the old base `4276a6d`, but the two PRs share no code file, only the two docs, which merged without conflict). Both branches kept: consumers pin `5ba2813`, `32c2103`, `eab21d1`. PRs #28 and #29 retargeted to `master`; both then conflicted in `docs/Lifecycle-Callbacks.md` (task-log entries added at the same place). #28: `master` merged in, both sides kept. #29 (owned by the CYLSearchViewController session) not touched: it needs the same merge.
+
+## TODO: `appDidBecomeActiveOnScreen` event (2026-11-26)
+
+Context: request from the CYLSearchViewController session (owner order 2026-11-26): CYLSearchBarView must focus its text field every time it reappears. `didEnterScreen` / `didLeaveScreen` cover first entry, tab switch and push / pop; returning from the background has no event.
+
+Prompt (cross-session request, summarized, English): add one generic derived event `CYLLifecycleEvent.appDidBecomeActiveOnScreen`, appended after `scrollDidEndScrolling`; fires when `UIApplication.didBecomeActiveNotification` arrives and the view or view controller is on screen (same derivation as `didEnterScreen`), once per activation per owner with a block, `.afterSuper` only, main thread, one lazily installed global observer; document it here and in `Cross-Platform-API.md` (Android maps to the resume that already re-fires appear); add a test; send the commit SHA.
+
+Rename (2026-11-26, owner: "use the first"): the event is `appDidBecomeActiveOnScreen` (first proposed as `didBecomeActiveOnScreen`).
+
+Status: DONE in code (2026-11-26, branch `feat/did-become-active-on-screen`, from master `4276a6d`). `CYLLifecycleSources` keeps a weak set of owners with a block, installs one observer of the notification by name on the first block (per-owner or global), and fires for owners that are on screen now (`CYLVisibilityState.computeVisible`); a global observer also reaches every view controller in a window. Raw values unchanged. Test "appDidBecomeActiveOnScreen" (4 checks): 89 / 89 in Debug and in Release, iOS 27.2 simulator (own, deleted afterwards), Xcode 27.2, 2026-11-26. Not released: the podspec stays 1.4.0 (owner decides the release). Other platforms are N/A in `Cross-Platform-API.md`.
 
 ## Design (reviewed by the advisor, 2026-11-22)
 
@@ -407,7 +417,7 @@ Found by the final review: with two overriding levels, v2 fired blocks twice or 
 
 **Layering.** The library knows generic UIKit concepts only: window moves, on-screen visibility, user scrolling, named custom events, global observers and forwarding. It never learns about badges: CYLTabBarController posts the badge moments as custom events.
 
-**Events (appended to `CYLLifecycleEvent`, existing raw values unchanged).** `willMoveToWindow`, `didMoveToWindow` (any view); `didEnterScreen`, `didLeaveScreen` (views and view controllers; on a view controller right after `viewDidAppear` / `viewDidDisappear`); `scrollWillBeginDragging`, `scrollDidEndDragging` (`info.willDecelerate`), `scrollDidEndScrolling`. New `CYLLifecycleInfo` fields: `window`, `scrollView`, `willDecelerate`, `customEvent`, `userInfo`.
+**Events (appended to `CYLLifecycleEvent`, existing raw values unchanged).** `willMoveToWindow`, `didMoveToWindow` (any view); `didEnterScreen`, `didLeaveScreen` (views and view controllers; on a view controller right after `viewDidAppear` / `viewDidDisappear`); `scrollWillBeginDragging`, `scrollDidEndDragging` (`info.willDecelerate`), `scrollDidEndScrolling`; `appDidBecomeActiveOnScreen` (appended last, 2026-11-26: the app became active again while the view or view controller is on screen; see below). New `CYLLifecycleInfo` fields: `window`, `scrollView`, `willDecelerate`, `customEvent`, `userInfo`.
 
 **Custom events** use the same identifier, key, invoke-once and lock rules: `cylAddLifecycleCallback(forCustomEvent:)`, `cylPostLifecycleEvent(_:userInfo:)`.
 

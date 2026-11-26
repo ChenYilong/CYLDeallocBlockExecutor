@@ -13,6 +13,8 @@ This week's folder holds **one file only**: append to this file, do not add anot
 4. **Run the Mini Program** example in WeChat DevTools on the logged-in Windows machine, and trace `Component is not found`.
 5. **Close the HarmonyOS memory gap** with DevEco Profiler, then re-score.
 
+**Update 2026-11-27:** PR #27 merged (`601de23`) and PR #30 merged (`0e2ca33`), both with merge commits, branches kept. #28 and #29 now target `master`; #28 has `master` merged in. #29 conflicts in `docs/Lifecycle-Callbacks.md` (task-log entries only): merge `master` into it, keep both sides, then merge. Its macOS CI jobs still wait for a runner.
+
 ## 1. Scores
 
 These are advisor estimates of 2026-11-26, made from repository and CI state, not from a new test run.
