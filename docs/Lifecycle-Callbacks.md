@@ -284,6 +284,23 @@ Prompt (verbatim): "提交本地未完成的代码，commit push pr中写好为�
 
 Status: DONE (2026-11-26). `ci.yml` change on PR #28 (`b10e0b6`); draft PR #31 (Flutter analyzer excludes, React Native lockfile, from the `integration/round-18` worktree); draft PR #32 (2026-11-23 WIP, reference only). Each PR says why and where to continue. Nothing was verified by a build here. The vault checkout's 120 staged files equal `master` `4276a6d`, so they were not committed.
 
+## TODO: Take over from the handoff and start coding (2026-11-27)
+
+Context: the next developer picks up the handoff in [todo/20261104/](todo/20261104/Next-Merge-Open-PRs-Release-1.4.0-Run-Mini-Program-DevTools.md). Merging, the release and the Mini Program run need the owner; this task takes the code items that do not.
+
+<details>
+<summary>Original prompt (verbatim)</summary>
+
+拉取远端最新代码，找到本项目最近的一条commit所在分支，切换到最近提交所在分支。阅读分支下，docs 文件夹下的包含 handover 文字的文件夹，遍历文件夹中的所有文件以及子文件夹下的所有文件。阅读交接文档完成交接任务。开始编写代码。
+
+</details>
+
+English: "Pull the latest code, find the branch of the newest commit and switch to it. Read the handover folders under `docs/` with all their files and subfolders. Read the handoff document, take over the tasks, and start writing code."
+
+Plan: HarmonyOS example, the ArkTS warning at `EntryAbility.ets:21` (an unhandled `getMainWindow()` promise).
+
+Status: TODO.
+
 ## Design (reviewed by the advisor, 2026-11-22)
 
 Every public interface below was designed with the advisor; any new public API goes back to the advisor first.
