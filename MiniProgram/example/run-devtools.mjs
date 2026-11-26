@@ -46,9 +46,12 @@ async function launch() {
   const port = Number(process.env.CYL_AUTO_PORT || 9420)
   const quote = (s) => '"' + s + '"'
   const cli = spawn(quote(cliPath), ['auto', '--project', quote(projectPath), '--auto-port', String(port)], { shell: true, stdio: 'inherit' })
-  const exited = new Promise((resolve) => cli.on('exit', resolve))
-  await exited
-  for (let tries = 0; tries < 30; tries++) {
+  // Poll while the CLI runs (as automator.launch does): it may stay alive on success. A non-zero exit fails at once.
+  let exitCode = null
+  cli.on('exit', (code) => { exitCode = code === null ? -1 : code })
+  const deadline = Date.now() + Number(process.env.CYL_LAUNCH_TIMEOUT_MS || 60000)
+  while (Date.now() < deadline) {
+    if (exitCode !== null && exitCode !== 0) throw new Error('`cli auto` exited with code ' + exitCode + ' (see its output above)')
     try { return await automator.connect({ wsEndpoint: 'ws://127.0.0.1:' + port }) } catch (e) { await sleep(1000) }
   }
   throw new Error('could not connect to DevTools automation on port ' + port)
@@ -133,13 +136,15 @@ try {
   console.log('theme events:', theme.join(', '))
   check('theme change -> traitCollectionDidChange', theme.includes('traitCollectionDidChange'), '(forwarded call, not the system switch)')
 
-  // Resize: onResize needs "pageOrientation": "auto" or a resizable window.
+  // Resize: automation has no simulator rotate or resize, so call the page's onResize with the payload the system
+  // passes on rotation ("pageOrientation": "auto" in index.json lets a manual rotation in DevTools fire it too).
   i = mark()
-  await mini.callWxMethod('setWindowSize', { width: 500, height: 800 }).catch((e) => console.log('setWindowSize:', e.message))
+  await page.callMethod('onResize', { deviceOrientation: 'landscape', size: { windowWidth: 812, windowHeight: 375 } })
+    .catch((e) => console.log('onResize call failed:', e.message))
   await sleep(500)
   const resize = since(i)
   console.log('resize events:', resize.join(', '))
-  check('onResize -> viewWillTransition', resize.includes('viewWillTransition'))
+  check('onResize -> viewWillTransition', resize.includes('viewWillTransition'), '(forwarded call, not a real rotation)')
 
   // Unload: reLaunch closes every page, so the index page gets onUnload.
   i = mark()
@@ -151,6 +156,7 @@ try {
 } finally {
   const failed = results.filter((r) => !r.ok).length
   console.log('RESULT: ' + (results.length - failed) + ' / ' + results.length + ' passed')
+  process.exitCode = failed || results.length === 0 ? 1 : 0
   console.log('all events:', events.join(', '))
   await mini.close().catch(() => {})
   restoreConfig()
