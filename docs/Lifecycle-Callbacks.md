@@ -248,6 +248,23 @@ Where: [Free-RAM.md](Free-RAM.md) (macOS section written, Windows section is a p
 
 Status: DONE (2026-11-26). Both scripts pass `bash -n` and a dry run on this Mac; the dry run kept the simulator a running `xcodebuild test` named. Display commands (brightness, mirroring, iTerm2 hiding) were not executed here: they need a normal Terminal.
 
+## TODO: Handoff document for the next developer (2026-11-26)
+
+Context: the owner is leaving and hands the project to the next developer.
+
+Where: [todo/20261104/](todo/20261104/Next-Merge-Open-PRs-Release-1.4.0-Run-Mini-Program-DevTools.md) (one file per week folder), pushed to `feat/example-taglist`.
+
+<details>
+<summary>Original prompt (verbatim)</summary>
+
+你本次主要添加的除iOS端以外其他端的章节， （android，鸿蒙，小程序，rn flutter）， 需要更新的文档地址在这里：我现在要离职，我要把这个项目的开发工作交给下一个同事，请你写一份全英文交接文档。放进docs的todo文件夹，如果没有就新建。在todo 文件夹下新建一个文件夹，文件名规则为 ： 年月第几周 ，举例说明：20261104 表示2026年11月的第四周。首先你要查到我们现在在本月的哪一周，然后再新建文件夹。如果该文件夹已经存在则无须新建文件夹。文件夹新建好后创建文档，注意这个文件夹下只能有一个文件，你如果发现已经有文件，你要进入文件追加内容，而非再新建文件。文档名为本次交接任务的重点todo项的提炼内容总结，需要标题告诉下一个同事，你接下来重点做什么。文档内容要写入目前项目所有todo。并要求advisor对目前项目进度打分，以及距离发布标准，百分制打分，能得多少分以及miss point在哪里。事无巨细，todo 重大缺陷，还没做决定的一些问题都要记录下。给出表格，第一列 本项目所有处于open 状态的分支地址，第二列以及每个分支的进度百分比评估，第三列todo项。
+
+再给出表格，本项目中所有bug 列表，以及为什么没有修，以及修复计划，修复思路，以及相关文档地址。立即推送到本分支。由于仅仅是文档，修复，没有代码风险。文档好后，把基于分支的，我能直接访问的GitHub https开头的链接发给我，我转发给同事，以完成交接工作。
+
+</details>
+
+Status: DONE (2026-11-26). Advisor scores: effect 92.2 / 100, release readiness 70 / 100. The sentence "the document to update is here:" had no address, so the new handoff document carries one chapter per platform.
+
 ## Design (reviewed by the advisor, 2026-11-22)
 
 Every public interface below was designed with the advisor; any new public API goes back to the advisor first.
