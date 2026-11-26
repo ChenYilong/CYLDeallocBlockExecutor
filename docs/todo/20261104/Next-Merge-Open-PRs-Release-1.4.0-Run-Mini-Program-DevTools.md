@@ -170,6 +170,7 @@ The GitHub issue list has **no open issue** on 2026-11-26 (history: [Issues.md](
 | 2 uncommitted files | worktree `/tmp/xpr/cdbe-int` (`integration/round-17`) | Check, probably disposable |
 | Local-only branch `feat/android-device-leftovers` (9 commits not in round-18 by patch) | local repository | Same commit family as `feat/android-device-run`; push or review before the machine is wiped |
 | Local-only branch `fix/flutter-example-analyze` | local repository | All changes already in round-18 (`git cherry` shows nothing new) |
+| Conversation context and memory notes of the last session (38 files; ignored by git, never push) | vault folder `CYLDeallocBlockExecutor/docs/todo/20261104/04/memory/` | Start at `00.md` |
 | Round 18 iOS screenshots, unlabeled | `/tmp/xpr/r18-shots/rows67/` | Label and commit to `docs/assets/` |
 
 ## 9. Environment and traps

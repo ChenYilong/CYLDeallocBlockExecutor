@@ -265,6 +265,19 @@ Where: [todo/20261104/](todo/20261104/Next-Merge-Open-PRs-Release-1.4.0-Run-Mini
 
 Status: DONE (2026-11-26). Advisor scores: effect 92.2 / 100, release readiness 70 / 100. The sentence "the document to update is here:" had no address, so the new handoff document carries one chapter per platform.
 
+## TODO: Local conversation-context notes for the next developer (2026-11-26)
+
+Context: the owner leaves today; the next developer starts tomorrow.
+
+<details>
+<summary>Original prompt (verbatim)</summary>
+
+我现在今天就要离职，我要把这个项目的开发工作交给明天来的下一个同事，请你写一份我们对话的 上下文 文档。放进docs的todo文件夹，如果没有就新建。在todo 文件夹下新建一个文件夹，文件名规则为 ： 年月第几周 ，举例说明：20261104 表示2026年11月的第四周。首先你要查到我们现在在本月的哪一周，然后再新建文件夹。如果该文件夹已经存在则无须新建文件夹。然后在该文件夹下按照今天是星期几创建一个两位数字开头的文件夹。比如周日就是00，周一就是01，依次类推，我们约定周日是一周的第0天，是一周的起点，周六是一周的结束编号06。 不存在07和以上编号。 今天的文件夹新建好后，进入今天的文件夹再创建一个新的文件夹，文件夹名字固定为memory，将该memory 文件夹 加入gitignore， 不要传到GitHub去，仅仅还存在本机，在memory文件夹下开始新建文档，文档名为纯数字，两位，注意这个文件夹下不仅仅有一个文件，你如果发现已经有文件，就新建文件追加编号，比如第一个人新建了一个文件名字叫 00，你就新建01， 新建好后， 文档内容要写入你能看到的我们对话的所有上下文，注意一个文件限制200行内容。写满就新建文件，文件名规则同上。如此往复一直到写完为止。如此往复将你能想起来的所有memory和上下文都写进去。
+
+</details>
+
+Status: DONE (2026-11-26). Week folder `20261104`, day folder `04` (Thursday; Sunday is `00`). The notes are on the owner's Mac only; `docs/todo/**/memory/` is in `.gitignore` and in the repository's local exclude file (so branches without the new line ignore it too). Nothing from the folder was committed.
+
 ## Design (reviewed by the advisor, 2026-11-22)
 
 Every public interface below was designed with the advisor; any new public API goes back to the advisor first.
