@@ -50,6 +50,12 @@ public enum CYLLifecycleEvent: Int, CaseIterable {
     case scrollDidEndDragging
     /// The scroll view stopped for good: after deceleration, or at the end of a drag that does not decelerate.
     case scrollDidEndScrolling
+    /**
+     * The app became active again (`UIApplication.didBecomeActiveNotification`, the foreground scene is active) while this view or
+     * view controller is on screen (same visibility rule as `didEnterScreen`). Fires once per activation for each owner that has a
+     * block for it, at `.afterSuper` on the main thread; a view that is not on screen at that moment hears nothing.
+     */
+    case appDidBecomeActiveOnScreen
 
     /**
      * Whether the event comes from a UIViewController method (the others are derived, see above).
@@ -78,7 +84,7 @@ public enum CYLLifecycleEvent: Int, CaseIterable {
         case .didMoveToParent: return #selector(UIViewController.didMove(toParent:))
         case .didReceiveMemoryWarning: return #selector(UIViewController.didReceiveMemoryWarning)
         case .willMoveToWindow, .didMoveToWindow, .didEnterScreen, .didLeaveScreen, .scrollWillBeginDragging, .scrollDidEndDragging,
-             .scrollDidEndScrolling:
+             .scrollDidEndScrolling, .appDidBecomeActiveOnScreen:
             return NSSelectorFromString("cyl_derivedEvent")
         }
     }

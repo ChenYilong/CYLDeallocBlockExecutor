@@ -184,6 +184,16 @@ public typealias CYLViewDidLayoutSubViewsBlock = (CYLTabBarController) -> Void
 
 </details>
 
+## TODO: `appDidBecomeActiveOnScreen` event (2026-11-26)
+
+Context: request from the CYLSearchViewController session (owner order 2026-11-26): CYLSearchBarView must focus its text field every time it reappears. `didEnterScreen` / `didLeaveScreen` cover first entry, tab switch and push / pop; returning from the background has no event.
+
+Prompt (cross-session request, summarized, English): add one generic derived event `CYLLifecycleEvent.appDidBecomeActiveOnScreen`, appended after `scrollDidEndScrolling`; fires when `UIApplication.didBecomeActiveNotification` arrives and the view or view controller is on screen (same derivation as `didEnterScreen`), once per activation per owner with a block, `.afterSuper` only, main thread, one lazily installed global observer; document it here and in `Cross-Platform-API.md` (Android maps to the resume that already re-fires appear); add a test; send the commit SHA.
+
+Rename (2026-11-26, owner: "use the first"): the event is `appDidBecomeActiveOnScreen` (first proposed as `didBecomeActiveOnScreen`).
+
+Status: DONE in code (2026-11-26, branch `feat/did-become-active-on-screen`, from master `4276a6d`). `CYLLifecycleSources` keeps a weak set of owners with a block, installs one observer of the notification by name on the first block (per-owner or global), and fires for owners that are on screen now (`CYLVisibilityState.computeVisible`); a global observer also reaches every view controller in a window. Raw values unchanged. Test "appDidBecomeActiveOnScreen" (4 checks): 89 / 89 in Debug and in Release, iOS 27.2 simulator (own, deleted afterwards), Xcode 27.2, 2026-11-26. Not released: the podspec stays 1.4.0 (owner decides the release). Other platforms are N/A in `Cross-Platform-API.md`.
+
 ## Design (reviewed by the advisor, 2026-11-22)
 
 Every public interface below was designed with the advisor; any new public API goes back to the advisor first.
@@ -273,7 +283,7 @@ Found by the final review: with two overriding levels, v2 fired blocks twice or 
 
 **Layering.** The library knows generic UIKit concepts only: window moves, on-screen visibility, user scrolling, named custom events, global observers and forwarding. It never learns about badges: CYLTabBarController posts the badge moments as custom events.
 
-**Events (appended to `CYLLifecycleEvent`, existing raw values unchanged).** `willMoveToWindow`, `didMoveToWindow` (any view); `didEnterScreen`, `didLeaveScreen` (views and view controllers; on a view controller right after `viewDidAppear` / `viewDidDisappear`); `scrollWillBeginDragging`, `scrollDidEndDragging` (`info.willDecelerate`), `scrollDidEndScrolling`. New `CYLLifecycleInfo` fields: `window`, `scrollView`, `willDecelerate`, `customEvent`, `userInfo`.
+**Events (appended to `CYLLifecycleEvent`, existing raw values unchanged).** `willMoveToWindow`, `didMoveToWindow` (any view); `didEnterScreen`, `didLeaveScreen` (views and view controllers; on a view controller right after `viewDidAppear` / `viewDidDisappear`); `scrollWillBeginDragging`, `scrollDidEndDragging` (`info.willDecelerate`), `scrollDidEndScrolling`; `appDidBecomeActiveOnScreen` (appended last, 2026-11-26: the app became active again while the view or view controller is on screen; see below). New `CYLLifecycleInfo` fields: `window`, `scrollView`, `willDecelerate`, `customEvent`, `userInfo`.
 
 **Custom events** use the same identifier, key, invoke-once and lock rules: `cylAddLifecycleCallback(forCustomEvent:)`, `cylPostLifecycleEvent(_:userInfo:)`.
 
