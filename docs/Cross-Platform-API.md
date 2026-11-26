@@ -365,9 +365,11 @@ Re-score:
 
 Average about **92.7 / 100** (was 92.2): iOS 89, Android 99, HarmonyOS 93, Flutter 94, React Native 97, Mini Program 84.
 
-### Round 18 Mini Program DevTools pass on Windows (2026-11-27, branch `test/miniprogram-devtools-windows`, base S of PR #27)
+### Round 18 Mini Program DevTools pass on Windows (2026-11-27, tested 5cbc571)
 
-Windows 11, WeChat DevTools 2.02.2609250 (logged in, `versionRelation` equal), Node 22.23.5, `miniprogram-automator` from a scratch directory, appid of the owner's account set for the run only (`CYL_APPID`, not committed). Command: `cd MiniProgram/example && ./sync.sh && node run-devtools.mjs`. Screenshot of the load events: [miniprogram-devtools-windows-load.jpg](assets/miniprogram-devtools-windows-load.jpg).
+Tested `5cbc571` on branch `test/miniprogram-devtools-windows` = `5ba2813` (head of `integration/round-18`; `MiniProgram/` unchanged since S `d0e752a`) + the core fix `b792f24` + the runner. On S itself the size row would fail (shown by the unit test, not run). Windows 11, WeChat DevTools 2.02.2609250 (logged in, `versionRelation` equal), Node 22.23.5, `miniprogram-automator` from a scratch directory, appid of the owner's account set for the run only (not committed).
+
+Command (this machine also needs the proxy of finding 4): in `MiniProgram/example` start `node no-happy-eyeballs-proxy.mjs`, set DevTools > Settings > Proxy to manual `127.0.0.1:18080`, restart DevTools, then `./sync.sh && CYL_APPID=<appid> CYL_AUTOMATOR_DIR=<scratch dir with miniprogram-automator> node run-devtools.mjs`; set the proxy back to "system" afterwards. Screenshot of the load events: [miniprogram-devtools-windows-load.jpg](assets/miniprogram-devtools-windows-load.jpg) (DevTools' optimized JPEG, not original pixels; retake at full size on the next DevTools run).
 
 | Test-Handoff section 2 row 2 | Result |
 |:---|:---|

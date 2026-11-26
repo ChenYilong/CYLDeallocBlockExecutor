@@ -3,7 +3,14 @@
 // project.config.json that DevTools accepts for automation.
 //   npm i miniprogram-automator          (in a scratch directory; pass it with CYL_AUTOMATOR_DIR=<that directory>)
 //   node run-devtools.mjs
-// The DevTools CLI is found from WECHAT_DEVTOOLS_CLI, else from the default install path of macOS or Windows.
+// Environment variables (all optional except where noted):
+//   CYL_APPID               appid for this run only (touristappid is refused); project.config.json is restored after
+//   CYL_AUTOMATOR_DIR       directory where `npm i miniprogram-automator` ran (default: resolve next to this file)
+//   WECHAT_DEVTOOLS_CLI     DevTools CLI path (default: the macOS or Windows install path)
+//   CYL_AUTO_PORT           automation port on Windows (default 9420)
+//   CYL_LAUNCH_TIMEOUT_MS   how long to wait for the automation port on Windows (default 60000)
+//   CYL_SHOT_DIR            where the scroll screenshot goes (default: this directory)
+// Far from China, DevTools may time out on its own requests: see no-happy-eyeballs-proxy.mjs.
 import { spawn } from 'node:child_process'
 import { createRequire } from 'node:module'
 import { fileURLToPath } from 'node:url'

@@ -186,7 +186,7 @@ public typealias CYLViewDidLayoutSubViewsBlock = (CYLTabBarController) -> Void
 
 ## TODO: Take over the handoff; run the Mini Program example in WeChat DevTools on Windows (2026-11-27)
 
-Context: the handoff in `docs/todo/20261104/` (branch `feat/example-taglist`) lists the Mini Program DevTools run as the only item this logged-in Windows machine can do without the owner. Branch `test/miniprogram-devtools-windows` from `integration/round-18` (S of PR #27; it has no Mini Program change against `master`).
+Context: the handoff in `docs/todo/20261104/` (branch `feat/example-taglist`) lists the Mini Program DevTools run as the only item this logged-in Windows machine can do without the owner. Branch `test/miniprogram-devtools-windows` from `5ba2813`, the head of `integration/round-18` (PR #27; its `MiniProgram/` equals S `d0e752a` and `master`).
 
 <details>
 <summary>Original prompt (verbatim)</summary>
@@ -195,7 +195,14 @@ Context: the handoff in `docs/todo/20261104/` (branch `feat/example-taglist`) li
 
 </details>
 
-Status: DONE (2026-11-27). DevTools pass 11 / 11 with the timeout worked around by `MiniProgram/example/no-happy-eyeballs-proxy.mjs`; results and re-score (Mini Program 84 to 94) in [Cross-Platform-API.md](Cross-Platform-API.md#round-18-mini-program-devtools-pass-on-windows-2026-11-27-branch-testminiprogram-devtools-windows-base-s-of-pr-27). Open: the CYLTabBarController `Component is not found` trace (another repository, needs the owner's yes).
+<details>
+<summary>Follow-up prompt (verbatim)</summary>
+
+阅读docs 文件夹下的包含 todo 文字的文件夹，遍历文件夹中的所有文件以及子文件夹下的所有文件。阅读交接文档完成交接任务。继续编写代码。
+
+</details>
+
+Status: DONE (2026-11-27). DevTools pass 11 / 11 on `5cbc571` with the timeout worked around by `MiniProgram/example/no-happy-eyeballs-proxy.mjs`; results and re-score (Mini Program 84 to 94) in [Cross-Platform-API.md](Cross-Platform-API.md#round-18-mini-program-devtools-pass-on-windows-2026-11-27-tested-5cbc571). Open: the CYLTabBarController `Component is not found` trace (another repository, needs the owner's yes).
 
 - Done: `MiniProgram/example/run-devtools.mjs` runs on Windows. It finds `cli.bat` (or `WECHAT_DEVTOOLS_CLI`), and because Node 22 refuses to spawn a `.bat` without a shell (EINVAL, CVE-2024-27980), it starts `cli auto` itself and connects to the automation port. `CYL_APPID` swaps the appid for one run and restores `project.config.json`; `CYL_AUTOMATOR_DIR` points at a scratch `miniprogram-automator`. It prints one PASS / FAIL line per expected event. The example page logs its teardown block and exposes `cylTheme(theme)` (the call the `wx.onThemeChange` handler makes). Node suite 64 / 64.
 - Run on Windows 11, DevTools logged in, `versionRelation` equal: `touristappid` is refused (`APPID_ERROR: There is no such AppID`). With the owner's appid from CYLTabBarController (not committed here), DevTools fails `Fetching AppID () permissions` with `ETIMEDOUT`; `get_user_appids` fails the same way, while the shell reaches `servicewechat.com`, `mp.weixin.qq.com` and `api.weixin.qq.com` on 443 (no system proxy; DevTools proxy `SYSTEM`). Blocked on the DevTools network state, not on the library. No event was observed yet.
