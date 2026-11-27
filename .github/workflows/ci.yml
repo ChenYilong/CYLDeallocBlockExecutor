@@ -13,9 +13,13 @@ on:
 permissions:
   contents: read
 
+# Do not cancel a run in progress: the macOS jobs often wait hours for a `macos-26` runner, and cancelling on every
+# push left branches with no finished macOS result (feat/example-taglist: about 12 cancelled runs, 2026-11-26/27).
+# A newer push waits as the one pending run of its ref (GitHub keeps only the newest pending run), so CI still ends
+# on the latest commit.
 concurrency:
   group: ci-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 jobs:
   shellcheck:
