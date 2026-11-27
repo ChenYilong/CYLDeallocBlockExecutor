@@ -318,6 +318,23 @@ Fourth item (owner prompt verbatim: "merge #27 and #30", 2026-11-27): merge PR #
 
 Status: DONE (2026-11-27). #27 merged as `601de23` (9 / 9 checks), #30 merged as `0e2ca33` (9 / 9 checks; its CI ran on the old base `4276a6d`, but the two PRs share no code file, only the two docs, which merged without conflict). Both branches kept: consumers pin `5ba2813`, `32c2103`, `eab21d1`. PRs #28 and #29 retargeted to `master`; both then conflicted in `docs/Lifecycle-Callbacks.md` (task-log entries added at the same place). #28: `master` merged in, both sides kept. #29 (owned by the CYLSearchViewController session) not touched: it needs the same merge.
 
+## TODO: Fix #29, then the advisor plan to 100 (2026-11-27)
+
+Context: #27 and #30 are merged; #29 conflicts with `master`. The owner then asks for an advisor review of the cross-platform score and for the plan to be implemented, with tests delegated.
+
+<details>
+<summary>Original prompt (verbatim)</summary>
+
+fix #29 too
+continue TODO (missing points): advisor opus
+advisor点评目前全平台接口实现得分 以及下一步计划与建议。并立即让默认模型sonnet按照建议去实现。将得分优化到100转发合适任务给其他session 直接使用本机环境进行测试，iOS在macos机器，其余在windows机器。转发任务给相应session无需等待ci结果。集成方自己测试，只保留编译检查，不跑上面这完整套件
+
+</details>
+
+English: "Fix #29 too. Continue the TODO (missing points) with the Opus advisor: have the advisor review the cross-platform interface score and give the next plan and advice, then have the default model (Sonnet) implement it right away, raising the score to 100. Forward suitable tasks to other sessions and test on this machine's environment: iOS on the macOS machine, the rest on the Windows machine. Do not wait for CI results when forwarding. Integrators test on their own; keep only the compile checks here, do not run the full suites above."
+
+Status: TODO.
+
 ## TODO: `appDidBecomeActiveOnScreen` event (2026-11-26)
 
 Context: request from the CYLSearchViewController session (owner order 2026-11-26): CYLSearchBarView must focus its text field every time it reappears. `didEnterScreen` / `didLeaveScreen` cover first entry, tab switch and push / pop; returning from the background has no event.
