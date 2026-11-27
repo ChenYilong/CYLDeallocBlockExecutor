@@ -194,6 +194,45 @@ Rename (2026-11-26, owner: "use the first"): the event is `appDidBecomeActiveOnS
 
 Status: DONE in code (2026-11-26, branch `feat/did-become-active-on-screen`, from master `4276a6d`). `CYLLifecycleSources` keeps a weak set of owners with a block, installs one observer of the notification by name on the first block (per-owner or global), and fires for owners that are on screen now (`CYLVisibilityState.computeVisible`); a global observer also reaches every view controller in a window. Raw values unchanged. Test "appDidBecomeActiveOnScreen" (4 checks): 89 / 89 in Debug and in Release, iOS 27.2 simulator (own, deleted afterwards), Xcode 27.2, 2026-11-26. Not released: the podspec stays 1.4.0 (owner decides the release). Other platforms are N/A in `Cross-Platform-API.md`.
 
+## TODO: Take over the handoff; run the Mini Program example in WeChat DevTools on Windows (2026-11-27)
+
+Context: the handoff in `docs/todo/20261104/` (branch `feat/example-taglist`) lists the Mini Program DevTools run as the only item this logged-in Windows machine can do without the owner. Branch `test/miniprogram-devtools-windows` from `5ba2813`, the head of `integration/round-18` (PR #27; its `MiniProgram/` equals S `d0e752a` and `master`).
+
+<details>
+<summary>Original prompt (verbatim)</summary>
+
+拉取远端最新代码，找到本项目最近的一条commit所在分支，切换到最近提交所在分支。阅读分支下，docs 文件夹下的包含 handover 文字的文件夹，遍历文件夹中的所有文件以及子文件夹下的所有文件。阅读交接文档完成交接任务。开始编写代码。
+
+</details>
+
+<details>
+<summary>Follow-up prompt (verbatim)</summary>
+
+阅读docs 文件夹下的包含 todo 文字的文件夹，遍历文件夹中的所有文件以及子文件夹下的所有文件。阅读交接文档完成交接任务。继续编写代码。
+
+</details>
+
+Status: DONE (2026-11-27). DevTools pass 11 / 11 on `5cbc571` with the timeout worked around by `MiniProgram/example/no-happy-eyeballs-proxy.mjs`; results and re-score (Mini Program 84 to 94) in [Cross-Platform-API.md](Cross-Platform-API.md#round-18-mini-program-devtools-pass-on-windows-2026-11-27-tested-5cbc571). Open: the CYLTabBarController `Component is not found` trace (another repository, needs the owner's yes).
+
+- Done: `MiniProgram/example/run-devtools.mjs` runs on Windows. It finds `cli.bat` (or `WECHAT_DEVTOOLS_CLI`), and because Node 22 refuses to spawn a `.bat` without a shell (EINVAL, CVE-2024-27980), it starts `cli auto` itself and connects to the automation port. `CYL_APPID` swaps the appid for one run and restores `project.config.json`; `CYL_AUTOMATOR_DIR` points at a scratch `miniprogram-automator`. It prints one PASS / FAIL line per expected event. The example page logs its teardown block and exposes `cylTheme(theme)` (the call the `wx.onThemeChange` handler makes). Node suite 64 / 64.
+- Run on Windows 11, DevTools logged in, `versionRelation` equal: `touristappid` is refused (`APPID_ERROR: There is no such AppID`). With the owner's appid from CYLTabBarController (not committed here), DevTools fails `Fetching AppID () permissions` with `ETIMEDOUT`; `get_user_appids` fails the same way, while the shell reaches `servicewechat.com`, `mp.weixin.qq.com` and `api.weixin.qq.com` on 443 (no system proxy; DevTools proxy `SYSTEM`). Blocked on the DevTools network state, not on the library. No event was observed yet.
+- Library core fix found on the way: `withLifecycle` passed the system `onResize` event (`{ deviceOrientation, size: { windowWidth, windowHeight } }`) to `onResize(size)`, so `viewWillTransition` had an undefined size; the controller now unwraps `size` (as the typings already declared). Node suite 65 / 65.
+- Cause of the timeout (Node happy eyeballs on a high-latency link): a Node 22 probe of port 443 on this machine (New Zealand) with the default `autoSelectFamily` gives `ETIMEDOUT` after about 520 ms for `servicewechat.com` and `open.weixin.qq.com`; with `autoSelectFamily: false` both connect (709 ms and 201 ms). `mp.weixin.qq.com`, `api.weixin.qq.com`, `long.open.weixin.qq.com` and `res.servicewechat.com` connect either way. The DevTools log shows the same frames (`AggregateError [ETIMEDOUT]` from `internalConnectMultiple`, e.g. `requestProjectAttr catch error`). `NODE_OPTIONS=--no-network-family-autoselection` has no effect on the packaged DevTools, and its CLI has no proxy option.
+
+## TODO: Round 19, review the missing points and hand the runs to the integrator sessions (2026-11-27)
+
+<details>
+<summary>Original prompt (verbatim)</summary>
+
+continue TODO (missing points): advisor opus
+advisor点评目前全平台接口实现得分 以及下一步计划与建议。并立即让默认模型sonnet按照建议去实现。将得分优化到100转发合适任务给其他session 直接使用本机环境进行测试，iOS在macos机器，其余在windows机器。转发任务给相应session无需等待ci结果。集成方自己测试，只保留编译检查，不跑上面这完整套件
+
+</details>
+
+English: "Continue the TODO (missing points). Advisor (Opus): review the current interface-implementation scores of all platforms and give the next plan and advice; the default model (Sonnet) implements it at once. To push the score to 100, forward suitable tasks to other sessions to test on their own machines: iOS on macOS, the rest on Windows. Do not wait for CI. Integrators test by themselves; keep only compile checks here, do not run the full suites."
+
+Status: DONE (2026-11-27, delivered). The advisor was rate-limited for this turn, so the review is from the round 18 deduction table and the 2026-11-27 runs: no library code is missing; the rest is runs and owner steps. The runs are in [Test-Handoff.md, round 19](Test-Handoff.md#round-19-handoff-2026-11-27-the-runs-that-close-the-remaining-points-by-integrator-sessions), sent to mac/CYLTabBarController (rows 1, 2), mac/CYLDeallocBlockExecutor (row 3) and winsCYLTabBarController (rows 4 to 8). Compile check here: `node --check` on every Mini Program file, clean; no other platform's code changed in this branch.
+
 ## Design (reviewed by the advisor, 2026-11-22)
 
 Every public interface below was designed with the advisor; any new public API goes back to the advisor first.

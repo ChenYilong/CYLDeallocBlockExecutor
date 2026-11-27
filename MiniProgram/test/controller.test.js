@@ -51,6 +51,12 @@ test('onResize carries the window size', () => {
   assert.deepEqual(log, ['375x667', '667x375']);
 });
 
+test('onResize reads the size nested in the system resize event', () => {
+  c.registry.addLifecycleCallback('viewWillTransition', (_o, _i, info) => log.push(`${info.size.width}x${info.size.height}`));
+  c.onResize({ deviceOrientation: 'landscape', size: { windowWidth: 812, windowHeight: 375 } });
+  assert.deepEqual(log, ['812x375']);
+});
+
 test('theme change carries the previous theme; the first report is only recorded', () => {
   c.registry.addLifecycleCallback('traitCollectionDidChange', (_o, _i, info) => log.push(info.previousColorScheme));
   c.themeChanged('light');

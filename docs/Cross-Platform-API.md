@@ -365,3 +365,44 @@ Re-score:
 | React Native | 95 | **97** | iOS host run (3 of 4), pop fix confirmed on iOS (1); memory warning on iOS open |
 
 Average about **92.7 / 100** (was 92.2): iOS 89, Android 99, HarmonyOS 93, Flutter 94, React Native 97, Mini Program 84.
+
+### Round 18 Mini Program DevTools pass on Windows (2026-11-27, tested 5cbc571)
+
+Tested `5cbc571` on branch `test/miniprogram-devtools-windows` = `5ba2813` (head of `integration/round-18`; `MiniProgram/` unchanged since S `d0e752a`) + the core fix `b792f24` + the runner. On S itself the size row would fail (shown by the unit test, not run). Windows 11, WeChat DevTools 2.02.2609250 (logged in, `versionRelation` equal), Node 22.23.5, `miniprogram-automator` from a scratch directory, appid of the owner's account set for the run only (not committed).
+
+Command (this machine also needs the proxy of finding 4): in `MiniProgram/example` start `node no-happy-eyeballs-proxy.mjs`, set DevTools > Settings > Proxy to manual `127.0.0.1:18080`, restart DevTools, then `./sync.sh && CYL_APPID=<appid> CYL_AUTOMATOR_DIR=<scratch dir with miniprogram-automator> node run-devtools.mjs`; set the proxy back to "system" afterwards. Screenshot of the load events: [miniprogram-devtools-windows-load.jpg](assets/miniprogram-devtools-windows-load.jpg) (DevTools' optimized JPEG, not original pixels; retake at full size on the next DevTools run).
+
+| Test-Handoff section 2 row 2 | Result |
+|:---|:---|
+| `onLoad`, `onShow`, `onReady` | PASS: `willMoveToWindow`, `didMoveToWindow`, `willMoveToParent`, `viewDidLoad`, `didMoveToParent`, `viewWillAppear`, `viewIsAppearing`, `viewDidAppear`, `didEnterScreen` |
+| scroll end 150 ms after the last scroll | PASS: `pageScrollTo(600)` gave `scrollWillBeginDragging` (pause 0 to 1); resume not yet fired 60 ms later, fired by 660 ms (`scrollDidEndDragging`, `scrollDidEndScrolling`, resume 0 to 1) |
+| `onHide` (push) | PASS: `viewWillDisappear`, `viewDidDisappear`, `didLeaveScreen` |
+| `onShow` (Back) | PASS: `viewWillAppear`, `viewIsAppearing`, `viewDidAppear`, `didEnterScreen` |
+| theme change | PASS, **forwarded call**: the page's `cylTheme` (the call its `wx.onThemeChange` handler makes) gave `traitCollectionDidChange`; automation cannot switch the simulator theme |
+| resize | PASS, **forwarded call**: the page's `onResize` with the system payload gave `viewWillTransition size=812x375`; automation cannot rotate the simulator |
+| `onUnload` (reLaunch away) | PASS: disappear events, window and parent moves, then the teardown block |
+
+Result 11 / 11. **Library bug found and fixed** (`b792f24`): `withLifecycle` passed the system `onResize` event (`{ deviceOrientation, size: { windowWidth, windowHeight } }`) to `onResize(size)`, so `viewWillTransition` carried an undefined size; the run shows `812x375` after the fix (Node 65 / 65).
+
+Environment findings: (1) Node 22 cannot spawn `cli.bat` without a shell (EINVAL), so the runner starts `cli auto` itself and polls the automation port until the first page is registered. (2) A never-trusted project needs `--trust-project`, else every automator call times out. (3) `Page.callMethod` answered "this.cylTheme is not a function" although the page had the method; the runner calls through `getCurrentPages()` instead. (4) From New Zealand, DevTools timed out on the AppID permission request (Node happy eyeballs, see `MiniProgram/example/no-happy-eyeballs-proxy.mjs`); the run used that local proxy as the DevTools manual proxy, and the setting was put back to "system" afterwards.
+
+Re-score (estimate; same rubric):
+
+| Platform | Was | Now | Why |
+|:---|---:|---:|:---|
+| Mini Program | 84 | **94** | DevTools run of the library example (12 of 12 minus 2: theme and resize were forwarded calls, not the system switch); `wx.onMemoryWarning` not exercised; CYLTabBarController `Component is not found` (4) open |
+
+Average about **94.3 / 100** (was 92.7): iOS 89, Android 99, HarmonyOS 93, Flutter 94, React Native 97, Mini Program 94.
+
+### Round 18 Mini Program in CYLTabBarController on Windows (2026-11-27, Test-Handoff section 2 rows 1 and 3)
+
+Scratch copy (`git archive`, nothing changed in that repository) of CYLTabBarController `2b99043f` (`feat/harmony-animated-item-engines`). Its vendored `src/cyl-dealloc-block-executor/` is pinned to `4276a6d`; its six library files equal this repository's `MiniProgram/` at S except the `onResize` fix `b792f24` (not used there: no component routes a resize through it). Default project settings (`ignoreDevUnusedFiles` not set, so on), `npm run setup -- --animation=lottie` (code package 1.96 MB of 2 MB), DevTools started with `cli auto --trust-project` and the suite connected through `CYL_AUTOMATOR_WS` (the same proxy as above).
+
+| Row | Result |
+|:---|:---|
+| 1: library modules load; UI suite at least 14 pass | Modules load: the bar component (which requires `cyl-dealloc-block-executor/index`) renders and 12 tests drive it, including the memory-warning test that reports each tab through the library. Suite: **12 pass, 3 fail, 3 skipped** (below 14). |
+| 3: `Component is not found ... cyl-tab-bar/index`, `reading 'push'` | **Gone** on this commit: no such error, and `#cyl-tab-bar` resolves on every page the suite opens. Not traced to a cause by a run; a static read fits the class-field fix of #24 (`LifecycleCenter.entries` was a static class field, which DevTools' es6 compile drops; it is now assigned after the class). |
+
+Failures and skips, none in this library: two tests stop at `no fold control for .cyl-home-row[...]` (the CollectionViewClassifyMenu tag list at the pinned `a40c4ee` has no fold control: the open request of the handoff); the launch-sequence test expects the Liquid Glass tap to turn the city badge into a `#AF52DE` dot and gets an empty badge (CYLTabBarController behaviour, item 55); the three scroll tests skip because the bar's four items have no `#cyl-item-animation` node with lottie installed (checked: no GIF choice in storage; the example configuration decides, CYLTabBarController side). Reported to the CYLTabBarController Windows session.
+
+Re-score (estimate): Mini Program 94 to **97** (the load problem is gone, 3 of 4: not traced by a run). Average about **94.8 / 100**.
