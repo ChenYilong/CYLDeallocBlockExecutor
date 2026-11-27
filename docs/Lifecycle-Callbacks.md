@@ -324,6 +324,8 @@ Context: PR #33 (Windows session) carries the Mini Program `onResize` core fix `
 
 Prompt (verbatim): "merge #33 when green otherwise fix ci error"
 
+Follow-up (verbatim): "fix #29 too": the same rule for PR #29 (`fdde21d`).
+
 Status: TODO.
 
 ## TODO: Fix #29, then the advisor plan to 100 (2026-11-27)
