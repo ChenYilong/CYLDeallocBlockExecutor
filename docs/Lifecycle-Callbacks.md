@@ -333,7 +333,7 @@ advisor点评目前全平台接口实现得分 以及下一步计划与建议。
 
 English: "Fix #29 too. Continue the TODO (missing points) with the Opus advisor: have the advisor review the cross-platform interface score and give the next plan and advice, then have the default model (Sonnet) implement it right away, raising the score to 100. Forward suitable tasks to other sessions and test on this machine's environment: iOS on the macOS machine, the rest on the Windows machine. Do not wait for CI results when forwarding. Integrators test on their own; keep only the compile checks here, do not run the full suites above."
 
-Status: TODO.
+Status: DONE (2026-11-27). #29: `master` merged in as `fdde21d` (doc conflicts only, both sides kept; `eab21d1` stays a parent), now MERGEABLE against `master`. Advisor: rate-limited, so the round 19 review in [Cross-Platform-API.md](Cross-Platform-API.md#round-19-review-and-plan-2026-11-27) is Sonnet's own; no library code is missing for the score. Tasks sent (no CI wait): Windows session of this repository (Mini Program DevTools, HarmonyOS Profiler, Android on Windows), Mac CYLTabBarController session (badge pause, Rive Loop ON, native pause paths), Mac CYLSearchViewController session (FYI on `fdde21d`). Results: Mini Program 11 / 11 in DevTools on `5cbc571` (PR #33); iOS library compile check on `fdde21d` passes in Debug and Release. Score about 94.7 / 100 (was 92.7). Not done: the React Native iOS memory warning needs Simulator.app at the Mac (owner); porting the two new events to the other platforms waits for the owner.
 
 ## TODO: `appDidBecomeActiveOnScreen` event (2026-11-26)
 

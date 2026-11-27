@@ -377,3 +377,38 @@ Re-score:
 | React Native | 95 | **97** | iOS host run (3 of 4), pop fix confirmed on iOS (1); memory warning on iOS open |
 
 Average about **92.7 / 100** (was 92.2): iOS 89, Android 99, HarmonyOS 93, Flutter 94, React Native 97, Mini Program 84.
+
+### Round 19 review and plan (2026-11-27)
+
+The Opus advisor was rate-limited when asked. **This review is Sonnet's own**, with the round 18 rubric (code never built or run on its platform gets at most half credit); have the advisor confirm it. Start: about **92.7 / 100**. Owner rule for this round: integrators test on their own machines; the library session runs compile checks only, not the full suites. No library code is missing for the score: every remaining point is a run (b) or owner-only (c).
+
+| Platform | Score | Remaining deduction | Points | Bucket | Sent to (2026-11-27) |
+|:---|---:|:---|---:|:---|:---|
+| iOS | 89 | badge pause while scrolling on a screen with animated badge items, `cyl.badge.*` lines | 5 | b | Mac, CYLTabBarController session |
+| iOS | | Rive Engine API page with Loop ON: `didPause` during the drag, `didResume` after | 3 | b | Mac, CYLTabBarController session |
+| iOS | | 1.4.0 release, consumers re-pinned, #823 / #824 out of draft | 2 | c | owner |
+| iOS | | no real device | 1 | c | owner |
+| Android | 99 | second machine (Windows emulator, arm64 if available) | 1 | b | Windows, this repository's session |
+| HarmonyOS | 93 | memory level delivered by the system (DevEco Profiler, GUI) | 3 | b | Windows, this repository's session |
+| HarmonyOS | | arm64 emulator | 2 | b | Windows, if an arm64 image exists |
+| HarmonyOS | | no real device | 2 | c | owner |
+| Flutter | 94 | native `animationsPaused` channel on a host (the channel is in the CYLTabBarController wrapper) | 6 | b | Mac, CYLTabBarController session |
+| React Native | 97 | iOS memory warning: needs Simulator.app (Debug > Simulate Memory Warning); this Mac runs simulators headless and the session sandbox cannot open the app | 1 | b | owner at the Mac |
+| React Native | | native pause path on a host | 2 | b | Mac, CYLTabBarController session |
+| Mini Program | 84 | WeChat DevTools run of `MiniProgram/example`; the Windows session reports 11 / 11 on PR #33 (not yet recorded here) | 12 | b | Windows, this repository's session |
+| Mini Program | | second load problem in CYLTabBarController (`Component is not found`) traced or gone | 4 | b | CYLTabBarController sessions |
+
+Most this round can reach: (b) gives iOS 97, HarmonyOS 98, the other four 100, average about **99.2**; the rest is bucket (c), owner only.
+
+Results received this round:
+
+| Platform | Run | Result | Source |
+|:---|:---|:---|:---|
+| Mini Program | WeChat DevTools 2.02, Windows 11, SHA `5cbc571` (= `5ba2813` + core fix `b792f24`: `onResize` read the nested `event.size`) | PASS 11 / 11: `onLoad`, `onShow`, `onReady`, scroll end after idle, `onHide`, `onShow` after Back, theme, resize (812 × 375), `onUnload` teardown. Theme and resize were forwarded calls (automation cannot switch the simulator theme or rotate). DevTools on that machine needs `MiniProgram/example/no-happy-eyeballs-proxy.mjs` (PR #33) as its proxy | Windows session of this repository, PR #33 |
+| iOS library | compile check, `CYLDeallocBlockExecutor-Framework`, Debug and Release, generic iOS Simulator, Xcode 27.2, SHA `fdde21d` (= master `0e2ca33` + PR #29) | BUILD SUCCEEDED both | this session |
+
+`master` `0e2ca33` still has the old `onResize`, so the size row passes only after PR #33 merges. The other Windows rows (HarmonyOS Profiler, Android on Windows) wait for the owner: the Windows sessions were told "compile checks only, integrators test".
+
+Re-score: Mini Program 84 → **96** (DevTools run, 12; counted on `5cbc571`, so merge #33); load problem in CYLTabBarController still open (4). Average about **94.7 / 100** (was 92.7): iOS 89, Android 99, HarmonyOS 93, Flutter 94, React Native 97, Mini Program 96.
+
+Not in the score, owner decision: port `appDidBecomeActiveOnScreen` and `didTouchOutside` (PRs #30, #29) to the other five platforms. A per-platform mapping exists in PR #29's Cross-Platform-API.md section "Screen-focus events". Not started.
