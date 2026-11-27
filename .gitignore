@@ -13,3 +13,9 @@ id_ecdsa*
 # macOS AppleDouble files
 ._*
 Carthage/
+Pods/
+*.xcworkspace
+!*.xcodeproj/project.xcworkspace
+
+# Local-only handoff memory (never push)
+docs/todo/**/memory/

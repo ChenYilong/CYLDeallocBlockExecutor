@@ -7,24 +7,19 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		0237469B91BF18F11035A5CD /* CYLDemoMenuViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2FDC1173A69C2A037DD07BD /* CYLDemoMenuViewController.swift */; };
 		0626B1ECBCDCEAF342B42704 /* CYLLifecycle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9AC0FFEE1C3064BD00000002 /* CYLLifecycle.swift */; };
+		0DAFABA5723172A443E3730C /* libPods-CYLDeallocBlockExecutor.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 9B2FD6EC399863A872EF22A5 /* libPods-CYLDeallocBlockExecutor.a */; };
 		6D26A590498BE2C9828D3F7D /* CYLCallbackModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9AC0FFEE1C3064BD00000001 /* CYLCallbackModel.swift */; };
 		7A1CE0D50F2B4C8C00000121 /* CYLLifecycleCenter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9AC0FFEE1C3064BD00000101 /* CYLLifecycleCenter.swift */; };
-		7A1CE0D50F2B4C8C00000123 /* CYLLifecycleLog.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9AC0FFEE1C3064BD00000103 /* CYLLifecycleLog.swift */; };
 		7A1CE0D50F2B4C8C00000122 /* CYLLifecycleSources.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9AC0FFEE1C3064BD00000102 /* CYLLifecycleSources.swift */; };
-		9AC0FFEE1C3064BD00000011 /* CYLCallbackModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9AC0FFEE1C3064BD00000001 /* CYLCallbackModel.swift */; };
-		9AC0FFEE1C3064BD00000111 /* CYLLifecycleCenter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9AC0FFEE1C3064BD00000101 /* CYLLifecycleCenter.swift */; };
-		9AC0FFEE1C3064BD00000113 /* CYLLifecycleLog.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9AC0FFEE1C3064BD00000103 /* CYLLifecycleLog.swift */; };
-		9AC0FFEE1C3064BD00000112 /* CYLLifecycleSources.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9AC0FFEE1C3064BD00000102 /* CYLLifecycleSources.swift */; };
-		9AC0FFEE1C3064BD00000012 /* CYLLifecycle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9AC0FFEE1C3064BD00000002 /* CYLLifecycle.swift */; };
-		9AC0FFEE1C3064BD00000013 /* UIViewController+CYLLifecycleHooks.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9AC0FFEE1C3064BD00000003 /* UIViewController+CYLLifecycleHooks.swift */; };
+		7A1CE0D50F2B4C8C00000123 /* CYLLifecycleLog.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9AC0FFEE1C3064BD00000103 /* CYLLifecycleLog.swift */; };
+		9311ABBCB76F33D6AAE13EC9 /* CYLDemoTabBarFactory.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7F9CCDA5224D3E383E095CFC /* CYLDemoTabBarFactory.swift */; };
 		9ACCE5581C30371B00D98916 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9ACCE54D1C30371B00D98916 /* AppDelegate.swift */; };
 		9ACCE5591C30371B00D98916 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 9ACCE54E1C30371B00D98916 /* Assets.xcassets */; };
 		9ACCE55A1C30371B00D98916 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 9ACCE54F1C30371B00D98916 /* LaunchScreen.storyboard */; };
 		9ACCE55E1C30371B00D98916 /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9ACCE5561C30371B00D98916 /* ViewController.swift */; };
 		9ACCE5681C303E0000D98916 /* UIView+ThemeManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9ACCE5671C303E0000D98916 /* UIView+ThemeManager.swift */; };
-		9AE3DD3D1C3064BD003184AD /* CYLDeallocExecutor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9AE3DD3A1C3064BD003184AD /* CYLDeallocExecutor.swift */; };
-		9AE3DD3E1C3064BD003184AD /* NSObject+CYLDeallocBlockExecutor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9AE3DD3C1C3064BD003184AD /* NSObject+CYLDeallocBlockExecutor.swift */; };
 		BDC7CEFD249151D3AFEDF2BB /* NSObject+CYLDeallocBlockExecutor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9AE3DD3C1C3064BD003184AD /* NSObject+CYLDeallocBlockExecutor.swift */; };
 		D7643446A6DB6C5A0C173027 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3A27A5239C304AE727E78D25 /* Foundation.framework */; };
 		D90D2070028EDE69F8932A74 /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1D6707B62C0689C0ED36287D /* SceneDelegate.swift */; };
@@ -35,12 +30,15 @@
 /* Begin PBXFileReference section */
 		1D6707B62C0689C0ED36287D /* SceneDelegate.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SceneDelegate.swift; sourceTree = "<group>"; };
 		3A27A5239C304AE727E78D25 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.0.sdk/System/Library/Frameworks/Foundation.framework; sourceTree = DEVELOPER_DIR; };
+		3BD5552C54B97E879EF6B38D /* Pods-CYLDeallocBlockExecutor.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-CYLDeallocBlockExecutor.release.xcconfig"; path = "Target Support Files/Pods-CYLDeallocBlockExecutor/Pods-CYLDeallocBlockExecutor.release.xcconfig"; sourceTree = "<group>"; };
+		6A25D9AA5F31AF0C119FEC71 /* Pods-CYLDeallocBlockExecutor.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-CYLDeallocBlockExecutor.debug.xcconfig"; path = "Target Support Files/Pods-CYLDeallocBlockExecutor/Pods-CYLDeallocBlockExecutor.debug.xcconfig"; sourceTree = "<group>"; };
+		7F9CCDA5224D3E383E095CFC /* CYLDemoTabBarFactory.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = CYLDemoTabBarFactory.swift; sourceTree = "<group>"; };
 		9AC0FFEE1C3064BD00000001 /* CYLCallbackModel.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CYLCallbackModel.swift; sourceTree = "<group>"; };
-		9AC0FFEE1C3064BD00000101 /* CYLLifecycleCenter.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CYLLifecycleCenter.swift; sourceTree = "<group>"; };
-		9AC0FFEE1C3064BD00000103 /* CYLLifecycleLog.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CYLLifecycleLog.swift; sourceTree = "<group>"; };
-		9AC0FFEE1C3064BD00000102 /* CYLLifecycleSources.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CYLLifecycleSources.swift; sourceTree = "<group>"; };
 		9AC0FFEE1C3064BD00000002 /* CYLLifecycle.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CYLLifecycle.swift; sourceTree = "<group>"; };
 		9AC0FFEE1C3064BD00000003 /* UIViewController+CYLLifecycleHooks.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "UIViewController+CYLLifecycleHooks.swift"; sourceTree = "<group>"; };
+		9AC0FFEE1C3064BD00000101 /* CYLLifecycleCenter.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CYLLifecycleCenter.swift; sourceTree = "<group>"; };
+		9AC0FFEE1C3064BD00000102 /* CYLLifecycleSources.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CYLLifecycleSources.swift; sourceTree = "<group>"; };
+		9AC0FFEE1C3064BD00000103 /* CYLLifecycleLog.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CYLLifecycleLog.swift; sourceTree = "<group>"; };
 		9ACCE52F1C3034A900D98916 /* CYLDeallocBlockExecutor.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = CYLDeallocBlockExecutor.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		9ACCE54D1C30371B00D98916 /* AppDelegate.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		9ACCE54E1C30371B00D98916 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
@@ -50,7 +48,9 @@
 		9ACCE5671C303E0000D98916 /* UIView+ThemeManager.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "UIView+ThemeManager.swift"; sourceTree = "<group>"; };
 		9AE3DD3A1C3064BD003184AD /* CYLDeallocExecutor.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CYLDeallocExecutor.swift; sourceTree = "<group>"; };
 		9AE3DD3C1C3064BD003184AD /* NSObject+CYLDeallocBlockExecutor.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "NSObject+CYLDeallocBlockExecutor.swift"; sourceTree = "<group>"; };
+		9B2FD6EC399863A872EF22A5 /* libPods-CYLDeallocBlockExecutor.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-CYLDeallocBlockExecutor.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		AA721609BE16E39B9A3C4E6D /* CYLDeallocBlockExecutor-Framework.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = "CYLDeallocBlockExecutor-Framework.framework"; sourceTree = BUILT_PRODUCTS_DIR; };
+		B2FDC1173A69C2A037DD07BD /* CYLDemoMenuViewController.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = CYLDemoMenuViewController.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -66,6 +66,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				0DAFABA5723172A443E3730C /* libPods-CYLDeallocBlockExecutor.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -79,6 +80,7 @@
 				9ACCE54B1C30371B00D98916 /* Example */,
 				9ACCE5301C3034A900D98916 /* Products */,
 				9C39253039FDBF939B168C77 /* Frameworks */,
+				CC8643742167ECD0979C8338 /* Pods */,
 			);
 			sourceTree = "<group>";
 		};
@@ -101,6 +103,8 @@
 				9ACCE5561C30371B00D98916 /* ViewController.swift */,
 				9ACCE5671C303E0000D98916 /* UIView+ThemeManager.swift */,
 				1D6707B62C0689C0ED36287D /* SceneDelegate.swift */,
+				B2FDC1173A69C2A037DD07BD /* CYLDemoMenuViewController.swift */,
+				7F9CCDA5224D3E383E095CFC /* CYLDemoTabBarFactory.swift */,
 			);
 			path = Example;
 			sourceTree = "<group>";
@@ -124,6 +128,7 @@
 			isa = PBXGroup;
 			children = (
 				CA229B3A7B5F74C52D40EF71 /* iOS */,
+				9B2FD6EC399863A872EF22A5 /* libPods-CYLDeallocBlockExecutor.a */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -134,6 +139,16 @@
 				3A27A5239C304AE727E78D25 /* Foundation.framework */,
 			);
 			name = iOS;
+			sourceTree = "<group>";
+		};
+		CC8643742167ECD0979C8338 /* Pods */ = {
+			isa = PBXGroup;
+			children = (
+				6A25D9AA5F31AF0C119FEC71 /* Pods-CYLDeallocBlockExecutor.debug.xcconfig */,
+				3BD5552C54B97E879EF6B38D /* Pods-CYLDeallocBlockExecutor.release.xcconfig */,
+			);
+			name = Pods;
+			path = Pods;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -171,9 +186,11 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = 9ACCE5461C3034A900D98916 /* Build configuration list for PBXNativeTarget "CYLDeallocBlockExecutor" */;
 			buildPhases = (
+				4AF8BBB67E42E07239525DE4 /* [CP] Check Pods Manifest.lock */,
 				9ACCE52B1C3034A900D98916 /* Sources */,
 				9ACCE52C1C3034A900D98916 /* Frameworks */,
 				9ACCE52D1C3034A900D98916 /* Resources */,
+				8CDEB4E7E097467E094B8880 /* [CP] Copy Pods Resources */,
 			);
 			buildRules = (
 			);
@@ -237,6 +254,53 @@
 		};
 /* End PBXResourcesBuildPhase section */
 
+/* Begin PBXShellScriptBuildPhase section */
+		4AF8BBB67E42E07239525DE4 /* [CP] Check Pods Manifest.lock */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+				"${PODS_PODFILE_DIR_PATH}/Podfile.lock",
+				"${PODS_ROOT}/Manifest.lock",
+			);
+			name = "[CP] Check Pods Manifest.lock";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+				"$(DERIVED_FILE_DIR)/Pods-CYLDeallocBlockExecutor-checkManifestLockResult.txt",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
+			showEnvVarsInLog = 0;
+		};
+		8CDEB4E7E097467E094B8880 /* [CP] Copy Pods Resources */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-CYLDeallocBlockExecutor/Pods-CYLDeallocBlockExecutor-resources.sh",
+				"${PODS_ROOT}/CYLAnimatedItem/CYLTabBarController/CYLAnimatedItem/Resources/CYLAnimatedItem.bundle",
+				"${PODS_ROOT}/CYLTabBarController/CYLTabBarController/Resources/CYLTabBarController.bundle",
+				"${PODS_CONFIGURATION_BUILD_DIR}/CollectionViewClassifyMenu/CYLClassifyMenuResources.bundle",
+			);
+			name = "[CP] Copy Pods Resources";
+			outputPaths = (
+				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/CYLAnimatedItem.bundle",
+				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/CYLTabBarController.bundle",
+				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/CYLClassifyMenuResources.bundle",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-CYLDeallocBlockExecutor/Pods-CYLDeallocBlockExecutor-resources.sh\"\n";
+			showEnvVarsInLog = 0;
+		};
+/* End PBXShellScriptBuildPhase section */
+
 /* Begin PBXSourcesBuildPhase section */
 		9ACCE52B1C3034A900D98916 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
@@ -244,16 +308,10 @@
 			files = (
 				9ACCE55E1C30371B00D98916 /* ViewController.swift in Sources */,
 				9ACCE5681C303E0000D98916 /* UIView+ThemeManager.swift in Sources */,
-				9AE3DD3D1C3064BD003184AD /* CYLDeallocExecutor.swift in Sources */,
-				9AE3DD3E1C3064BD003184AD /* NSObject+CYLDeallocBlockExecutor.swift in Sources */,
-				9AC0FFEE1C3064BD00000013 /* UIViewController+CYLLifecycleHooks.swift in Sources */,
-				9AC0FFEE1C3064BD00000012 /* CYLLifecycle.swift in Sources */,
-				9AC0FFEE1C3064BD00000011 /* CYLCallbackModel.swift in Sources */,
-				9AC0FFEE1C3064BD00000111 /* CYLLifecycleCenter.swift in Sources */,
-				9AC0FFEE1C3064BD00000113 /* CYLLifecycleLog.swift in Sources */,
-				9AC0FFEE1C3064BD00000112 /* CYLLifecycleSources.swift in Sources */,
 				9ACCE5581C30371B00D98916 /* AppDelegate.swift in Sources */,
 				D90D2070028EDE69F8932A74 /* SceneDelegate.swift in Sources */,
+				0237469B91BF18F11035A5CD /* CYLDemoMenuViewController.swift in Sources */,
+				9311ABBCB76F33D6AAE13EC9 /* CYLDemoTabBarFactory.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -429,6 +487,7 @@
 		};
 		9ACCE5471C3034A900D98916 /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 6A25D9AA5F31AF0C119FEC71 /* Pods-CYLDeallocBlockExecutor.debug.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_LAUNCHIMAGE_NAME = LaunchImage;
@@ -436,6 +495,7 @@
 				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = ChenYilong.CYLDeallocExecutor;
+				PRODUCT_MODULE_NAME = CYLDeallocExample;
 				PRODUCT_NAME = CYLDeallocBlockExecutor;
 				SWIFT_VERSION = 5.0;
 			};
@@ -443,6 +503,7 @@
 		};
 		9ACCE5481C3034A900D98916 /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 3BD5552C54B97E879EF6B38D /* Pods-CYLDeallocBlockExecutor.release.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_LAUNCHIMAGE_NAME = LaunchImage;
@@ -450,6 +511,7 @@
 				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = ChenYilong.CYLDeallocExecutor;
+				PRODUCT_MODULE_NAME = CYLDeallocExample;
 				PRODUCT_NAME = CYLDeallocBlockExecutor;
 				SWIFT_VERSION = 5.0;
 			};

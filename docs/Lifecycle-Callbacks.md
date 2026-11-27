@@ -184,6 +184,167 @@ public typealias CYLViewDidLayoutSubViewsBlock = (CYLTabBarController) -> Void
 
 </details>
 
+### DONE (2026-11-25): example demo rule, sectioned lists use the ClassifyMenu tag list
+
+**Context:** the examples of this library show lists as plain table views. The owner wants one rule for all demo examples: where a screen needs a table with sections, it uses the tag list of CollectionViewClassifyMenu instead, and the rule is written down in the repository instructions and a skill, then executed once in this task.
+
+**Requirements (English):**
+
+1. Find this project's instructions files (root agent / Claude files if any, `instructions.md`) and its skills; classify the rule as "example demo". If an agent / Claude file would pass 200 lines, put the rule in a suitable file of `docs/instructions/`. Create the files if they do not exist. Write in English only.
+2. Rule: in demo examples, a table-view style with sections is replaced by CollectionViewClassifyMenu's tag list (title and icon of each row as a tag), with section headers (every header has a title), a more / less fold button with a built-in icon when a section exceeds the maximum rows, tapping a tag does what tapping the cell did, a long press on a tag shows the subtitle in a small floating box with an arrow (through the tag list's long-press API), tag titles may wrap (the style's title-wrap API), tag width is adaptive so a row holds as many tags as fit, and this example allows at most 3 rows per section before folding.
+3. Execute the rule once in this task (iOS Example, the only table-view example; the other platforms' lists are scroll-test fixtures).
+
+**Status: DONE (2026-11-25), iOS Example.** Rule: `instructions.md` and the skill `cyl-example-demo`. Execution: the Example root is now a CYLTabBarController (pod pin `dea0951e`, read-only): the Home tab is `CYLDemoMenuViewController`, a `CYLTagListView` with three titled sections (Lifecycle events 6 tags, Dealloc blocks 3, Theme 2), `defaultVisibleRows = 3` so the first section folds with More / Less, `style.titleWraps = true` (one tag title wraps to two lines), adaptive tag width, a tap that toggles the theme and shows the Log tab, and a long press that shows the subtitle in a popover with an arrow (`menu(_:didLongPressItemAt:)`, `adaptivePresentationStyle` `.none`). The old log list (`ViewController`) is the second tab, Log; its behaviour is unchanged (its tap path, the once-only push, no longer exists: the tab replaces it).
+
+Dependencies (Example only, `Podfile`): `CYLDeallocBlockExecutor` `:path => '.'` (the one copy: CYLTabBarController/Core asks for `~> 1.4`, so the Example target no longer compiles the library sources and imports the pod module), `CYLTabBarController` and `CYLAnimatedItem` at `dea0951e`, `CollectionViewClassifyMenu` at `59ce43cc` (branch `feat/engine-api-core`, not on its master). The app module is named `CYLDeallocExample` (the target name equals the library module and made a module cycle); the app scheme is `CYLDeallocBlockExecutor-Example` (the Pods project has a scheme with the target's own name). CI: the Example step runs `pod install` and builds the workspace.
+
+Tested once on a new simulator (iPhone 18 Pro, iOS 27.2, Xcode 27.2): build succeeded, launch shows the Home menu, long press shows the popover with an arrow and the subtitle, More shows all 6 rows of the first section, a tap on a tag shows the Log tab with the theme changed, the Log tab label is "Log". The framework scheme still builds from the project alone (Carthage). Not run: CI, the lifecycle suite (library code untouched).
+
+Open points, both in other repositories: (1) the fold control `.iconAndTitle` shows "More" with the chevron collapsed but only the chevron expanded (`CYLMenuFoldControl.showsTitle(whenExpanded:)`), so "Less" with an icon is not possible yet: the owner asked for More or Less with the built-in icon; a ClassifyMenu API change is needed, not an example workaround. (2) The Home navigation bar shows no title on iOS 27 with the Example's white title appearance; cosmetic.
+
+![iOS: sectioned tag-list demo menu](assets/ios-example-taglist-menu.png)
+
+<details>
+<summary>Original prompt (verbatim)</summary>
+
+找到本项目instructions 相关文件（可能包含根目录的agent Claude文件instructions 文件， 首先确认下面内容的归类。归类为找到example演示相关。如果agent Claude文件文件超出每个文件200行限制，则优先放入docs 里的instructions文件夹合适文件，）以及skills相关文件，如果没有就新增文件保证写入成功，全英文写入，并且在本次任务中就执行一次下面的指令：
+
+ deme example演示，如果遇到需要使用类似 tableview 包含section分组功能的样式，优先使用以下样式替换。为example引入并使用CollectionViewClassifyMenu  的taglist 展示提取主标题与icon，使用具有section样式。可以显示more less 折叠展开按钮，点击tag后维持与点击cell相同效果。长按cell显示副标题，小的悬浮框带有箭头。小的悬浮显示副标题。按照taglist中长按自定义API以实现该功能。设置 taglist允许换行，设置的是tag里面的title lable的文字允许换行，没有只能一行的限制， CollectionViewClassifyMen 允许换行的API。 本次执行max 在example。 。本example可以设置为3行。tag宽度采用自适应样式。预期是一行尽可能显示更多tag。section heder 必须有title内容。超出最多行数限制，展示展开按钮。展开按钮显示more或者less 并附带内置icon
+
+</details>
+
+## TODO: Example tag list in Liquid Glass style (2026-11-25)
+
+Context: the Home tab of the Example (PR #28) shows the ClassifyMenu tag list. Requirement: change that tag list to a Liquid Glass style; record the style requirement in the Example's instruction files (English only) and apply it once in this task.
+
+Prompt (verbatim): "将本example中的taglist改为液态玻璃样式。并找到example相关instructions文件，全英文写入样式要求。并实行本次要求。"
+
+Plan: rule in `instructions.md` and checklist item 10 in `.agents/skills/cyl-example-demo/SKILL.md`; the Example uses the public style API (translucent tags, clear background, colorful backdrop); real `UIGlassEffect` per tag needs a ClassifyMenu core change (requested from its session).
+
+Status: DONE (2026-11-25). `CYLDemoMenuViewController` uses a gradient backdrop, a clear list, translucent tags (light/dark dynamic fill and border, corner radius 16), a transparent navigation bar and extended layout. Original-pixel screenshots, iOS 27.2 simulator (iPhone 18 Pro), Debug build of branch `feat/example-taglist`, Xcode 27.2, 2026-11-25 17:35:
+
+![Home tab, light](assets/ios-example-taglist-glass-light.png)
+![Home tab, dark](assets/ios-example-taglist-glass-dark.png)
+
+Open: per-tag system glass (`UIGlassEffect`) needs a CollectionViewClassifyMenu core API; not added here (rule: core first).
+
+## TODO: Simulator rules in the instruction files (2026-11-25)
+
+Context: simulators and apps were left running after test runs. Requirement: record a mandatory notice and rule in the root instruction file and a skill (English only), and execute the rule once in this task.
+
+Prompt (verbatim): "根目录文件加上文字必须提示，运行模拟器前必须阅读模拟器运行规则该文档或下面这段文字 运行模拟器 测试截图结束后 ，立即杀掉终止app，以及模拟器进程。使用时在重新启动。避免运行后，任务完毕也不关掉app ，也不关闭模拟器进程。"
+
+Where: `instructions.md` (62 lines, under the 200-line limit, so no `docs/instructions` split) gets a notice at the top and a "Simulator rules" section; new skill `.agents/skills/cyl-simulator-run/SKILL.md`.
+
+Status: DONE (2026-11-25). Executed once: the app `ChenYilong.CYLDeallocExecutor` was terminated and the own simulator `CYLDealloc glass` (D303DAC8) was shut down and deleted; `simctl list devices | grep Booted` shows none of it.
+
+## TODO: Free-RAM scripts and document, macOS section (2026-11-26)
+
+Context: the owner asked for heavy apps and idle simulators to be closed on the Mac before simulator debugging; that run is turned into reusable scripts plus a developer document.
+
+Prompt (verbatim): "全英文处理本任务：在docs文档中新建文件，名字为全英文释放RAM文档。区分windows和macos章节，将你刚刚执行的脚本相关放进根目录的脚本文件，名字为全英文释放RAM。本次插入文档的是macos章节。要求脚本放根目录，文档是一个给开发者开的如何手动调用刚刚那个提到的脚本。如果一个脚本不够用可以在脚本文件夹创建多个脚本，文档采用相对文件路径链接的方式指出脚本位置：macos开发者会按照该文档找到脚本手动运行。"
+
+Where: [Free-RAM.md](Free-RAM.md) (macOS section written, Windows section is a placeholder) and `scripts/free-ram/` (`free-ram-macos.sh`, `macos-display.sh`).
+
+Status: DONE (2026-11-26). Both scripts pass `bash -n` and a dry run on this Mac; the dry run kept the simulator a running `xcodebuild test` named. Display commands (brightness, mirroring, iTerm2 hiding) were not executed here: they need a normal Terminal.
+
+## TODO: Handoff document for the next developer (2026-11-26)
+
+Context: the owner is leaving and hands the project to the next developer.
+
+Where: [todo/20261104/](todo/20261104/Next-Merge-Open-PRs-Release-1.4.0-Run-Mini-Program-DevTools.md) (one file per week folder), pushed to `feat/example-taglist`.
+
+<details>
+<summary>Original prompt (verbatim)</summary>
+
+你本次主要添加的除iOS端以外其他端的章节， （android，鸿蒙，小程序，rn flutter）， 需要更新的文档地址在这里：我现在要离职，我要把这个项目的开发工作交给下一个同事，请你写一份全英文交接文档。放进docs的todo文件夹，如果没有就新建。在todo 文件夹下新建一个文件夹，文件名规则为 ： 年月第几周 ，举例说明：20261104 表示2026年11月的第四周。首先你要查到我们现在在本月的哪一周，然后再新建文件夹。如果该文件夹已经存在则无须新建文件夹。文件夹新建好后创建文档，注意这个文件夹下只能有一个文件，你如果发现已经有文件，你要进入文件追加内容，而非再新建文件。文档名为本次交接任务的重点todo项的提炼内容总结，需要标题告诉下一个同事，你接下来重点做什么。文档内容要写入目前项目所有todo。并要求advisor对目前项目进度打分，以及距离发布标准，百分制打分，能得多少分以及miss point在哪里。事无巨细，todo 重大缺陷，还没做决定的一些问题都要记录下。给出表格，第一列 本项目所有处于open 状态的分支地址，第二列以及每个分支的进度百分比评估，第三列todo项。
+
+再给出表格，本项目中所有bug 列表，以及为什么没有修，以及修复计划，修复思路，以及相关文档地址。立即推送到本分支。由于仅仅是文档，修复，没有代码风险。文档好后，把基于分支的，我能直接访问的GitHub https开头的链接发给我，我转发给同事，以完成交接工作。
+
+</details>
+
+Status: DONE (2026-11-26). Advisor scores: effect 92.2 / 100, release readiness 70 / 100. The sentence "the document to update is here:" had no address, so the new handoff document carries one chapter per platform.
+
+## TODO: Local conversation-context notes for the next developer (2026-11-26)
+
+Context: the owner leaves today; the next developer starts tomorrow.
+
+<details>
+<summary>Original prompt (verbatim)</summary>
+
+我现在今天就要离职，我要把这个项目的开发工作交给明天来的下一个同事，请你写一份我们对话的 上下文 文档。放进docs的todo文件夹，如果没有就新建。在todo 文件夹下新建一个文件夹，文件名规则为 ： 年月第几周 ，举例说明：20261104 表示2026年11月的第四周。首先你要查到我们现在在本月的哪一周，然后再新建文件夹。如果该文件夹已经存在则无须新建文件夹。然后在该文件夹下按照今天是星期几创建一个两位数字开头的文件夹。比如周日就是00，周一就是01，依次类推，我们约定周日是一周的第0天，是一周的起点，周六是一周的结束编号06。 不存在07和以上编号。 今天的文件夹新建好后，进入今天的文件夹再创建一个新的文件夹，文件夹名字固定为memory，将该memory 文件夹 加入gitignore， 不要传到GitHub去，仅仅还存在本机，在memory文件夹下开始新建文档，文档名为纯数字，两位，注意这个文件夹下不仅仅有一个文件，你如果发现已经有文件，就新建文件追加编号，比如第一个人新建了一个文件名字叫 00，你就新建01， 新建好后， 文档内容要写入你能看到的我们对话的所有上下文，注意一个文件限制200行内容。写满就新建文件，文件名规则同上。如此往复一直到写完为止。如此往复将你能想起来的所有memory和上下文都写进去。
+
+</details>
+
+Status: DONE (2026-11-26). Week folder `20261104`, day folder `04` (Thursday; Sunday is `00`). The notes are on the owner's Mac only; `docs/todo/**/memory/` is in `.gitignore` and in the repository's local exclude file (so branches without the new line ignore it too). Nothing from the folder was committed.
+
+## TODO: Push the unfinished local work (2026-11-26)
+
+Prompt (verbatim): "提交本地未完成的代码，commit push pr中写好为什么没写完就commit了，别人应该从哪里写。"
+
+Status: DONE (2026-11-26). `ci.yml` change on PR #28 (`b10e0b6`); draft PR #31 (Flutter analyzer excludes, React Native lockfile, from the `integration/round-18` worktree); draft PR #32 (2026-11-23 WIP, reference only). Each PR says why and where to continue. Nothing was verified by a build here. The vault checkout's 120 staged files equal `master` `4276a6d`, so they were not committed.
+
+## TODO: Take over from the handoff and start coding (2026-11-27)
+
+Context: the next developer picks up the handoff in [todo/20261104/](todo/20261104/Next-Merge-Open-PRs-Release-1.4.0-Run-Mini-Program-DevTools.md). Merging, the release and the Mini Program run need the owner; this task takes the code items that do not.
+
+<details>
+<summary>Original prompt (verbatim)</summary>
+
+拉取远端最新代码，找到本项目最近的一条commit所在分支，切换到最近提交所在分支。阅读分支下，docs 文件夹下的包含 handover 文字的文件夹，遍历文件夹中的所有文件以及子文件夹下的所有文件。阅读交接文档完成交接任务。开始编写代码。
+
+</details>
+
+English: "Pull the latest code, find the branch of the newest commit and switch to it. Read the handover folders under `docs/` with all their files and subfolders. Read the handoff document, take over the tasks, and start writing code."
+
+Plan: HarmonyOS example, the ArkTS warning at `EntryAbility.ets:21` (an unhandled `getMainWindow()` promise).
+
+Status: DONE (2026-11-27). `getMainWindow()` now has a `.catch` that logs to `hilog` tag `CYL`. `build-har.sh entry`: BUILD SUCCESSFUL, the ArkTS warning is gone (only the expected "skip sign" warning). HarmonyOS Node suite 47 / 47. Not run on the emulator (the change only adds an error path). CI of PRs #28 to #31: the Linux jobs pass; the macOS jobs have been queued since 2026-11-25 / 26 and never started.
+
+Second item (same prompt, "继续编写代码", 2026-11-27): the React Native example ignored `RCT_METRO_PORT` on iOS.
+
+Status: DONE (2026-11-27). Cause: `RCT_METRO_PORT` is a compile-time macro of React-Core (`RCTDefines.h`, set through the `React-Core` podspec), and this install uses `React-Core-prebuilt`, so the port stays 8081 whatever the build says. Fix in the example host only (no library change): `SceneDelegate.bundleURL()` reads the port at run time, from the launch environment first, then the new `RCTMetroPort` Info.plist key (`$(RCT_METRO_PORT)`); an explicit `RCT_jsLocation` default still wins. Usage: [ReactNative/example/README.md](../ReactNative/example/README.md). Verified on a fresh Debug build (prebuilt React-Core) on a new iPhone 18 Pro simulator, iOS 27.2, Xcode 27.2, macOS 27.3, deleted afterwards; nothing listened on 8081.
+
+| Run | Result | Screenshot (original pixels) |
+| :-- | :-- | :-- |
+| Built with `RCT_METRO_PORT=8088`, Metro on 8088, plain launch | Metro served the bundle; Home screen with rows | ![RN iOS, Info.plist port 8088, iOS 27.2 simulator, 2026-11-27](assets/rn-ios-metro-port-infoplist-8088.png) |
+| Same build, `SIMCTL_CHILD_RCT_METRO_PORT=8099` (no server there) | Red box asks for `http://localhost:8099/index.bundle…`: the launch environment overrides the Info.plist value | ![RN iOS, launch environment port 8099, iOS 27.2 simulator, 2026-11-27](assets/rn-ios-metro-port-env-8099.png) |
+
+Third item (owner prompt verbatim: "continue", 2026-11-27): commit the round 18 iOS host screenshots of the React Native and Flutter examples (rows 6 and 7), which exist only in `/tmp/xpr/r18-shots/rows67/` (lost on reboot), labeled, into `docs/assets/`; then bring [Issues.md](Issues.md) in line with GitHub (no open issue on 2026-11-26).
+
+Status: DONE (2026-11-27). Seven screenshots copied unchanged (1206 × 2622) to `docs/assets/r18-ios-*.png` and labeled in a table under "Round 18 iOS rows 6–7" in [Cross-Platform-API.md](Cross-Platform-API.md) (iPhone 18 Pro simulator, iOS 27.2, Xcode 27.2, S = `d0e752a`, capture times). [Issues.md](Issues.md): #5, #7, #8 marked closed (GitHub: closed 2026-11-22; all 7 issues closed). Also found: PR #30 is now green (9 / 9), so #27 and #30 can both be merged once the owner agrees; the macOS jobs of #28, #29, #31 still wait for a runner (no run of this repository is in progress, so the limit is likely account-wide).
+
+Fourth item (owner prompt verbatim: "merge #27 and #30", 2026-11-27): merge PR #27 (`integration/round-18`) and PR #30 (`feat/did-become-active-on-screen`) into `master` with merge commits (consumers pin commits of both), in that order; keep the branches.
+
+Status: DONE (2026-11-27). #27 merged as `601de23` (9 / 9 checks), #30 merged as `0e2ca33` (9 / 9 checks; its CI ran on the old base `4276a6d`, but the two PRs share no code file, only the two docs, which merged without conflict). Both branches kept: consumers pin `5ba2813`, `32c2103`, `eab21d1`. PRs #28 and #29 retargeted to `master`; both then conflicted in `docs/Lifecycle-Callbacks.md` (task-log entries added at the same place). #28: `master` merged in, both sides kept. #29 (owned by the CYLSearchViewController session) not touched: it needs the same merge.
+
+## TODO: Merge #33 when green, otherwise fix the CI error (2026-11-27)
+
+Context: PR #33 (Windows session) carries the Mini Program `onResize` core fix `b792f24` that the DevTools pass (11 / 11 on `5cbc571`) depends on.
+
+Prompt (verbatim): "merge #33 when green otherwise fix ci error"
+
+Follow-up (verbatim): "fix #29 too": the same rule for PR #29 (`fdde21d`).
+
+Status: TODO.
+
+## TODO: Fix #29, then the advisor plan to 100 (2026-11-27)
+
+Context: #27 and #30 are merged; #29 conflicts with `master`. The owner then asks for an advisor review of the cross-platform score and for the plan to be implemented, with tests delegated.
+
+<details>
+<summary>Original prompt (verbatim)</summary>
+
+fix #29 too
+continue TODO (missing points): advisor opus
+advisor点评目前全平台接口实现得分 以及下一步计划与建议。并立即让默认模型sonnet按照建议去实现。将得分优化到100转发合适任务给其他session 直接使用本机环境进行测试，iOS在macos机器，其余在windows机器。转发任务给相应session无需等待ci结果。集成方自己测试，只保留编译检查，不跑上面这完整套件
+
+</details>
+
+English: "Fix #29 too. Continue the TODO (missing points) with the Opus advisor: have the advisor review the cross-platform interface score and give the next plan and advice, then have the default model (Sonnet) implement it right away, raising the score to 100. Forward suitable tasks to other sessions and test on this machine's environment: iOS on the macOS machine, the rest on the Windows machine. Do not wait for CI results when forwarding. Integrators test on their own; keep only the compile checks here, do not run the full suites above."
+
+Status: DONE (2026-11-27). #29: `master` merged in as `fdde21d` (doc conflicts only, both sides kept; `eab21d1` stays a parent), now MERGEABLE against `master`. Advisor: rate-limited, so the round 19 review in [Cross-Platform-API.md](Cross-Platform-API.md#round-19-review-and-plan-2026-11-27) is Sonnet's own; no library code is missing for the score. Tasks sent (no CI wait): Windows session of this repository (Mini Program DevTools, HarmonyOS Profiler, Android on Windows), Mac CYLTabBarController session (badge pause, Rive Loop ON, native pause paths), Mac CYLSearchViewController session (FYI on `fdde21d`). Results: Mini Program 11 / 11 in DevTools on `5cbc571` (PR #33); iOS library compile check on `fdde21d` passes in Debug and Release. Score about 94.7 / 100 (was 92.7). Not done: the React Native iOS memory warning needs Simulator.app at the Mac (owner); porting the two new events to the other platforms waits for the owner.
+
 ## TODO: `appDidBecomeActiveOnScreen` event (2026-11-26)
 
 Context: request from the CYLSearchViewController session (owner order 2026-11-26): CYLSearchBarView must focus its text field every time it reappears. `didEnterScreen` / `didLeaveScreen` cover first entry, tab switch and push / pop; returning from the background has no event.
