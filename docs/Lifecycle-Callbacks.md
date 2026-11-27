@@ -318,6 +318,14 @@ Fourth item (owner prompt verbatim: "merge #27 and #30", 2026-11-27): merge PR #
 
 Status: DONE (2026-11-27). #27 merged as `601de23` (9 / 9 checks), #30 merged as `0e2ca33` (9 / 9 checks; its CI ran on the old base `4276a6d`, but the two PRs share no code file, only the two docs, which merged without conflict). Both branches kept: consumers pin `5ba2813`, `32c2103`, `eab21d1`. PRs #28 and #29 retargeted to `master`; both then conflicted in `docs/Lifecycle-Callbacks.md` (task-log entries added at the same place). #28: `master` merged in, both sides kept. #29 (owned by the CYLSearchViewController session) not touched: it needs the same merge.
 
+## TODO: Merge #33 when green, otherwise fix the CI error (2026-11-27)
+
+Context: PR #33 (Windows session) carries the Mini Program `onResize` core fix `b792f24` that the DevTools pass (11 / 11 on `5cbc571`) depends on.
+
+Prompt (verbatim): "merge #33 when green otherwise fix ci error"
+
+Status: TODO.
+
 ## TODO: Fix #29, then the advisor plan to 100 (2026-11-27)
 
 Context: #27 and #30 are merged; #29 conflicts with `master`. The owner then asks for an advisor review of the cross-platform score and for the plan to be implemented, with tests delegated.
