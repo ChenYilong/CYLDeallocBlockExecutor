@@ -365,3 +365,14 @@ Re-score:
 | React Native | 95 | **97** | iOS host run (3 of 4), pop fix confirmed on iOS (1); memory warning on iOS open |
 
 Average about **92.7 / 100** (was 92.2): iOS 89, Android 99, HarmonyOS 93, Flutter 94, React Native 97, Mini Program 84.
+
+## Screen-focus events (2026-11-26)
+
+Two derived events for "do something every time a view appears or the user touches elsewhere" (a search field that focuses itself and hides the keyboard):
+
+| Event | iOS | Android | HarmonyOS | Flutter | React Native | Mini Program |
+| :-- | :-- | :-- | :-- | :-- | :-- | :-- |
+| `appDidBecomeActiveOnScreen` | `UIApplication.didBecomeActiveNotification` while the owner is on screen (PR #30) | the appear events already fire again on resume | `onShow` of the page while visible | `AppLifecycleState.resumed` with the render box visible | `AppState` change to `active` with the view focused | page `onShow` |
+| `didTouchOutside` | `UIWindow.sendEvent(_:)` wrapper, touch began outside the owner | `dispatchTouchEvent` of the activity window, `ACTION_DOWN` outside the view bounds | root component `onTouch` down outside the owner's area | `TapRegion.onTapOutside` (or a `Listener` at the root) | responder capture on the root view | root `touchstart` outside the component (`bindtouchstart` on the page) |
+
+Every finger scroll starts with a touch outside the owner, so `didTouchOutside` also covers scroll gestures. A pointer or trackpad scroll is not a touch (TODO).
