@@ -52,6 +52,10 @@ class MainActivity : FragmentActivity() {
             text = "open ScrollView (timer-based source)"
             setOnClickListener { startActivity(Intent(this@MainActivity, ScrollActivity::class.java)) }
         })
+        root.addView(Button(this).apply {
+            text = "open NestedScrollView (timer-based source)"
+            setOnClickListener { startActivity(Intent(this@MainActivity, NestedScrollActivity::class.java)) }
+        })
         out = TextView(this)
         root.addView(ScrollView(this).apply { addView(out) })
         setContentView(root)
