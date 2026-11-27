@@ -194,6 +194,12 @@ Rename (2026-11-26, owner: "use the first"): the event is `appDidBecomeActiveOnS
 
 Status: DONE in code (2026-11-26, branch `feat/did-become-active-on-screen`, from master `4276a6d`). `CYLLifecycleSources` keeps a weak set of owners with a block, installs one observer of the notification by name on the first block (per-owner or global), and fires for owners that are on screen now (`CYLVisibilityState.computeVisible`); a global observer also reaches every view controller in a window. Raw values unchanged. Test "appDidBecomeActiveOnScreen" (4 checks): 89 / 89 in Debug and in Release, iOS 27.2 simulator (own, deleted afterwards), Xcode 27.2, 2026-11-26. Not released: the podspec stays 1.4.0 (owner decides the release). Other platforms are N/A in `Cross-Platform-API.md`.
 
+## CI: stop cancelling queued macOS jobs (2026-11-27)
+
+Prompt (verbatim): "fix ci error". No job had failed (PRs #28 to #33; the last failed run, `integration/round-18` on 2026-11-24, was fixed in `5ba2813`). The visible error was cancellation: the five macOS jobs wait hours for a `macos-26` runner and `cancel-in-progress: true` cancelled them on each new push, so `feat/example-taglist` had about 12 cancelled runs and no finished macOS result. Owner choice: stop cancelling.
+
+Status: DONE (2026-11-27). `.github/workflows/ci.yml`: `cancel-in-progress: false`; a newer push waits as the single pending run of its ref, so CI still ends on the latest commit. Branch `ci/keep-macos-jobs` from `master` `0e2ca33`.
+
 ## Design (reviewed by the advisor, 2026-11-22)
 
 Every public interface below was designed with the advisor; any new public API goes back to the advisor first.
