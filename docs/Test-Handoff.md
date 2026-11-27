@@ -113,3 +113,24 @@ New in S (compiled, never run): Android `NestedScrollActivity`; React Native exa
 | 3 | Flutter `Flutter/example` in a **profile** build (`flutter run --profile`) | three flings pair up; the round 16 events again |
 | 4 | HarmonyOS `HarmonyOS/entry`, arm64 emulator if available: tap "Debug: simulate memory level (handler only)"; then DevEco Profiler memory level | `deliverMemoryLevel level=2`, `EVENT n didReceiveMemoryWarning` (hilog `CYL`); Profiler: the same lines without the tap |
 | 5 | Mini Program (Windows A, logged in): section 2 rows 1 to 3 at S | events table of section 2; load problem gone or traced |
+
+## Round 19 handoff (2026-11-27): the runs that close the remaining points, by integrator sessions
+
+Owner rule of 2026-11-27: integrators test in their own apps on their own machines (iOS on the Mac, the rest on Windows); the library session keeps compile checks only and does not run the full suites; nobody waits for CI. No library code is missing: every point below is a run (bucket b) or an owner step (bucket c). Results go back to the library session in the section 5 format; it records them in [Cross-Platform-API.md](Cross-Platform-API.md) and re-scores.
+
+SHAs: library code at `5ba2813` (head of `integration/round-18`, PR #27) for iOS, Android, HarmonyOS, Flutter and React Native; `5767e41` (PR #33) for the Mini Program (adds the `onResize` size fix `b792f24`). Hold `C:/w/heavy.lock` (a `mkdir` lock with an `owner` file) for every emulator or WeChat DevTools run on the Windows machine.
+
+| # | Platform | Run | Pass | Points | Session |
+|:-:|:---|:---|:---|---:|:---|
+| 1 | iOS | CYLTabBarController with the iOS pins at `5ba2813`: a screen with animated badge items, "Pause while scrolling" ON, 4 real flicks | `cyl.badge.*` lines; badges pause and resume once per flick | 5 | mac/CYLTabBarController |
+| 2 | iOS | Example-Rive Engine API page with **Loop ON**, pause while scrolling ON, flick | label `didPause` during the drag, `didResume` after | 3 | mac/CYLTabBarController |
+| 3 | React Native | `ReactNative/example` iOS host: Simulator.app > Debug > Simulate Memory Warning | `didReceiveMemoryWarning` once in the log | part of 3 | mac/CYLDeallocBlockExecutor |
+| 4 | Flutter | the `animationsPaused` native channel of the CYLTabBarController Flutter wrapper on an Android emulator, flings | the channel reports paused on drag, resumed after; pauses == resumes | 6 | winsCYLTabBarController |
+| 5 | React Native | the native `animationsPaused` path of the CYLTabBarController React Native wrapper on an Android emulator, flings | as row 4 | 3 | winsCYLTabBarController |
+| 6 | HarmonyOS | CYLTabBarController HarmonyOS app on the Windows emulator (arm64 image if available); DevEco Profiler memory level, without the debug button | `didReceiveMemoryWarning` in `hilog`; arm64 noted | 4 + 2 | winsCYLTabBarController |
+| 7 | Android | CYLTabBarController Android example on the Windows emulator (second machine): dark mode, rotation, `RUNNING_LOW` trim, flings | the library events in logcat tag `CYL`; pauses == resumes | 1 | winsCYLTabBarController |
+| 8 | Mini Program | CYLTabBarController Mini Program in WeChat DevTools: switch the simulator theme and rotate it from the DevTools menus (not forwarded calls); Debug > simulate memory warning | `traitCollectionDidChange`, `viewWillTransition` with a size, `didReceiveMemoryWarning` | 2 | winsCYLTabBarController |
+
+DevTools on that machine needs `MiniProgram/example/no-happy-eyeballs-proxy.mjs` as its manual proxy (the timeout finding of 2026-11-27) and `cli auto --trust-project` started through a shell.
+
+Bucket (c), owner only, not handed out: the 1.4.0 tag and `pod trunk push`, merge order of #27 to #33, real devices, and the Mini Program load problem's cause (it is gone, not traced). With rows 1 to 8 passed the estimate is iOS 97, Android 100, HarmonyOS 98, Flutter 100, React Native 100, Mini Program 99; 100 everywhere needs the owner steps.

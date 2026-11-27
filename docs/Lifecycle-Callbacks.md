@@ -209,6 +209,20 @@ Status: DONE (2026-11-27). DevTools pass 11 / 11 on `5cbc571` with the timeout w
 - Library core fix found on the way: `withLifecycle` passed the system `onResize` event (`{ deviceOrientation, size: { windowWidth, windowHeight } }`) to `onResize(size)`, so `viewWillTransition` had an undefined size; the controller now unwraps `size` (as the typings already declared). Node suite 65 / 65.
 - Cause of the timeout (Node happy eyeballs on a high-latency link): a Node 22 probe of port 443 on this machine (New Zealand) with the default `autoSelectFamily` gives `ETIMEDOUT` after about 520 ms for `servicewechat.com` and `open.weixin.qq.com`; with `autoSelectFamily: false` both connect (709 ms and 201 ms). `mp.weixin.qq.com`, `api.weixin.qq.com`, `long.open.weixin.qq.com` and `res.servicewechat.com` connect either way. The DevTools log shows the same frames (`AggregateError [ETIMEDOUT]` from `internalConnectMultiple`, e.g. `requestProjectAttr catch error`). `NODE_OPTIONS=--no-network-family-autoselection` has no effect on the packaged DevTools, and its CLI has no proxy option.
 
+## TODO: Round 19, review the missing points and hand the runs to the integrator sessions (2026-11-27)
+
+<details>
+<summary>Original prompt (verbatim)</summary>
+
+continue TODO (missing points): advisor opus
+advisor点评目前全平台接口实现得分 以及下一步计划与建议。并立即让默认模型sonnet按照建议去实现。将得分优化到100转发合适任务给其他session 直接使用本机环境进行测试，iOS在macos机器，其余在windows机器。转发任务给相应session无需等待ci结果。集成方自己测试，只保留编译检查，不跑上面这完整套件
+
+</details>
+
+English: "Continue the TODO (missing points). Advisor (Opus): review the current interface-implementation scores of all platforms and give the next plan and advice; the default model (Sonnet) implements it at once. To push the score to 100, forward suitable tasks to other sessions to test on their own machines: iOS on macOS, the rest on Windows. Do not wait for CI. Integrators test by themselves; keep only compile checks here, do not run the full suites."
+
+Status: DONE (2026-11-27, delivered). The advisor was rate-limited for this turn, so the review is from the round 18 deduction table and the 2026-11-27 runs: no library code is missing; the rest is runs and owner steps. The runs are in [Test-Handoff.md, round 19](Test-Handoff.md#round-19-handoff-2026-11-27-the-runs-that-close-the-remaining-points-by-integrator-sessions), sent to mac/CYLTabBarController (rows 1, 2), mac/CYLDeallocBlockExecutor (row 3) and winsCYLTabBarController (rows 4 to 8). Compile check here: `node --check` on every Mini Program file, clean; no other platform's code changed in this branch.
+
 ## Design (reviewed by the advisor, 2026-11-22)
 
 Every public interface below was designed with the advisor; any new public API goes back to the advisor first.
