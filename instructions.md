@@ -5,6 +5,7 @@ Read this file before reading or writing files in this repository. It inherits t
 ## Where the rules are
 
 - This file: the repository rules.
+- `AGENTS.md`: tagged agent rules. Its `memory` tag applies before running claude-mem's learn-codebase.
 - `.agents/skills/cyl-naming/SKILL.md`: how to name new code (the rules below, as a skill).
 - `docs/Lifecycle-Callbacks.md`: the task log, the API design and the score.
 

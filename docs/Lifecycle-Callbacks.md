@@ -261,6 +261,30 @@ English: "Commit these notes to the public repository? First remove local paths 
 
 Status: DONE (2026-11-29). Removed before the first commit: the local paths quoted in the previous entry and one local lock-file path in `11-build-ci-scripts.md`. The pattern scan for local paths, the local user name, session ids and personal email addresses then matched nothing in the committed changes. Public identifiers of this repository (the GitHub account in URLs, `com.chenyilong.*` bundle ids and the tracked `xcuserdata/chenyilong.xcuserdatad` paths in the file inventory) are kept. Secret keywords: the prompt mentions two hits; in these notes the scan matched five lines (`signingConfigs`, `scrollToken`, `windowToken`, and two mentions of `keystore`, one being the file list entry for the already tracked example `debug.keystore`, which was not opened). None of the lines contains a key or password. Every note now starts with a "Not reviewed" notice, and the evidence column of the findings table says what was reproduced. claude-mem still watches `docs/learn-codebase/` and stores each changed note as a new record.
 
+## DONE: write the learn-codebase guide and add the `memory` agent rule (2026-11-29, branch `docs/learn-codebase-notes`)
+
+<details>
+<summary>Original prompt (verbatim)</summary>
+
+在 该根目录下 " \docs\learn-codebase"   新建一个文档， README ， 该文档需要记录，以后换了电脑， 之后， 重新使用 claude-mem 的 learn-codebase 指令的时候， 应该如何指定交付物路劲， CLAUDE_MEM_MEMORY_WATCH_ROOTS 如何重新配置，以及交付物如何删除隐私信息后提交git，结合本次经验， 总结成文档， 并在agents文件中，新建tag ，叫做 memory ， 该新建文档中， 需要在 执行 learn-codebase 之前阅读，本次新建的文档，给出相对路径的文档地址。 以上指令全英文执行，文档全英文编写。
+
+</details>
+
+English: "In `docs/learn-codebase` under the repository root, create a README. It must record how, on a new computer, to choose the deliverables path when running claude-mem's learn-codebase command again, how to reconfigure `CLAUDE_MEM_MEMORY_WATCH_ROOTS`, and how to remove private information from the deliverables before committing them to git, summarizing the experience from this work. In the agents file, add a tag called `memory` saying that the new document must be read before running learn-codebase, and give the document's relative path. Carry out all of this in English and write the documents entirely in English."
+
+Status: DONE (2026-11-29; committed with the next entry). Added [`docs/learn-codebase/README.md`](learn-codebase/README.md) and a new root `AGENTS.md` (the repository had none) with the `memory` tag, and listed `AGENTS.md` in `instructions.md`. Tested: the settings script on a made-up settings file (not the real one), the record-count command against the local database (19 distinct files), and the relative links. The scan with the local values filled in found no local path or user name in the guide or in `AGENTS.md`. The worker restart commands were not run again.
+
+## DONE: load `AGENTS.md` through a root `CLAUDE.md`, then commit and push (2026-11-29, branch `docs/learn-codebase-notes`)
+
+<details>
+<summary>Original prompt (verbatim)</summary>
+
+Add a root CLAUDE.md with @AGENTS.md, then commit and push.
+
+</details>
+
+Status: DONE (2026-11-29). Added a root `CLAUDE.md` that contains only the import of `AGENTS.md`, so Claude Code sessions in this repository load the agent rules. Whether a new session loads them was not tested. This entry, the guide and the `memory` rule are committed and pushed together.
+
 ## Design (reviewed by the advisor, 2026-11-22)
 
 Every public interface below was designed with the advisor; any new public API goes back to the advisor first.
