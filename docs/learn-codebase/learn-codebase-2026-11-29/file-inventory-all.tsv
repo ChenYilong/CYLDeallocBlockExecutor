@@ -1,0 +1,372 @@
+category	path	bytes	status
+doc	.agents/skills/cyl-naming/SKILL.md	4794	read in full
+config	.github/workflows/ci.yml	5366	read in full
+source	.gitignore	174	read in full
+source	Android/.gitignore	51	read in full
+source	Android/binding/build.gradle.kts	2852	read in full
+config	Android/binding/src/debug/AndroidManifest.xml	276	read in full
+config	Android/binding/src/main/AndroidManifest.xml	14	read in full
+source	Android/binding/src/main/kotlin/com/chenyilong/cyldeallocblockexecutor/binding/AndroidBinding.kt	10632	read in full
+source	Android/binding/src/main/kotlin/com/chenyilong/cyldeallocblockexecutor/binding/RecyclerViewScrolling.kt	3598	read in full
+source	Android/binding/src/test/kotlin/com/chenyilong/cyldeallocblockexecutor/binding/AndroidBindingTest.kt	14806	read in full
+source	Android/build.gradle.kts	236	read in full
+source	Android/core/build.gradle.kts	1134	read in full
+source	Android/core/src/main/kotlin/com/chenyilong/cyldeallocblockexecutor/LifecycleCenter.kt	6420	read in full
+source	Android/core/src/main/kotlin/com/chenyilong/cyldeallocblockexecutor/LifecycleController.kt	7128	read in full
+source	Android/core/src/main/kotlin/com/chenyilong/cyldeallocblockexecutor/LifecycleLog.kt	1737	read in full
+source	Android/core/src/main/kotlin/com/chenyilong/cyldeallocblockexecutor/LifecycleRegistry.kt	13985	read in full
+source	Android/core/src/main/kotlin/com/chenyilong/cyldeallocblockexecutor/Types.kt	3215	read in full
+source	Android/core/src/test/kotlin/com/chenyilong/cyldeallocblockexecutor/LifecycleControllerTest.kt	5774	read in full
+source	Android/core/src/test/kotlin/com/chenyilong/cyldeallocblockexecutor/LifecycleRegistryTest.kt	8026	read in full
+source	Android/core/src/test/kotlin/com/chenyilong/cyldeallocblockexecutor/ObservableMomentsTest.kt	13117	read in full
+source	Android/example/build.gradle.kts	739	read in full
+config	Android/example/src/main/AndroidManifest.xml	1455	read in full
+source	Android/example/src/main/kotlin/com/chenyilong/cyldeallocblockexecutor/example/ExampleApp.kt	303	read in full
+source	Android/example/src/main/kotlin/com/chenyilong/cyldeallocblockexecutor/example/ListActivity.kt	3849	read in full
+source	Android/example/src/main/kotlin/com/chenyilong/cyldeallocblockexecutor/example/MainActivity.kt	2977	read in full
+source	Android/example/src/main/kotlin/com/chenyilong/cyldeallocblockexecutor/example/NestedScrollActivity.kt	2360	read in full
+source	Android/example/src/main/kotlin/com/chenyilong/cyldeallocblockexecutor/example/ScrollActivity.kt	2336	read in full
+source	Android/example/src/main/kotlin/com/chenyilong/cyldeallocblockexecutor/example/SecondActivity.kt	417	read in full
+config	Android/gradle.properties	53	read in full
+binary	Android/gradle/wrapper/gradle-wrapper.jar	43764	not opened
+config	Android/gradle/wrapper/gradle-wrapper.properties	260	read in full
+generated	Android/gradlew	8984	not read
+generated	Android/gradlew.bat	2937	not read
+source	Android/scripts/gradle.sh	409	read in full
+source	Android/scripts/test-mirror.sh	486	read in full
+source	Android/settings.gradle.kts	743	read in full
+source	CYLDeallocBlockExecutor.podspec	756	read in full
+generated	CYLDeallocBlockExecutor.xcodeproj/project.pbxproj	23610	key settings extracted only
+config	CYLDeallocBlockExecutor.xcodeproj/project.xcworkspace/contents.xcworkspacedata	226	read in full
+config	CYLDeallocBlockExecutor.xcodeproj/project.xcworkspace/xcshareddata/IDEWorkspaceChecks.plist	246	read in full
+binary	CYLDeallocBlockExecutor.xcodeproj/project.xcworkspace/xcuserdata/chenyilong.xcuserdatad/UserInterfaceState.xcuserstate	63739	not opened
+binary	CYLDeallocBlockExecutor.xcodeproj/project.xcworkspace/xcuserdata/wangrui.xcuserdatad/UserInterfaceState.xcuserstate	17635	not opened
+config	CYLDeallocBlockExecutor.xcodeproj/xcshareddata/xcschemes/CYLDeallocBlockExecutor-Framework.xcscheme	2144	read in full
+generated	CYLDeallocBlockExecutor.xcodeproj/xcuserdata/chenyilong.xcuserdatad/xcdebugger/Breakpoints_v2.xcbkptlist	5816	not read
+generated	CYLDeallocBlockExecutor.xcodeproj/xcuserdata/chenyilong.xcuserdatad/xcschemes/CYLDeallocExecutor.xcscheme	3586	not read
+generated	CYLDeallocBlockExecutor.xcodeproj/xcuserdata/chenyilong.xcuserdatad/xcschemes/xcschememanagement.plist	512	not read
+generated	CYLDeallocBlockExecutor.xcodeproj/xcuserdata/wangrui.xcuserdatad/xcdebugger/Breakpoints_v2.xcbkptlist	1453	not read
+generated	CYLDeallocBlockExecutor.xcodeproj/xcuserdata/wangrui.xcuserdatad/xcschemes/CYLDeallocBlockExecutor.xcscheme	3586	not read
+generated	CYLDeallocBlockExecutor.xcodeproj/xcuserdata/wangrui.xcuserdatad/xcschemes/xcschememanagement.plist	517	not read
+source	CYLDeallocBlockExecutor/CYLCallbackModel.swift	15038	read in full
+source	CYLDeallocBlockExecutor/CYLDeallocExecutor.swift	654	read in full
+source	CYLDeallocBlockExecutor/CYLLifecycle.swift	22087	read in full
+source	CYLDeallocBlockExecutor/CYLLifecycleCenter.swift	9675	read in full
+source	CYLDeallocBlockExecutor/CYLLifecycleLog.swift	1855	read in full
+source	CYLDeallocBlockExecutor/CYLLifecycleSources.swift	22875	read in full
+source	CYLDeallocBlockExecutor/NSObject+CYLDeallocBlockExecutor.swift	5424	read in full
+source	CYLDeallocBlockExecutor/UIViewController+CYLLifecycleHooks.swift	8305	read in full
+source	CYLTabBarControllerTestDemo/Podfile	543	read in full
+generated	CYLTabBarControllerTestDemo/TestDemo.xcodeproj/project.pbxproj	16330	key settings extracted only
+config	CYLTabBarControllerTestDemo/TestDemo.xcodeproj/project.xcworkspace/contents.xcworkspacedata	160	read in full
+binary	CYLTabBarControllerTestDemo/TestDemo.xcodeproj/project.xcworkspace/xcuserdata/qianxx.xcuserdatad/UserInterfaceState.xcuserstate	9453	not opened
+generated	CYLTabBarControllerTestDemo/TestDemo.xcodeproj/xcuserdata/chenyilong.xcuserdatad/xcschemes/TestDemo.xcscheme	3406	not read
+generated	CYLTabBarControllerTestDemo/TestDemo.xcodeproj/xcuserdata/chenyilong.xcuserdatad/xcschemes/xcschememanagement.plist	502	not read
+generated	CYLTabBarControllerTestDemo/TestDemo.xcodeproj/xcuserdata/qianxx.xcuserdatad/xcschemes/TestDemo.xcscheme	3406	not read
+generated	CYLTabBarControllerTestDemo/TestDemo.xcodeproj/xcuserdata/qianxx.xcuserdatad/xcschemes/xcschememanagement.plist	502	not read
+config	CYLTabBarControllerTestDemo/TestDemo.xcworkspace/contents.xcworkspacedata	236	read in full
+binary	CYLTabBarControllerTestDemo/TestDemo.xcworkspace/xcuserdata/chenyilong.xcuserdatad/UserInterfaceState.xcuserstate	15185	not opened
+binary	CYLTabBarControllerTestDemo/TestDemo.xcworkspace/xcuserdata/qianxx.xcuserdatad/UserInterfaceState.xcuserstate	14233	not opened
+generated	CYLTabBarControllerTestDemo/TestDemo.xcworkspace/xcuserdata/qianxx.xcuserdatad/xcdebugger/Breakpoints_v2.xcbkptlist	490	not read
+source	CYLTabBarControllerTestDemo/TestDemo/AppDelegate.swift	792	read in full
+generated	CYLTabBarControllerTestDemo/TestDemo/Assets.xcassets/AppIcon.appiconset/Contents.json	622	not read
+generated	CYLTabBarControllerTestDemo/TestDemo/Base.lproj/LaunchScreen.storyboard	1691	not read
+generated	CYLTabBarControllerTestDemo/TestDemo/Base.lproj/Main.storyboard	3977	not read
+source	CYLTabBarControllerTestDemo/TestDemo/CustomTabBarController.swift	1109	read in full
+config	CYLTabBarControllerTestDemo/TestDemo/Info.plist	1245	read in full
+source	CYLTabBarControllerTestDemo/TestDemo/LoginViewController.swift	362	read in full
+source	Example/AppDelegate.swift	873	read in full
+generated	Example/Assets.xcassets/AppIcon.appiconset/Contents.json	3064	not read
+binary	Example/Assets.xcassets/AppIcon.appiconset/Icon-40.png	1821	not opened
+binary	Example/Assets.xcassets/AppIcon.appiconset/Icon-40@2x.png	4010	not opened
+binary	Example/Assets.xcassets/AppIcon.appiconset/Icon-40@3x.png	6553	not opened
+binary	Example/Assets.xcassets/AppIcon.appiconset/Icon-60@2x.png	6553	not opened
+binary	Example/Assets.xcassets/AppIcon.appiconset/Icon-60@3x.png	11342	not opened
+binary	Example/Assets.xcassets/AppIcon.appiconset/Icon-72.png	3456	not opened
+binary	Example/Assets.xcassets/AppIcon.appiconset/Icon-72@2x.png	7974	not opened
+binary	Example/Assets.xcassets/AppIcon.appiconset/Icon-76.png	3682	not opened
+binary	Example/Assets.xcassets/AppIcon.appiconset/Icon-76@2x.png	8916	not opened
+binary	Example/Assets.xcassets/AppIcon.appiconset/Icon-83.5@2x.png	10104	not opened
+binary	Example/Assets.xcassets/AppIcon.appiconset/Icon-Small-50.png	2426	not opened
+binary	Example/Assets.xcassets/AppIcon.appiconset/Icon-Small-50@2x.png	5486	not opened
+binary	Example/Assets.xcassets/AppIcon.appiconset/Icon-Small.png	1396	not opened
+binary	Example/Assets.xcassets/AppIcon.appiconset/Icon-Small@2x.png	2824	not opened
+binary	Example/Assets.xcassets/AppIcon.appiconset/Icon-Small@3x.png	4502	not opened
+binary	Example/Assets.xcassets/AppIcon.appiconset/Icon.png	2878	not opened
+binary	Example/Assets.xcassets/AppIcon.appiconset/Icon@2x.png	6416	not opened
+generated	Example/Assets.xcassets/Contents.json	67	not read
+generated	Example/Assets.xcassets/LaunchImage.launchimage/Contents.json	5764	not read
+binary	Example/Assets.xcassets/LaunchImage.launchimage/Default-568h@2x.png	167119	not opened
+binary	Example/Assets.xcassets/LaunchImage.launchimage/Default-667h@2x.png	223847	not opened
+binary	Example/Assets.xcassets/LaunchImage.launchimage/Default-Landscape-1792h@3x.png	356552	not opened
+binary	Example/Assets.xcassets/LaunchImage.launchimage/Default-Landscape-2436h@3x.png	583963	not opened
+binary	Example/Assets.xcassets/LaunchImage.launchimage/Default-Landscape-2688h@3x.png	691730	not opened
+binary	Example/Assets.xcassets/LaunchImage.launchimage/Default-Landscape-736h@3x.png	599470	not opened
+binary	Example/Assets.xcassets/LaunchImage.launchimage/Default-Portrait-1792h@3x.png	297257	not opened
+binary	Example/Assets.xcassets/LaunchImage.launchimage/Default-Portrait-2436h@3x.png	527203	not opened
+binary	Example/Assets.xcassets/LaunchImage.launchimage/Default-Portrait-2688h@3x.png	612227	not opened
+binary	Example/Assets.xcassets/LaunchImage.launchimage/Default-Portrait-736h@3x.png	539691	not opened
+binary	Example/Assets.xcassets/LaunchImage.launchimage/Default.png	46945	not opened
+binary	Example/Assets.xcassets/LaunchImage.launchimage/Default@2x.png	151218	not opened
+binary	Example/Assets.xcassets/LaunchImage.launchimage/Default~ipad.png	193526	not opened
+binary	Example/Assets.xcassets/LaunchImage.launchimage/Default~ipad@2x.png	655675	not opened
+binary	Example/Assets.xcassets/LaunchImage.launchimage/Default~ipad~landscape.png	212622	not opened
+binary	Example/Assets.xcassets/LaunchImage.launchimage/Default~ipad~landscape@2x.png	692906	not opened
+binary	Example/Assets.xcassets/LaunchImage.launchimage/Default~ipad~landscape~nostatusbar.png	217760	not opened
+binary	Example/Assets.xcassets/LaunchImage.launchimage/Default~ipad~landscape~nostatusbar@2x.png	695051	not opened
+binary	Example/Assets.xcassets/LaunchImage.launchimage/Default~ipad~nostatusbar.png	196799	not opened
+binary	Example/Assets.xcassets/LaunchImage.launchimage/Default~ipad~nostatusbar@2x.png	664325	not opened
+generated	Example/Base.lproj/LaunchScreen.storyboard	1881	not read
+config	Example/Info.plist	1969	read in full
+source	Example/SceneDelegate.swift	851	read in full
+source	Example/UIView+ThemeManager.swift	2543	read in full
+source	Example/ViewController.swift	5462	read in full
+source	Flutter/.gitignore	74	read in full
+config	Flutter/analysis_options.yaml	45	read in full
+source	Flutter/example/.gitignore	794	read in full
+config	Flutter/example/.metadata	998	read in full
+doc	Flutter/example/README.md	660	read in full
+config	Flutter/example/analysis_options.yaml	1507	read in full
+source	Flutter/example/android/.gitignore	267	read in full
+source	Flutter/example/android/app/build.gradle.kts	1855	read in full
+config	Flutter/example/android/app/src/debug/AndroidManifest.xml	385	read in full
+config	Flutter/example/android/app/src/main/AndroidManifest.xml	2254	read in full
+source	Flutter/example/android/app/src/main/kotlin/com/chenyilong/cyl/cyl_lifecycle_example/MainActivity.kt	147	read in full
+config	Flutter/example/android/app/src/main/res/drawable-v21/launch_background.xml	450	read in full
+config	Flutter/example/android/app/src/main/res/drawable/launch_background.xml	446	read in full
+binary	Flutter/example/android/app/src/main/res/mipmap-hdpi/ic_launcher.png	544	not opened
+binary	Flutter/example/android/app/src/main/res/mipmap-mdpi/ic_launcher.png	442	not opened
+binary	Flutter/example/android/app/src/main/res/mipmap-xhdpi/ic_launcher.png	721	not opened
+binary	Flutter/example/android/app/src/main/res/mipmap-xxhdpi/ic_launcher.png	1031	not opened
+binary	Flutter/example/android/app/src/main/res/mipmap-xxxhdpi/ic_launcher.png	1443	not opened
+config	Flutter/example/android/app/src/main/res/values-night/styles.xml	1013	read in full
+config	Flutter/example/android/app/src/main/res/values/styles.xml	1014	read in full
+config	Flutter/example/android/app/src/profile/AndroidManifest.xml	385	read in full
+source	Flutter/example/android/build.gradle.kts	561	read in full
+config	Flutter/example/android/gradle.properties	306	read in full
+config	Flutter/example/android/gradle/wrapper/gradle-wrapper.properties	207	read in full
+source	Flutter/example/android/settings.gradle.kts	796	read in full
+source	Flutter/example/ios/.gitignore	603	read in full
+config	Flutter/example/ios/Flutter/AppFrameworkInfo.plist	744	read in full
+config	Flutter/example/ios/Flutter/Debug.xcconfig	31	read in full
+config	Flutter/example/ios/Flutter/Release.xcconfig	31	read in full
+generated	Flutter/example/ios/Runner.xcodeproj/project.pbxproj	25084	key settings extracted only
+config	Flutter/example/ios/Runner.xcodeproj/project.xcworkspace/contents.xcworkspacedata	142	read in full
+config	Flutter/example/ios/Runner.xcodeproj/project.xcworkspace/xcshareddata/IDEWorkspaceChecks.plist	246	read in full
+config	Flutter/example/ios/Runner.xcodeproj/project.xcworkspace/xcshareddata/WorkspaceSettings.xcsettings	234	read in full
+config	Flutter/example/ios/Runner.xcodeproj/xcshareddata/xcschemes/Runner.xcscheme	4836	read in full
+config	Flutter/example/ios/Runner.xcworkspace/contents.xcworkspacedata	159	read in full
+config	Flutter/example/ios/Runner.xcworkspace/xcshareddata/IDEWorkspaceChecks.plist	246	read in full
+config	Flutter/example/ios/Runner.xcworkspace/xcshareddata/WorkspaceSettings.xcsettings	234	read in full
+source	Flutter/example/ios/Runner/AppDelegate.swift	555	read in full
+generated	Flutter/example/ios/Runner/Assets.xcassets/AppIcon.appiconset/Contents.json	2641	not read
+binary	Flutter/example/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-1024x1024@1x.png	10932	not opened
+binary	Flutter/example/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-20x20@1x.png	295	not opened
+binary	Flutter/example/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-20x20@2x.png	406	not opened
+binary	Flutter/example/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-20x20@3x.png	450	not opened
+binary	Flutter/example/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-29x29@1x.png	282	not opened
+binary	Flutter/example/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-29x29@2x.png	462	not opened
+binary	Flutter/example/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-29x29@3x.png	704	not opened
+binary	Flutter/example/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-40x40@1x.png	406	not opened
+binary	Flutter/example/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-40x40@2x.png	586	not opened
+binary	Flutter/example/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-40x40@3x.png	862	not opened
+binary	Flutter/example/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-60x60@2x.png	862	not opened
+binary	Flutter/example/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-60x60@3x.png	1674	not opened
+binary	Flutter/example/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-76x76@1x.png	762	not opened
+binary	Flutter/example/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-76x76@2x.png	1226	not opened
+binary	Flutter/example/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-83.5x83.5@2x.png	1418	not opened
+generated	Flutter/example/ios/Runner/Assets.xcassets/LaunchImage.imageset/Contents.json	414	not read
+binary	Flutter/example/ios/Runner/Assets.xcassets/LaunchImage.imageset/LaunchImage.png	68	not opened
+binary	Flutter/example/ios/Runner/Assets.xcassets/LaunchImage.imageset/LaunchImage@2x.png	68	not opened
+binary	Flutter/example/ios/Runner/Assets.xcassets/LaunchImage.imageset/LaunchImage@3x.png	68	not opened
+doc	Flutter/example/ios/Runner/Assets.xcassets/LaunchImage.imageset/README.md	340	read in full
+generated	Flutter/example/ios/Runner/Base.lproj/LaunchScreen.storyboard	2414	not read
+generated	Flutter/example/ios/Runner/Base.lproj/Main.storyboard	1631	not read
+config	Flutter/example/ios/Runner/Info.plist	2310	read in full
+source	Flutter/example/ios/Runner/Runner-Bridging-Header.h	39	read in full
+source	Flutter/example/ios/Runner/SceneDelegate.swift	82	read in full
+source	Flutter/example/ios/RunnerTests/RunnerTests.swift	297	read in full
+source	Flutter/example/lib/main.dart	3031	read in full
+config	Flutter/example/pubspec.yaml	4180	read in full
+source	Flutter/lib/cyl_dealloc_block_executor.dart	337	read in full
+source	Flutter/lib/src/lifecycle_center.dart	6788	read in full
+source	Flutter/lib/src/lifecycle_event.dart	3935	read in full
+source	Flutter/lib/src/lifecycle_log.dart	1691	read in full
+source	Flutter/lib/src/lifecycle_mixin.dart	15402	read in full
+source	Flutter/lib/src/lifecycle_registry.dart	14259	read in full
+config	Flutter/pubspec.yaml	370	read in full
+source	Flutter/test/mixin_test.dart	12924	read in full
+source	Flutter/test/observable_test.dart	12421	read in full
+source	Flutter/test/registry_test.dart	7370	read in full
+source	HarmonyOS/.gitignore	195	read in full
+config	HarmonyOS/AppScope/app.json5	227	read in full
+config	HarmonyOS/AppScope/resources/base/element/string.json	109	read in full
+binary	HarmonyOS/AppScope/resources/base/media/app_icon.png	878	not opened
+config	HarmonyOS/build-profile.json5	707	read in full
+source	HarmonyOS/cyldeallocblockexecutor/Index.ets	569	read in full
+config	HarmonyOS/cyldeallocblockexecutor/LICENSE	1165	read in full
+config	HarmonyOS/cyldeallocblockexecutor/build-profile.json5	115	read in full
+source	HarmonyOS/cyldeallocblockexecutor/hvigorfile.ts	114	read in full
+config	HarmonyOS/cyldeallocblockexecutor/oh-package.json5	358	read in full
+source	HarmonyOS/cyldeallocblockexecutor/src/main/ets/CYLLifecycleBridge.ets	4287	read in full
+source	HarmonyOS/cyldeallocblockexecutor/src/main/ets/center.ts	6980	read in full
+source	HarmonyOS/cyldeallocblockexecutor/src/main/ets/controller.ts	6810	read in full
+source	HarmonyOS/cyldeallocblockexecutor/src/main/ets/index.ts	582	read in full
+source	HarmonyOS/cyldeallocblockexecutor/src/main/ets/log.ts	1754	read in full
+source	HarmonyOS/cyldeallocblockexecutor/src/main/ets/registry.ts	13928	read in full
+source	HarmonyOS/cyldeallocblockexecutor/src/main/ets/types.ts	3637	read in full
+config	HarmonyOS/cyldeallocblockexecutor/src/main/module.json5	147	read in full
+config	HarmonyOS/entry/build-profile.json5	93	read in full
+source	HarmonyOS/entry/hvigorfile.ts	114	read in full
+config	HarmonyOS/entry/oh-package.json5	303	read in full
+source	HarmonyOS/entry/src/main/ets/entryability/EntryAbility.ets	2862	read in full
+source	HarmonyOS/entry/src/main/ets/pages/Index.ets	4283	read in full
+config	HarmonyOS/entry/src/main/module.json5	791	read in full
+config	HarmonyOS/entry/src/main/resources/base/element/color.json	66	read in full
+config	HarmonyOS/entry/src/main/resources/base/element/string.json	155	read in full
+binary	HarmonyOS/entry/src/main/resources/base/media/icon.png	878	not opened
+config	HarmonyOS/entry/src/main/resources/base/profile/main_pages.json	25	read in full
+config	HarmonyOS/hvigor/hvigor-config.json5	136	read in full
+source	HarmonyOS/hvigorfile.ts	114	read in full
+config	HarmonyOS/oh-package.json5	200	read in full
+config	HarmonyOS/package.json	481	read in full
+source	HarmonyOS/scripts/build-har.sh	829	read in full
+source	HarmonyOS/test/controller.test.ts	6595	read in full
+source	HarmonyOS/test/observable.test.ts	10599	read in full
+source	HarmonyOS/test/register.mjs	92	read in full
+source	HarmonyOS/test/registry.test.ts	7268	read in full
+source	HarmonyOS/test/resolve-hooks.mjs	593	read in full
+config	HarmonyOS/tsconfig.json	366	read in full
+config	LICENSE	1165	read in full
+source	MiniProgram/center.js	6599	read in full
+source	MiniProgram/controller.js	7723	read in full
+source	MiniProgram/example/.gitignore	18	read in full
+source	MiniProgram/example/miniprogram/app.js	10	read in full
+config	MiniProgram/example/miniprogram/app.json	234	read in full
+config	MiniProgram/example/miniprogram/app.wxss	51	read in full
+source	MiniProgram/example/miniprogram/pages/index/index.js	2326	read in full
+config	MiniProgram/example/miniprogram/pages/index/index.json	52	read in full
+config	MiniProgram/example/miniprogram/pages/index/index.wxml	353	read in full
+config	MiniProgram/example/miniprogram/pages/index/index.wxss	184	read in full
+source	MiniProgram/example/miniprogram/pages/second/second.js	10	read in full
+config	MiniProgram/example/miniprogram/pages/second/second.json	27	read in full
+config	MiniProgram/example/miniprogram/pages/second/second.wxml	97	read in full
+config	MiniProgram/example/miniprogram/sitemap.json	51	read in full
+config	MiniProgram/example/miniprogram/theme.json	128	read in full
+source	MiniProgram/example/no-happy-eyeballs-proxy.mjs	2457	read in full
+config	MiniProgram/example/project.config.json	386	read in full
+source	MiniProgram/example/run-devtools.mjs	11112	read in full
+source	MiniProgram/example/sync.sh	363	read in full
+source	MiniProgram/index.js	502	read in full
+source	MiniProgram/log.js	1948	read in full
+config	MiniProgram/package.json	374	read in full
+source	MiniProgram/registry.js	13492	read in full
+source	MiniProgram/test/controller.test.js	7274	read in full
+source	MiniProgram/test/observable.test.js	10490	read in full
+source	MiniProgram/test/registry.test.js	7555	read in full
+source	MiniProgram/test/syntax.test.js	5938	read in full
+source	MiniProgram/types.js	2046	read in full
+source	MiniProgram/typings/center.d.ts	3125	read in full
+source	MiniProgram/typings/controller.d.ts	1583	read in full
+source	MiniProgram/typings/index.d.ts	137	read in full
+source	MiniProgram/typings/log.d.ts	1422	read in full
+source	MiniProgram/typings/registry.d.ts	5911	read in full
+source	MiniProgram/typings/types.d.ts	3731	read in full
+source	Package.swift	698	read in full
+doc	README.md	10059	read in full
+source	ReactNative/.gitignore	20	read in full
+source	ReactNative/example/.gitignore	1160	read in full
+source	ReactNative/example/App.tsx	4192	read in full
+doc	ReactNative/example/README.md	2983	read in full
+config	ReactNative/example/android/app/build.gradle	4907	read in full
+binary	ReactNative/example/android/app/debug.keystore	2257	not opened
+config	ReactNative/example/android/app/proguard-rules.pro	445	read in full
+config	ReactNative/example/android/app/src/main/AndroidManifest.xml	1187	read in full
+source	ReactNative/example/android/app/src/main/java/com/chenyilong/cyldeallocblockexecutor/rnexample/MainActivity.kt	1147	read in full
+source	ReactNative/example/android/app/src/main/java/com/chenyilong/cyldeallocblockexecutor/rnexample/MainApplication.kt	1733	read in full
+config	ReactNative/example/android/app/src/main/res/drawable/rn_edit_text_material.xml	1954	read in full
+binary	ReactNative/example/android/app/src/main/res/mipmap-hdpi/ic_launcher.png	3056	not opened
+binary	ReactNative/example/android/app/src/main/res/mipmap-hdpi/ic_launcher_round.png	5024	not opened
+binary	ReactNative/example/android/app/src/main/res/mipmap-mdpi/ic_launcher.png	2096	not opened
+binary	ReactNative/example/android/app/src/main/res/mipmap-mdpi/ic_launcher_round.png	2858	not opened
+binary	ReactNative/example/android/app/src/main/res/mipmap-xhdpi/ic_launcher.png	4569	not opened
+binary	ReactNative/example/android/app/src/main/res/mipmap-xhdpi/ic_launcher_round.png	7098	not opened
+binary	ReactNative/example/android/app/src/main/res/mipmap-xxhdpi/ic_launcher.png	6464	not opened
+binary	ReactNative/example/android/app/src/main/res/mipmap-xxhdpi/ic_launcher_round.png	10676	not opened
+binary	ReactNative/example/android/app/src/main/res/mipmap-xxxhdpi/ic_launcher.png	9250	not opened
+binary	ReactNative/example/android/app/src/main/res/mipmap-xxxhdpi/ic_launcher_round.png	15523	not opened
+config	ReactNative/example/android/app/src/main/res/raw/cyl_keep.xml	254	read in full
+config	ReactNative/example/android/app/src/main/res/values/strings.xml	83	read in full
+config	ReactNative/example/android/app/src/main/res/values/styles.xml	291	read in full
+config	ReactNative/example/android/build.gradle	567	read in full
+config	ReactNative/example/android/gradle.properties	2564	read in full
+binary	ReactNative/example/android/gradle/wrapper/gradle-wrapper.jar	48966	not opened
+config	ReactNative/example/android/gradle/wrapper/gradle-wrapper.properties	259	read in full
+generated	ReactNative/example/android/gradlew	8902	not read
+generated	ReactNative/example/android/gradlew.bat	3093	not read
+config	ReactNative/example/android/settings.gradle	385	read in full
+config	ReactNative/example/app.json	76	read in full
+source	ReactNative/example/babel.config.js	70	read in full
+source	ReactNative/example/index.js	172	read in full
+config	ReactNative/example/ios/.xcode.env	493	read in full
+generated	ReactNative/example/ios/CylDeallocExample.xcodeproj/project.pbxproj	19654	key settings extracted only
+config	ReactNative/example/ios/CylDeallocExample.xcodeproj/xcshareddata/xcschemes/CylDeallocExample.xcscheme	3478	read in full
+source	ReactNative/example/ios/CylDeallocExample/AppDelegate.swift	264	read in full
+generated	ReactNative/example/ios/CylDeallocExample/Images.xcassets/AppIcon.appiconset/Contents.json	902	not read
+generated	ReactNative/example/ios/CylDeallocExample/Images.xcassets/Contents.json	69	not read
+config	ReactNative/example/ios/CylDeallocExample/Info.plist	2430	read in full
+generated	ReactNative/example/ios/CylDeallocExample/LaunchScreen.storyboard	4288	not read
+config	ReactNative/example/ios/CylDeallocExample/PrivacyInfo.xcprivacy	1023	read in full
+source	ReactNative/example/ios/CylDeallocExample/SceneDelegate.swift	1627	read in full
+source	ReactNative/example/ios/Podfile	961	read in full
+source	ReactNative/example/metro.config.js	437	read in full
+config	ReactNative/example/package.json	1210	read in full
+config	ReactNative/package.json	643	read in full
+source	ReactNative/src/center.ts	6986	read in full
+source	ReactNative/src/controller.ts	15856	read in full
+source	ReactNative/src/index.ts	557	read in full
+source	ReactNative/src/log.ts	1754	read in full
+source	ReactNative/src/native.ts	3495	read in full
+source	ReactNative/src/registry.ts	13940	read in full
+source	ReactNative/src/types.ts	3637	read in full
+source	ReactNative/test/controller.test.ts	15739	read in full
+source	ReactNative/test/observable.test.ts	10509	read in full
+source	ReactNative/test/registry.test.ts	7208	read in full
+config	ReactNative/tsconfig.json	378	read in full
+source	ReactNative/typings/react-native.d.ts	373	read in full
+source	Tests/LifecycleTests/main.swift	43632	read in full
+source	Tests/run-lifecycle-tests.sh	4059	read in full
+binary	assets/16911207374398.jpg	104579	not opened
+doc	docs/Cross-Platform-API.md	118505	read in full
+doc	docs/Issues.md	6987	read in full
+doc	docs/Lifecycle-Callbacks.md	61368	read in full
+doc	docs/Observing-and-Debugging.md	6406	read in full
+doc	docs/Scenario-Theme-CYLTabBarController.md	7998	read in full
+doc	docs/Test-Handoff.md	13968	read in full
+doc	docs/Usage-Android.md	3642	read in full
+doc	docs/Usage-Flutter.md	2795	read in full
+doc	docs/Usage-HarmonyOS.md	2647	read in full
+doc	docs/Usage-MiniProgram.md	2233	read in full
+doc	docs/Usage-ReactNative.md	2740	read in full
+doc	docs/Usage-iOS.md	11375	read in full
+binary	docs/assets/android-binding-emulator-api35-landscape.png	81552	not opened
+binary	docs/assets/android-binding-emulator-api35-list-after-dark-rotation.png	76182	not opened
+binary	docs/assets/android-binding-emulator-api35-list-after-flings.png	85467	not opened
+binary	docs/assets/android-binding-emulator-api35-list-start.png	67698	not opened
+binary	docs/assets/android-binding-emulator-api35-portrait.png	71557	not opened
+binary	docs/assets/android-binding-emulator-api35-scrollview-after-flings.png	114432	not opened
+binary	docs/assets/example-ios27-scene.png	325273	not opened
+binary	docs/assets/flutter-example-emulator-api35-after-fling.png	97630	not opened
+binary	docs/assets/flutter-example-emulator-api35-after-replace-teardown.png	38487	not opened
+binary	docs/assets/flutter-example-emulator-api35-landscape.png	59242	not opened
+binary	docs/assets/harmonyos-bridge-dark-emulator-mate70pro.jpeg	167669	not opened
+binary	docs/assets/harmonyos-bridge-emulator-mate70pro.jpeg	156986	not opened
+binary	docs/assets/harmonyos-bridge-landscape-dark-light-emulator-mate70pro.jpeg	147903	not opened
+binary	docs/assets/harmonyos-bridge-scroll-emulator-mate70pro.png	266110	not opened
+binary	docs/assets/issue-7-swift-destruct-event.jpg	180215	not opened
+binary	docs/assets/issue-8-kvo-release-order.jpg	231976	not opened
+binary	docs/assets/miniprogram-devtools-windows-load.jpg	21808	not opened
+binary	docs/assets/react-native-example-emulator-api35-after-fling.png	84187	not opened
+binary	docs/assets/react-native-example-emulator-api35-after-replace-teardown.png	23179	not opened
+doc	instructions.md	4997	read in full
+config	jitpack.yml	294	read in full

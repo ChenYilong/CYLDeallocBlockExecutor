@@ -233,6 +233,34 @@ English: "Continue the TODO (missing points). Advisor (Opus): review the current
 
 Status: DONE (2026-11-27, delivered). The advisor was rate-limited for this turn, so the review is from the round 18 deduction table and the 2026-11-27 runs: no library code is missing; the rest is runs and owner steps. The runs are in [Test-Handoff.md, round 19](Test-Handoff.md#round-19-handoff-2026-11-27-the-runs-that-close-the-remaining-points-by-integrator-sessions), sent to mac/CYLTabBarController (rows 1, 2), mac/CYLDeallocBlockExecutor (row 3) and winsCYLTabBarController (rows 4 to 8). Compile check here: `node --check` on every Mini Program file, clean; no other platform's code changed in this branch.
 
+## DONE: move the learn-codebase notes into `docs/learn-codebase/` and let claude-mem ingest them (2026-11-29)
+
+<details>
+<summary>Original prompt (verbatim)</summary>
+
+"~/.claude-mem/deliverables/CYLTableViewPlaceHolder/learn-codebase-2026-11-29/FAQ.md" 按照文档，建议， 将 交付物"~/.claude-mem/deliverables/CYLDeallocBlockExecutor" 移动到 docs/learn-codebase/ ，并更新 让 claude-mem 主动收录我们本次在本git仓库内新建的文件夹。
+
+(Local paths were shortened to `~/...` before publishing.)
+
+</details>
+
+English: "Following the FAQ document and its recommendations, move the deliverables folder for CYLDeallocBlockExecutor to `docs/learn-codebase/`, and update the setup so claude-mem actively ingests the folder newly created in this git repository."
+
+Status: DONE (2026-11-29; published by the next entry). The 23 files moved to `docs/learn-codebase/learn-codebase-2026-11-29/` (checksums verified, no local paths found in them) and the old folder was removed. On this machine `CLAUDE_MEM_MEMORY_WATCH_ROOTS` in the claude-mem settings now lists `docs/learn-codebase/` with project `CYLDeallocBlockExecutor`; after a worker restart all 18 `.md` files were stored as memory records. The watcher reads only `.md` files up to 64 KB, so the `.tsv` and `probes/` files are not ingested. The setting is per machine and is not part of the repository.
+
+## DONE: publish the learn-codebase notes (2026-11-29, branch `docs/learn-codebase-notes`)
+
+<details>
+<summary>Original prompt (verbatim)</summary>
+
+要把这些笔记提交到公开仓库？先清除本机路径和用户名，检查扫描出的两处疑似密钥关键词，把没复核的结论明确标出来，再更新 Task-Log 并推送。claude-mem 照常能收录。
+
+</details>
+
+English: "Commit these notes to the public repository? First remove local paths and the user name, check the two suspected secret keywords the scan found, clearly mark the conclusions that were not reviewed, then update the task log and push. claude-mem keeps ingesting them as before."
+
+Status: DONE (2026-11-29). Removed before the first commit: the local paths quoted in the previous entry and one local lock-file path in `11-build-ci-scripts.md`. The pattern scan for local paths, the local user name, session ids and personal email addresses then matched nothing in the committed changes. Public identifiers of this repository (the GitHub account in URLs, `com.chenyilong.*` bundle ids and the tracked `xcuserdata/chenyilong.xcuserdatad` paths in the file inventory) are kept. Secret keywords: the prompt mentions two hits; in these notes the scan matched five lines (`signingConfigs`, `scrollToken`, `windowToken`, and two mentions of `keystore`, one being the file list entry for the already tracked example `debug.keystore`, which was not opened). None of the lines contains a key or password. Every note now starts with a "Not reviewed" notice, and the evidence column of the findings table says what was reproduced. claude-mem still watches `docs/learn-codebase/` and stores each changed note as a new record.
+
 ## Design (reviewed by the advisor, 2026-11-22)
 
 Every public interface below was designed with the advisor; any new public API goes back to the advisor first.
